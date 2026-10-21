@@ -5,7 +5,7 @@ Periodo previsto: 2/11 – 18/11/2026 (D-243). Riferimenti: pianificazione §6.1
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |
 |---|---|---|---|
-| **PR-00** Scheletro | Laravel 13 su PHP 8.4, Sail (MariaDB 11.8, Redis, Mailpit), Pest, Larastan, Pint, Inertia + Vue 3 TS, ESLint, `vue-tsc`; `.env.example`; workflow CI di `docs/dev/ci.md` §1; comandi del `CLAUDE.md` §12 | D-174, D-178 | — |
+| **PR-00** Scheletro (PR #2) | Laravel 13 su PHP 8.4, Sail (MariaDB 11.8, Redis, Mailpit), Pest, Larastan, Pint, Inertia + Vue 3 TS, ESLint, `vue-tsc`; `.env.example`; workflow CI di `docs/dev/ci.md` §1; comandi del `CLAUDE.md` §12 | D-174, D-178 | — |
 | **PR-01** Interfaccia di base | Layout applicativo: menu laterale per ruolo (compresso su tablet, a scomparsa su smartphone), barra superiore con selettore stagione (segnaposto fino a F1), componenti degli stati vuoto, caricamento ed errore, toast con codice di supporto; font IBM Plex Sans/Mono, accento #C8102E | ux-architettura §4.1, §4.5; D-157, D-161, D-165 | PR-00 |
 | **PR-02** Utenti e ruoli | Tabella `users` (D-209), enum `Role`, comando Artisan per creare il primo admin, Policy e Gate di base, **test di matrice** rotta × ruolo | M01 RB-01, RB-02; D-208, D-215 | PR-00 |
 | **PR-03** Accesso sicuro | Fortify con pagine Inertia; password ≥ 12 caratteri con controllo sulle password violate; 2FA TOTP obbligatoria a ogni login, 8 codici di recupero; blocco di 15 minuti dopo 5 tentativi; sessioni su Redis con scadenza per ruolo (8 h agente, 2 h admin e gestore); il cambio password chiude le altre sessioni | M01-CA1, M01-CA2; D-214 | PR-02 |
