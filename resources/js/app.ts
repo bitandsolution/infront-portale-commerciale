@@ -7,8 +7,8 @@ const appName = import.meta.env.VITE_APP_NAME || 'Portale Commerciale Infront';
 createInertiaApp({
     title: (title) => (title ? `${title} · ${appName}` : appName),
     resolve: (name) => {
-        const pages = import.meta.glob<DefineComponent>('./Pages/**/*.vue', { eager: true });
-        const page = pages[`./Pages/${name}.vue`];
+        const pages = import.meta.glob<DefineComponent>('./pages/**/*.vue', { eager: true });
+        const page = pages[`./pages/${name}.vue`];
         if (!page) {
             throw new Error(`Page not found: ${name}`);
         }

@@ -4,10 +4,10 @@
 set -o pipefail
 title="$1"; shift
 log=$(mktemp)
-if "$@" 2>&1 | tee "$log"; then
-    exit 0
+"$@" 2>&1 | tee "$log"
+status=${PIPESTATUS[0]}
+if [ "$status" -ne 0 ]; then
+    msg=$(tail -n 60 "$log" | sed -e 's/\x1b\[[0-9;]*m//g' -e 's/%/%25/g' -e 's/\r//g' | awk 'BEGIN{ORS="%0A"} {print}')
+    echo "::error title=${title}::${msg}"
 fi
-status=$?
-msg=$(tail -n 60 "$log" | sed -e 's/%/%25/g' -e 's/\r//g' | awk 'BEGIN{ORS="%0A"} {print}')
-echo "::error title=${title}::${msg}"
-exit $status
+exit "$status"

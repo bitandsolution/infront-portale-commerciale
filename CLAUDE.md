@@ -51,7 +51,7 @@ app/
   Policies/                una Policy per entità (D-215)
   Jobs/                    lavori in coda, idempotenti
   Support/                 formattazione (numeri, minuti, importi), helper trasversali
-resources/js/Pages/<Area>/ pagine Inertia; resources/js/Components/ componenti condivisi
+resources/js/pages/<Area>/ pagine Inertia (convenzione Inertia 3); resources/js/components/ componenti condivisi
 resources/views/documents/ template Blade dei layout dei documenti
 lang/it/                   tutti i testi dell'interfaccia
 docs/                      specifiche e decisioni (vedi §2)
