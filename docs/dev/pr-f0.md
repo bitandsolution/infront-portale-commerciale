@@ -1,6 +1,6 @@
 # Fetta F0 — Fondamenta: elenco delle PR
 
-Stato: 💡 proposta del blocco 6.3. Lo sviluppo parte solo con l'autorizzazione esplicita al blocco 6.4.
+Stato: ✅ approvato (D-254); sviluppo autorizzato (D-259).
 Periodo previsto: 2/11 – 18/11/2026 (D-243). Riferimenti: pianificazione §6.1.3, spec-M01, progettazione-tecnica §5.2–§5.5.
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |
