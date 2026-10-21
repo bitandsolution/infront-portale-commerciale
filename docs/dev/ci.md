@@ -36,7 +36,7 @@ Passi del deploy, con utente SSH dedicato senza sudo (R6):
 
 ## 3. Prerequisiti di Antonio
 - Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248).
-- Staging conforme a R1–R7 entro il 13/11/2026; produzione entro il 15/1/2027 (D-243).
+- Collaudo durante lo sviluppo su VM locale (`docs/dev/ambiente-locale.md`, D-261). Staging su server conforme a R1–R7 quando disponibile, al più tardi entro il 26/2/2027 (milestone B); produzione entro il 15/1/2027 (D-243).
 - Utente di deploy e chiave SSH dedicata, da salvare nel GitHub Environment.
 - `DOCUMENT_FONTS_PATH` sul server con i file Interstate autorizzati.
 

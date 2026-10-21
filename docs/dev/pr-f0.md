@@ -14,9 +14,10 @@ Periodo previsto: 2/11 – 18/11/2026 (D-243). Riferimenti: pianificazione §6.1
 | **PR-06** File | `stored_files`, disco privato, verifica del tipo dal contenuto, ricodifica delle immagini, rotta di download con Policy | D-218, C10 | PR-02 |
 | **PR-07** Impostazioni | Tabella `settings` con i valori di D-191 e un seeder dei dati di sistema. Le tabelle di catalogo e anagrafica arrivano con le fette F1 e F2, ciascuna con il proprio seeder | D-191; progettazione-tecnica §5.6.1 A1 | PR-00 |
 | **PR-08** Code ed e-mail | Code `documents`, `mail` e `default` con Horizon (visibile solo all'admin); `notification_logs`; template e-mail in italiano con logo Infront (segnaposto fino alla ricezione del logo ufficiale); invio delle e-mail di attivazione e reset password | D-209, D-220; M01 §7 | PR-04 |
-| **PR-09** Esercizio | Endpoint `/health` (database, Redis, worker, disco); Sentry con regione UE e senza dati personali; intestazioni di sicurezza (HSTS, CSP, X-Frame-Options); log giornalieri a rotazione; deploy su staging (`docs/dev/ci.md` §2) | D-176, D-179 | PR-00; staging pronto (13/11) |
+| **PR-09** Esercizio | Endpoint `/health` (database, Redis, worker, disco); Sentry con regione UE e senza dati personali; intestazioni di sicurezza (HSTS, CSP, X-Frame-Options); log giornalieri a rotazione; workflow di deploy su staging (`docs/dev/ci.md` §2) pronto ma **non attivo** finché lo staging su server non è disponibile (D-261) | D-176, D-179, D-261 | PR-00 |
 
 Note:
 - PR-02, PR-05, PR-06 e PR-07 possono procedere in parallelo dopo PR-00.
-- ⚠️ PR-09 dipende dallo staging conforme a R1–R7 (scadenza 13/11). Se lo staging non è pronto, la fetta si chiude senza il deploy, che slitta a S1.
+- Il collaudo di ogni PR si fa sulla VM locale di Antonio (`docs/dev/ambiente-locale.md`, D-261). Ogni PR che cambia l'avvio in locale aggiorna la guida.
+- ⚠️ Lo staging su server è rinviato (D-261): la fetta si chiude senza deploy, che si attiva quando l'ambiente R1–R7 è pronto, al più tardi entro il 26/2/2027 per la milestone B.
 - Alla fine di F0 parte **S1 Prova della pipeline PDF** (D-239), che usa `docs/layout-dinamici.md`.

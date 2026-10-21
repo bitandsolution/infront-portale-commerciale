@@ -13,6 +13,7 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 | `specs/spec-M01…M10-*.md` | Specifiche funzionali approvate, con le note di allineamento in testa |
 | `specs/spec-M11-migrazione.md` | Non applicata (D-227); resta solo il perimetro degli script di dati iniziali |
 | `dev/ci.md` | Pipeline di integrazione e deploy |
+| `dev/ambiente-locale.md` | Guida della VM VirtualBox per il collaudo delle PR (D-261) |
 | `dev/pr-f0.md` | Elenco delle PR della fetta F0 |
 
 **Mockup UX**: canvas "Portale Infront – Configuratore", 13 tavole → https://claude.ai/artifact/WnoZA4zUgQMJBHLJvF4B3c (privato).

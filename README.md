@@ -7,7 +7,9 @@ Portale web per gli agenti commerciali di Infront Italy: configurazione delle pr
 
 ## Avvio in locale (Laravel Sail)
 
-Requisiti: Docker, PHP 8.4 e Composer (solo per la prima installazione).
+Per il collaudo su una VM VirtualBox in Windows segui la guida passo passo [`docs/dev/ambiente-locale.md`](docs/dev/ambiente-locale.md) (D-261).
+
+In breve, con Docker, PHP 8.4 e Composer già installati:
 
 ```bash
 cp .env.example .env
