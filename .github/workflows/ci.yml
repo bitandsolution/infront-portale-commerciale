@@ -1,0 +1,125 @@
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches: [main]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    backend:
+        name: Backend (Pint, Larastan, Pest)
+        runs-on: ubuntu-24.04
+        services:
+            mariadb:
+                image: mariadb:11.8
+                env:
+                    MARIADB_ROOT_PASSWORD: password
+                    MARIADB_DATABASE: testing
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="healthcheck.sh --connect --innodb_initialized"
+                    --health-interval=5s --health-timeout=5s --health-retries=20
+            redis:
+                image: redis:7-alpine
+                ports:
+                    - 6379:6379
+                options: >-
+                    --health-cmd="redis-cli ping"
+                    --health-interval=5s --health-timeout=5s --health-retries=10
+        env:
+            DB_CONNECTION: mariadb
+            DB_HOST: 127.0.0.1
+            DB_PORT: 3306
+            DB_DATABASE: testing
+            DB_USERNAME: root
+            DB_PASSWORD: password
+            REDIS_HOST: 127.0.0.1
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up PHP 8.4
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: mbstring, intl, bcmath, pdo_mysql, redis, gd, zip, pcntl
+                  coverage: none
+                  tools: composer:v2
+
+            - name: Install Composer dependencies
+              run: |
+                  if [ -f composer.lock ]; then
+                      composer install --no-interaction --no-progress --prefer-dist
+                  else
+                      echo "::warning::composer.lock missing: resolving dependencies with composer update"
+                      composer update --no-interaction --no-progress --prefer-dist
+                  fi
+
+            - name: Upload composer.lock
+              uses: actions/upload-artifact@v4
+              with:
+                  name: composer-lock
+                  path: composer.lock
+
+            - name: Prepare environment
+              run: |
+                  cp .env.example .env
+                  php artisan key:generate --ansi
+
+            - name: Pint
+              run: composer format:test
+
+            - name: Larastan
+              run: composer analyse -- --no-progress --error-format=github
+
+            - name: Build frontend assets for feature tests
+              run: |
+                  npm ci --no-audit --no-fund
+                  npm run build
+
+            - name: Pest
+              run: php artisan test
+
+    frontend:
+        name: Frontend (vue-tsc, ESLint, build)
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: npm
+            - run: npm ci --no-audit --no-fund
+            - run: npm run typecheck
+            - run: npm run lint
+            - run: npm run build
+
+    audit:
+        name: Dependency audit
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v4
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  tools: composer:v2
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+            - name: Composer audit
+              run: |
+                  if [ -f composer.lock ]; then
+                      composer audit --no-interaction
+                  else
+                      composer update --no-interaction --no-progress --no-install --no-scripts
+                      composer audit --no-interaction
+                  fi
+            - name: npm audit (high and critical)
+              run: npm audit --audit-level=high

@@ -1,0 +1,15 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app/
+        - bootstrap/app.php
+        - config/
+        - database/
+        - routes/
+
+    # CLAUDE.md §3: highest reachable level, target 8.
+    level: 8
+
+    tmpDir: storage/framework/cache/phpstan
