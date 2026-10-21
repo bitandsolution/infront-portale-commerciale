@@ -43,7 +43,7 @@ jobs:
             DB_PASSWORD: password
             REDIS_HOST: 127.0.0.1
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
 
             - name: Set up PHP 8.4
               uses: shivammathur/setup-php@v2
@@ -64,7 +64,7 @@ jobs:
 
             - name: Upload composer.lock
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v5
               with:
                   name: composer-lock
                   path: composer.lock
@@ -92,8 +92,8 @@ jobs:
         name: Frontend (vue-tsc, ESLint, build)
         runs-on: ubuntu-24.04
         steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/checkout@v5
+            - uses: actions/setup-node@v5
               with:
                   node-version: '22'
                   cache: npm
@@ -106,12 +106,12 @@ jobs:
         name: Dependency audit
         runs-on: ubuntu-24.04
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - uses: shivammathur/setup-php@v2
               with:
                   php-version: '8.4'
                   tools: composer:v2
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v5
               with:
                   node-version: '22'
             - name: Composer audit
@@ -119,6 +119,6 @@ jobs:
                   if [ ! -f composer.lock ]; then
                       .github/scripts/run.sh "composer resolve" composer update --no-interaction --no-progress --no-install --no-scripts
                   fi
-                  .github/scripts/run.sh "composer audit" composer audit --no-interaction
+                  .github/scripts/run.sh "composer audit" composer audit --locked --no-interaction
             - name: npm audit (high and critical)
               run: npm audit --audit-level=high
