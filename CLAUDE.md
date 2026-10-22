@@ -52,6 +52,7 @@ app/
   Jobs/                    lavori in coda, idempotenti
   Support/                 formattazione (numeri, minuti, importi), helper trasversali
 resources/js/pages/<Area>/ pagine Inertia (convenzione Inertia 3); resources/js/components/ componenti condivisi
+resources/js/layouts/       layout applicativo (AppLayout); resources/js/composables/ useTrans (testi da lang/it), useToasts
 resources/views/documents/ template Blade dei layout dei documenti
 lang/it/                   tutti i testi dell'interfaccia
 docs/                      specifiche e decisioni (vedi §2)

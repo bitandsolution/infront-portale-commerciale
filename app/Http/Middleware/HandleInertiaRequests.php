@@ -35,6 +35,10 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name'),
                 'locale' => app()->getLocale(),
             ],
+            // Interface texts for the frontend: single source in lang/it/ui.php (CLAUDE.md §9).
+            'ui' => fn (): mixed => trans('ui'),
+            // One-shot notification (ux-architettura §4.5): {id, type, message, code?}.
+            'toast' => fn (): mixed => $request->hasSession() ? $request->session()->get('toast') : null,
         ];
     }
 }
