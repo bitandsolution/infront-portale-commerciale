@@ -52,20 +52,24 @@ sudo usermod -aG docker $USER
 
 Esci e rientra con `ssh`, poi verifica: `docker run --rm hello-world`.
 
-Chiave per GitHub (il repository è privato):
+Chiave per GitHub (il repository è privato). Nella VM si fanno solo `clone`, `fetch` e `checkout`, quindi basta una **deploy key in sola lettura**, valida solo per questo repository: se la VM venisse compromessa, gli altri repository dell'account restano al sicuro.
 
 ```bash
-ssh-keygen -t ed25519 -C "vm-infront-portale"
+ssh-keygen -t ed25519 -C "vm-infront-portale" -f ~/.ssh/id_ed25519
 cat ~/.ssh/id_ed25519.pub
 ```
 
-Copia la chiave in GitHub → *Settings* → *SSH and GPG keys* → *New SSH key*.
+Copia la chiave in GitHub → repository `bitandsolution/infront-portale-commerciale` → *Settings* → *Deploy keys* → *Add deploy key*, titolo `vm-infront-portale`, **senza** spuntare "Allow write access". Non usare *Settings* → *SSH and GPG keys* del profilo: darebbe accesso in scrittura a tutti i repository.
+
+Verifica con `ssh -T git@github.com`: alla prima connessione conferma con `yes` se l'impronta è `SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU` (quella pubblicata da GitHub). Risposta attesa: `Hi bitandsolution/infront-portale-commerciale! You've successfully authenticated…`.
 
 ## 3. Prima installazione del portale
 
 ```bash
 git clone git@github.com:bitandsolution/infront-portale-commerciale.git
 cd infront-portale-commerciale
+# Finché la PR-00 non è unita, main contiene solo la documentazione:
+# git checkout feat/f0-skeleton
 cp .env.example .env
 sed -i 's#^APP_URL=.*#APP_URL=http://localhost:8080#' .env
 
