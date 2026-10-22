@@ -10,18 +10,19 @@ Regole:
 
 ## 1. Creare la VM
 
-1. Installa **VirtualBox 7** da virtualbox.org e scarica l'immagine **Ubuntu Server 24.04 LTS** (ubuntu.com/download/server).
+1. Installa **VirtualBox 7** da virtualbox.org e scarica l'immagine **Ubuntu Server LTS** (ubuntu.com/download/server): va bene la 24.04 o la 26.04.
 2. ⚠️ Se su Windows sono attivi Hyper-V, WSL 2 o Docker Desktop, VirtualBox funziona lo stesso ma più lento (icona della tartaruga in basso a destra). Se la VM è troppo lenta, disattiva "Piattaforma macchina virtuale" e "Hyper-V" in *Attiva o disattiva funzionalità di Windows* e riavvia.
 3. Nuova macchina virtuale:
 
    | Voce | Valore |
    |---|---|
    | Nome | `infront-portale` |
-   | Immagine ISO | Ubuntu Server 24.04 LTS |
+   | Immagine ISO | Ubuntu Server 24.04 o 26.04 LTS |
    | Processori | 4 |
    | Memoria | 8192 MB |
    | Disco | 40 GB, allocazione dinamica |
-   | Rete | NAT |
+   | Rete | NAT, con "Cavo collegato" spuntato |
+   | Sistema → Scheda madre | "Orologio hardware in tempo UTC" spuntato |
 
 4. Installazione di Ubuntu: lingua a scelta, utente `antonio`, attiva **"Install OpenSSH server"**. Non selezionare i pacchetti aggiuntivi (il Docker "snap" in particolare: lo installiamo dal repository ufficiale).
 5. VirtualBox → *Impostazioni* della VM → *Rete* → *Avanzate* → **Inoltro delle porte**:
@@ -114,7 +115,17 @@ Comandi utili:
 
 💡 Prima di provare una PR che cambia molto, fai un'**istantanea** della VM da VirtualBox (*Macchina* → *Istantanea*): se qualcosa va storto torni indietro in un clic.
 
-## 5. Più avanti
+## 5. Problemi noti
+
+| Sintomo | Causa | Soluzione |
+|---|---|---|
+| `ssh: kex_exchange_identification … Connection aborted` | Il server SSH non è installato o non è avviato nella VM | Dalla finestra della VM: `sudo apt install -y openssh-server && sudo systemctl enable --now ssh` |
+| `Temporary failure resolving 'archive.ubuntu.com'` | DNS della VM non configurato | `sudo mkdir -p /etc/systemd/resolved.conf.d && printf "[Resolve]\nDNS=1.1.1.1 8.8.8.8\n" \| sudo tee /etc/systemd/resolved.conf.d/dns.conf && sudo systemctl restart systemd-resolved` |
+| `ip -br a` non mostra `10.0.2.15` | Rete non configurata durante l'installazione | In `/etc/netplan/*.yaml` impostare `dhcp4: true` sull'interfaccia `enp0s3`, poi `sudo netplan apply` |
+| `Release file … is not valid yet` | Orologio della VM indietro | `sudo date -s "AAAA-MM-GG HH:MM:SS"` con l'ora attuale, poi `sudo apt install -y chrony && sudo systemctl enable --now chrony` (dalla 25.10 Ubuntu usa chrony, non `systemd-timesyncd`) |
+| La VM è molto lenta (tartaruga verde in basso) | Hyper-V attivo su Windows | Vedi §1, punto 2 |
+
+## 6. Più avanti
 
 - **Font Interstate** e **Chromium**: arrivano con la fetta S1. La PR di S1 aggiungerà il servizio Chromium a `compose.yaml` e la cartella dei font da indicare in `DOCUMENT_FONTS_PATH`, fuori dal repository. I file dei font non vanno mai nel repository.
 - **Demo a Infront (gennaio 2027)**: dal tuo PC, con `sail artisan migrate:fresh --seed` per partire da dati di prova puliti.
