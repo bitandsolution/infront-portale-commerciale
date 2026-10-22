@@ -34,7 +34,7 @@ Il vecchio sistema compone ogni pagina da un **JPEG di sfondo 1920×1080** (circ
 | **Calibri** e Calibri Bold | Prezzi del recap (listino barrato e totale finale) | ✅ **Sostituito** da Interstate Bold e Black (D-249): font Microsoft, non disponibile su Linux |
 | Interstate Regular | Testi nei PPTX, assente dai testi dinamici dei PDF | ✅ Utile per note e testi lunghi |
 
-- Tutti i file Interstate dichiarano l'incorporamento "anteprima e stampa" (fsType 4). È compatibile con un PDF in sola lettura come il nostro. **Resta da verificare la licenza Font Bureau per l'uso su server** (D-224).
+- Tutti i file Interstate dichiarano l'incorporamento "anteprima e stampa" (fsType 4). È compatibile con un PDF in sola lettura come il nostro. Licenza per l'uso su server **confermata** (D-256).
 - ⚠️ Il file Bold e il file Black dichiarano internamente la sottofamiglia "Regular", come il Regular. Se fossero installati come font di sistema, Chromium li confonderebbe. 💡 **Regola**: i font si caricano solo **da file**, con `@font-face` e `font-weight` esplicito (400 Regular, 700 Bold, 900 Black). Non si installano mai nel sistema.
 - `Interstate-black-euro.ttf` non è un font valido e non si usa: il simbolo € è già presente nei file originali.
 - 💡 I file dei font **non vanno nel repository**, per via della licenza. Stanno in un percorso configurato (`DOCUMENT_FONTS_PATH`), predisposto sul server da Antonio. In CI e nei test si usa un font libero sostitutivo, per esempio DejaVu Sans.
@@ -236,7 +236,7 @@ Il PPTX club riporta "€ 180.000 + IVA", i PDF solo l'importo. 💡 Il recap ri
 - La nota del PDF e del PPTX dice invece "partite che coinvolgono almeno una delle seguenti squadre: **Lazio**, Inter, Milan, Juventus, Roma e Napoli". Con la Lazio il conteggio darebbe 12 e non 10.
 - ⚠️ Per una proposta sulla Lazio la differenza pesa di più: con "ospite con il flag" i top match in casa sono 5; con "almeno una delle due squadre" sarebbero tutte e 19 le partite casalinghe.
 
-✅ **Decisione (D-253)**: RB-06 resta invariata (conta l'ospite con il flag) e la **Lazio** riceve il flag. Bologna + Como danno quindi 12 top match; in un documento della Lazio contano le sue partite in casa contro gli altri club con il flag. L'elenco dei club con il flag va confermato con Infront prima del caricamento dei dati 2027-28.
+✅ **Decisione (D-253)**: RB-06 resta invariata (conta l'ospite con il flag) e la **Lazio** riceve il flag. Bologna + Como danno quindi 12 top match; in un documento della Lazio contano le sue partite in casa contro gli altri club con il flag. Club con il flag confermati da D-257: Lazio, Inter, Milan, Juventus, Roma, Napoli.
 
 ---
 
