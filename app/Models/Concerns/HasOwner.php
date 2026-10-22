@@ -5,6 +5,7 @@ namespace App\Models\Concerns;
 use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * manager and admin, and nothing for a deactivated user. A mistake in a controller cannot expose
  * the data of another agent.
  *
- * @phpstan-require-extends \Illuminate\Database\Eloquent\Model
+ * @phpstan-require-extends Model
  */
 trait HasOwner
 {
@@ -32,7 +33,7 @@ trait HasOwner
      */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
-        if (! $user->is_active) {
+        if ($user->is_active === false) {
             $query->whereRaw('1 = 0');
 
             return;
@@ -45,6 +46,6 @@ trait HasOwner
 
     public function isOwnedBy(User $user): bool
     {
-        return (int) $this->getAttribute('owner_id') === $user->id;
+        return $this->getAttribute('owner_id') === $user->id;
     }
 }
