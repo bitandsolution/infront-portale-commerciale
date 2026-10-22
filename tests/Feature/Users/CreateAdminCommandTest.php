@@ -12,16 +12,27 @@ use Illuminate\Support\Facades\Http;
 const STRONG_PASSWORD = 'Campo-Sportivo-2027!';
 
 beforeEach(function () {
-    // Password::uncompromised() asks the breached-password archive; no real request in tests.
+    // Password::uncompromised() asks the breached-password archive: no real request in tests.
     Http::preventStrayRequests();
-    Http::fake(['api.pwnedpasswords.com/*' => Http::response('')]);
 });
+
+/**
+ * Fake answer of the breached-password archive (k-anonymity: hash suffixes of the asked prefix).
+ */
+function fakeBreachedArchive(string $body = ''): void
+{
+    Http::fake(['api.pwnedpasswords.com/*' => Http::response($body)]);
+}
 
 /**
  * @param  array<string, string>  $answers
  */
 function runCreateAdmin(object $test, array $answers): mixed
 {
+    if (! array_key_exists('breached', $answers)) {
+        fakeBreachedArchive();
+    }
+
     return $test->artisan('users:create-admin')
         ->expectsQuestion('Nome', $answers['first_name'] ?? 'Laura')
         ->expectsQuestion('Cognome', $answers['last_name'] ?? 'Verdi')
@@ -95,10 +106,9 @@ it('refuses a confirmation that does not match', function () {
 });
 
 it('D-214: refuses a password found in the breached-password archive', function () {
-    $hash = strtoupper(sha1(STRONG_PASSWORD));
-    Http::fake(['api.pwnedpasswords.com/*' => Http::response(substr($hash, 5).':42')]);
+    fakeBreachedArchive(substr(strtoupper(sha1(STRONG_PASSWORD)), 5).':42');
 
-    runCreateAdmin($this, [])
+    runCreateAdmin($this, ['breached' => 'yes'])
         ->expectsOutputToContain('compare in archivi di password violate')
         ->assertFailed();
 

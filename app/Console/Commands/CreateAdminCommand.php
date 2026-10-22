@@ -56,7 +56,9 @@ class CreateAdminCommand extends Command
 
         if ($validator->fails()) {
             $this->components->error($this->text('users.create_admin.invalid'));
-            $this->components->bulletList($validator->errors()->all());
+            foreach ($validator->errors()->all() as $message) {
+                $this->line('  • '.$message);
+            }
 
             return self::FAILURE;
         }
