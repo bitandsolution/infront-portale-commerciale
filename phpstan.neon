@@ -13,3 +13,10 @@ parameters:
     level: 8
 
     tmpDir: storage/framework/cache/phpstan
+
+    ignoreErrors:
+        # Owner scope prepared in PR-02 (D-215), first used by clients in slice F3.
+        # When a model uses it this ignore becomes unmatched and Larastan asks to remove it.
+        -
+            identifier: trait.unused
+            path: app/Models/Concerns/HasOwner.php
