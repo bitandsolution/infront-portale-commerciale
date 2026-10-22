@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /*
@@ -51,11 +50,12 @@ it('D-264: answers 404 for an unknown role', function () {
 it('D-264: answers 404 outside the local and testing environments', function () {
     app()->detectEnvironment(fn () => 'production');
 
-    // Outside "testing" Laravel checks the CSRF token again: not the subject of this test.
-    $this->withoutMiddleware(ValidateCsrfToken::class);
-
     $this->get('/anteprima/layout/admin')->assertNotFound();
-    $this->post('/anteprima/errore')->assertNotFound();
+
+    // Outside "testing" Laravel checks the CSRF token again: send a valid one.
+    $this->withSession(['_token' => 'preview-test-token'])
+        ->post('/anteprima/errore', ['_token' => 'preview-test-token'])
+        ->assertNotFound();
 });
 
 it('links the home page to the preview only where the preview exists', function () {
