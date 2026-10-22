@@ -175,6 +175,9 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Registro e-mail | `NotificationLog` · `notification_logs` |
 | Piattaforma che legge l'API | `ApiClient` · `api_clients` |
 | Ruoli | `Role`: `admin`, `manager` (Gestore), `agent` (Agente) |
+| Permesso d'area (riga della matrice M01 §4) | `Ability` (enum; ogni caso è un Gate) |
+| Utente disattivato | `is_active` = false, `deactivated_at`, `deactivated_by` |
+| Visibile all'utente (scope per proprietario) | `visibleTo($user)` (trait `HasOwner`) |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 
@@ -212,6 +215,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ```bash
 ./vendor/bin/sail up -d                 # ambiente locale (app, mariadb, redis, mailpit, chromium)
 ./vendor/bin/sail artisan migrate --seed
+./vendor/bin/sail artisan users:create-admin   # primo admin (interattivo)
 ./vendor/bin/sail artisan test          # Pest
 ./vendor/bin/sail composer analyse      # Larastan
 ./vendor/bin/sail composer format       # Pint

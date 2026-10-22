@@ -2,44 +2,66 @@
 
 namespace Database\Factories;
 
+use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
+ * Fictitious users only (CLAUDE.md §7, §11). Default: an active agent.
+ *
  * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
     /**
-     * The current password being used by the factory.
+     * Same hash for every factory user: hashing is slow and no test logs in with it.
      */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'phone' => null,
+            'role' => Role::Agent,
+            'password' => static::$password ??= Hash::make(Str::random(32)),
+            'is_active' => true,
+            'activated_at' => now(),
+            'deactivated_at' => null,
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+        return $this->state(['role' => Role::Admin]);
+    }
+
+    public function manager(): static
+    {
+        return $this->state(['role' => Role::Manager]);
+    }
+
+    public function agent(): static
+    {
+        return $this->state(['role' => Role::Agent]);
+    }
+
+    /**
+     * Deactivated user (RB-05): the date is required by the users_deactivation_check constraint.
+     */
+    public function inactive(): static
+    {
+        return $this->state([
+            'is_active' => false,
+            'deactivated_at' => now(),
         ]);
     }
 }

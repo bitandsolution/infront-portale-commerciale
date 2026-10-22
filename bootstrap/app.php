@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\SupportCode;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,8 +19,19 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            EnsureUserIsActive::class,
             HandleInertiaRequests::class,
         ]);
+
+        // A deactivated user is signed out before any authentication or permission check runs.
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: EnsureUserIsActive::class,
+        );
+
+        // No login page before PR-03: guests asking for a protected page go back to the home page.
+        // PR-03 points this to the login.
+        $middleware->redirectGuestsTo(fn (): string => route('home'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -30,19 +43,28 @@ return Application::configure(basePath: dirname(__DIR__))
             'support_code' => app(SupportCode::class)->value(),
         ]);
 
-        // System errors during an Inertia visit: back to the previous page with a toast
-        // and the support code (ux-architettura §4.5, "Errore di sistema").
-        // Full page loads keep the error page (resources/views/errors/500.blade.php).
+        // During an Inertia visit, back to the previous page with a toast (ux-architettura §4.5):
+        // - 500, system error, with the support code (D-265);
+        // - 403, forbidden action (RB-02).
+        // Full page loads keep the error pages (resources/views/errors/500.blade.php, 403.blade.php).
         $exceptions->respond(function (Response $response, Throwable $e, Request $request): Response {
-            if ($response->getStatusCode() !== 500 || ! $request->header('X-Inertia')) {
+            if (! $request->header('X-Inertia')) {
                 return $response;
             }
 
-            return back()->with('toast', [
-                'id' => (string) Str::uuid(),
-                'type' => 'error',
-                'message' => __('ui.errors.system'),
-                'code' => app(SupportCode::class)->value(),
-            ]);
+            return match ($response->getStatusCode()) {
+                403 => back()->with('toast', [
+                    'id' => (string) Str::uuid(),
+                    'type' => 'error',
+                    'message' => __('ui.errors.forbidden'),
+                ]),
+                500 => back()->with('toast', [
+                    'id' => (string) Str::uuid(),
+                    'type' => 'error',
+                    'message' => __('ui.errors.system'),
+                    'code' => app(SupportCode::class)->value(),
+                ]),
+                default => $response,
+            };
         });
     })->create();

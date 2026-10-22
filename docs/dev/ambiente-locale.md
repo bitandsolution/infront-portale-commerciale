@@ -82,9 +82,12 @@ echo "alias sail='./vendor/bin/sail'" >> ~/.bashrc && source ~/.bashrc
 sail up -d                     # la prima volta costruisce l'immagine: 5-10 minuti
 sail artisan key:generate
 sail artisan migrate --seed
+sail artisan users:create-admin   # primo admin: nome, cognome, e-mail, password (≥ 12 caratteri)
 sail npm ci
 sail npm run build
 ```
+
+Fino all'accesso vero (PR-03) puoi entrare come un qualsiasi utente con l'**accesso di sviluppo** (D-268): imposta `DEV_LOGIN=true` nel `.env` della VM (`sed -i 's#^DEV_LOGIN=.*#DEV_LOGIN=true#' .env`) e apri **http://localhost:8080/sviluppo/accesso**. Funziona solo con `APP_ENV=local`: su staging e produzione la pagina non esiste.
 
 Apri nel browser di Windows:
 - portale: **http://localhost:8080**
@@ -114,7 +117,11 @@ Comandi utili:
 | Accendere / spegnere i servizi | `sail up -d` / `sail stop` |
 | Eseguire i test | `sail artisan test` |
 | Vedere i log dell'applicazione | `sail artisan pail` oppure `tail -f storage/logs/laravel.log` |
-| Ricreare il database con i dati di prova | `sail artisan migrate:fresh --seed` |
+| Ricreare il database con i dati di prova | `sail artisan migrate:fresh --seed` (poi `sail artisan users:create-admin`) |
+| Creare il primo admin | `sail artisan users:create-admin` (si rifiuta se un admin esiste già) |
+| Entrare come un utente (fino alla PR-03) | `DEV_LOGIN=true` nel `.env`, poi **http://localhost:8080/sviluppo/accesso** |
+
+Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`.
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 💡 Prima di provare una PR che cambia molto, fai un'**istantanea** della VM da VirtualBox (*Macchina* → *Istantanea*): se qualcosa va storto torni indietro in un clic.
@@ -128,6 +135,8 @@ Comandi utili:
 | `ip -br a` non mostra `10.0.2.15` | Rete non configurata durante l'installazione | In `/etc/netplan/*.yaml` impostare `dhcp4: true` sull'interfaccia `enp0s3`, poi `sudo netplan apply` |
 | `Release file … is not valid yet` | Orologio della VM indietro | `sudo date -s "AAAA-MM-GG HH:MM:SS"` con l'ora attuale, poi `sudo apt install -y chrony && sudo systemctl enable --now chrony` (dalla 25.10 Ubuntu usa chrony, non `systemd-timesyncd`) |
 | La VM è molto lenta (tartaruga verde in basso) | Hyper-V attivo su Windows | Vedi §1, punto 2 |
+| `sail artisan migrate` si ferma con `The users table contains rows` | La PR-02 rifà la tabella `users` e nel database c'è ancora l'utente di prova dello scheletro | `sail artisan migrate:fresh --seed`, poi `sail artisan users:create-admin` |
+| `/sviluppo/accesso` risponde 404 | `DEV_LOGIN` non è `true` nel `.env`, oppure `APP_ENV` non è `local` | Correggi il `.env`, poi `sail artisan config:clear` |
 
 ## 6. Più avanti
 
