@@ -73,6 +73,34 @@ return [
         'label' => 'Stagione :season',
         'select' => 'Cambia stagione',
         'unavailable' => 'Il cambio stagione sarà disponibile con le anagrafiche sportive',
+        'placeholder' => '2027-28',
+    ],
+
+    'auth' => [
+        'deactivated' => "Il tuo account è disattivato. Per riattivarlo rivolgiti all'amministratore",
+    ],
+
+    'placeholder' => [
+        'title' => 'Funzione in arrivo',
+        'message' => 'Questa pagina sarà disponibile nelle prossime fasi dello sviluppo. Il menu mostra già le voci previste per il tuo ruolo.',
+    ],
+
+    'dev_login' => [
+        'title' => 'Accesso di sviluppo',
+        'notice' => "Solo nell'ambiente locale: entra come un utente senza password per provare menu e permessi. Sparisce con l'accesso vero (PR-03).",
+        'open' => 'Accesso di sviluppo',
+        'change_user' => 'Cambia utente',
+        'empty' => 'Nessun utente nel database. Esegui "sail artisan migrate:fresh --seed" e "sail artisan users:create-admin".',
+        'name' => 'Nome',
+        'email' => 'E-mail',
+        'role' => 'Ruolo',
+        'status' => 'Stato',
+        'active' => 'Attivo',
+        'inactive' => 'Disattivato',
+        'current' => 'In uso',
+        'sign_in' => 'Entra',
+        'sign_in_as' => 'Entra come :name',
+        'sign_out' => 'Esci',
     ],
 
     'user' => [
@@ -98,6 +126,8 @@ return [
         'offline' => 'Connessione assente: controlla la rete e riprova',
         'page_title' => 'Errore del portale',
         'back_home' => 'Torna alla pagina iniziale',
+        'forbidden_title' => 'Accesso non consentito',
+        'forbidden' => 'Non hai i permessi per questa funzione',
     ],
 
     'preview' => [

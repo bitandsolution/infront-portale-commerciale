@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Enums\Ability;
+use App\Models\User;
 use App\Support\SupportCode;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +25,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $this->registerAuthorization();
+
+        // D-214: at least 12 characters, checked against known breached passwords.
+        // Single definition, reused by the first-admin command and by Fortify (PR-03).
+        Password::defaults(fn (): Password => Password::min(12)->uncompromised());
+    }
+
+    /**
+     * Area Gates from the M01 §4 matrix (D-215). Entity Policies are discovered by name (App\Policies).
+     */
+    private function registerAuthorization(): void
+    {
+        // A deactivated user has no permission at all, whatever the role (RB-05).
+        Gate::before(fn (User $user): ?bool => $user->is_active ? null : false);
+
+        foreach (Ability::cases() as $ability) {
+            Gate::define($ability->value, fn (User $user): bool => $ability->allows($user->role));
+        }
     }
 }

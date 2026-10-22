@@ -14,7 +14,7 @@ use RuntimeException;
  * Layout preview before users exist (PR-01, D-264). Local and testing environments only.
  *
  * Shows the application layout with the menu of a role, the placeholders of the top bar
- * and the shared states (empty, loading, error, toast). Replaced by the real pages from PR-02.
+ * and the shared states (empty, loading, error, toast). Removed by PR-03, with the development access.
  */
 class LayoutPreviewController extends Controller
 {

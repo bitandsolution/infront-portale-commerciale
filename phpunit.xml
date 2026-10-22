@@ -28,6 +28,8 @@
         <env name="DB_CONNECTION" value="mariadb"/>
         <env name="DB_DATABASE" value="testing"/>
         <env name="DB_URL" value=""/>
+        <!-- Development access (D-268): enabled in tests so the route matrix covers it. -->
+        <env name="DEV_LOGIN" value="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
