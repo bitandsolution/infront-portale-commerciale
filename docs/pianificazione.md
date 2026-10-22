@@ -62,8 +62,8 @@ flowchart LR
 
 | # | Fetta | Contenuto | Dipende da | Criteri di accettazione coperti |
 |---|---|---|---|---|
-| **F0** | Fondamenta (M01 base + trasversali) | Scheletro applicativo, CI e deploy su staging (D-178); login Fortify + 2FA obbligatoria, blocco tentativi, scadenze per ruolo, attivazione con token (D-214); gestione utenti dell'admin; Policy/Gate con **test di matrice** (D-215); infrastruttura **audit** append-only (D-210, D-211) con eventi di accesso; `stored_files` e upload ricodificati (D-218); `settings`; code Redis/Horizon, coda `mail`, `notification_logs`, Mailpit; struttura dell'interfaccia (menu per ruolo, selettore stagione, stati di ux §4.5); seeder A1; `/health` e monitoraggio errori. Elenco delle PR: `docs/dev/pr-f0.md` nel repository | — | M01: 1, 2, 3 (parziale), 5 · M10: 2, 3 |
-| **S1** | Prova della pipeline PDF | Una slide statica e una dinamica con font Interstate, Chromium senza rete + qpdf **sullo staging**: tempo, peso, resa. Il codice resta come base di F7 | F0; verifica D-226 (6.3) | Anticipa M09 CA 4 |
+| **F0** | Fondamenta (M01 base + trasversali) | Scheletro applicativo, CI e deploy su staging (D-178; deploy rinviato a quando lo staging su server è pronto, D-261); login Fortify + 2FA obbligatoria, blocco tentativi, scadenze per ruolo, attivazione con token (D-214); gestione utenti dell'admin; Policy/Gate con **test di matrice** (D-215); infrastruttura **audit** append-only (D-210, D-211) con eventi di accesso; `stored_files` e upload ricodificati (D-218); `settings`; code Redis/Horizon, coda `mail`, `notification_logs`, Mailpit; struttura dell'interfaccia (menu per ruolo, selettore stagione, stati di ux §4.5); seeder A1; `/health` e monitoraggio errori. Elenco delle PR: `docs/dev/pr-f0.md` nel repository | — | M01: 1, 2, 3 (parziale), 5 · M10: 2, 3 |
+| **S1** | Prova della pipeline PDF | Una slide statica e una dinamica con font Interstate, Chromium senza rete + qpdf **nella VM locale e in CI** (D-261): tempo, peso, resa; si ripete sullo staging quando disponibile. Il codice resta come base di F7 | F0; verifica D-226 (6.3) | Anticipa M09 CA 4 |
 | **F1** | M02 Anagrafiche sportive | Discipline, stagioni, competizioni, edizioni, iscrizioni, club con alias, stadi, giornate, partite; import Excel con anteprima e alias; calcolo partite (F-12) con RB-05 (D-187) e top match; script dei club dal dump (D-229) | F0 | M02: 1–8 |
 | **F2** | M03 Catalogo e listini + M04 Capacità | Catalogo; listino per stagione bozza/pubblicato a griglia; prezzi; testi on top e benefit facoltativi; capacità con flag "gestito"; vista disponibilità e servizio residui | F1 | M03: 1–4, 7, 9 · M04: 3, 4, 10 |
 | **R0** | Rilascio interno (✅ D-235) | Produzione aperta al solo admin per caricare stagione 2027-28, club, stadi, iscrizioni, listino, capacità | F2 | — |
@@ -98,7 +98,7 @@ flowchart LR
 |---|---|---|---|
 | 20/10 – 30/10/2026 | **6.3** Preparazione del repository e verifica D-226 | 1,5 | `CLAUDE.md`, `docs/`, layout verificati |
 | 2/11 – 18/11 | **F0** Fondamenta | 2,5 | |
-| 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | Esito su staging: resa, tempo, peso |
+| 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | Esito nella VM locale (D-261): resa, tempo, peso |
 | 26/11 – 9/12 | **F1** M02 | 2 | |
 | 10/12 – 23/12 | **F2** M03 + M04 | 2 | |
 | 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | |
@@ -127,7 +127,8 @@ flowchart LR
 |---|---|---|---|---|
 | 23/10/2026 | Antonio | Nuovo repository GitHub privato (D-241) | 6.3 | ✅ `bitandsolution/infront-portale-commerciale` (D-248) |
 | 27/10 | Antonio | Cartella con PDF/PPTX di esempio e font Interstate collegata alla chat | Verifica D-226 | ✅ Collegata il 21/10 |
-| 13/11 | Antonio | **Staging** conforme a R1–R7, utente di deploy (R6) | Deploy di F0, S1 | |
+| 30/10 | Antonio | **VM VirtualBox** locale con Docker e Sail (`docs/dev/ambiente-locale.md`) | Collaudo delle PR di F0 (D-261) | |
+| ~~13/11~~ → 26/2/2027 | Antonio | **Staging su server** conforme a R1–R7, utente di deploy (R6). Richiesta all'amministratore: VM dedicata con root oppure pacchetti (D-261) | Deploy automatico, milestone B con agenti pilota | |
 | 13/11 | Infront | Conferma della licenza dei font per l'incorporamento nei PDF generati da server (D-224) — Regular, Bold e **Black** (D-249) | S1 | |
 | 30/11 | Infront | Calendario Excel reale nel tracciato D-017 | F1, milestone A | |
 | 15/1/2027 | Antonio | **Produzione** conforme a R1–R7, backup fuori dall'host attivi | R0 (D-235) | |
