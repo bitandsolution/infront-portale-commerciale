@@ -4,7 +4,7 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 
 | File | Contenuto |
 |---|---|
-| `registro-decisioni.md` | Decisioni D-001…D-266. Valgono solo le APPROVATE |
+| `registro-decisioni.md` | Decisioni D-001…D-267. Valgono solo le APPROVATE |
 | `pianificazione.md` | Fase 6: perimetro MVP, fette F0…F9, milestone, calendario |
 | `progettazione-tecnica.md` | Stack, hosting (R1–R7), modello dati, sicurezza e API, documenti e code, piano di avvio |
 | `ux-architettura.md` | Principi UX, navigazione per ruolo, stati ed errori, breakpoint |
