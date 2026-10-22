@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\SupportCode;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +12,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One support code per request (D-265).
+        $this->app->scoped(SupportCode::class);
     }
 
     /**
