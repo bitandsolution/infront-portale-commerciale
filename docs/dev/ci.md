@@ -36,6 +36,11 @@ Passi del deploy, con utente SSH dedicato senza sudo (R6):
 
 ## 3. Prerequisiti di Antonio
 - Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248).
-- Staging conforme a R1–R7 entro il 13/11/2026; produzione entro il 15/1/2027 (D-243).
+- Collaudo durante lo sviluppo su VM locale (`docs/dev/ambiente-locale.md`, D-261). Staging su server conforme a R1–R7 quando disponibile, al più tardi entro il 26/2/2027 (milestone B); produzione entro il 15/1/2027 (D-243).
 - Utente di deploy e chiave SSH dedicata, da salvare nel GitHub Environment.
 - `DOCUMENT_FONTS_PATH` sul server con i file Interstate autorizzati.
+
+## 4. Note di esercizio (PR-00, 2026-10-21)
+- Gli errori di ogni passo sono riportati come **annotazioni** del check (`.github/scripts/run.sh`), leggibili anche dove i log completi dei job non sono raggiungibili.
+- Se `composer.lock` manca, la CI lo risolve e lo **committa sul branch della PR** (unico caso in cui il job ha permesso di scrittura). Una volta presente, la CI usa sempre `composer install` dal lock.
+- ⚠️ Nelle sessioni cloud di Claude **packagist.org non è raggiungibile** e PHP è alla 8.3: la parte PHP si verifica solo in CI; la parte frontend anche in locale. Per lavorare più velocemente serve abilitare packagist.org nella rete delle sessioni, oppure sviluppare in locale con Sail.
