@@ -137,7 +137,6 @@ return [
         'message' => 'Questa pagina sarà disponibile nelle prossime fasi dello sviluppo. Il menu mostra già le voci previste per il tuo ruolo.',
     ],
 
-
     'user' => [
         'area' => 'Utente collegato',
         'menu' => 'Menu utente',
