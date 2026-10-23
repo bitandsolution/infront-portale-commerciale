@@ -30,13 +30,16 @@ it('D-214: expires the session of each role after its inactivity limit', functio
 ]);
 
 it('ux §4.5: after an expired session the login goes back to the page that was open', function () {
-    $user = User::factory()->manager()->withoutTwoFactor()->withPassword('Una-password-di-prova-2027')->create();
+    $user = User::factory()->manager()->withPassword('Una-password-di-prova-2027')->create();
 
     $this->actingAs($user)->get(route('pages.content_kpi'))->assertOk();
     $this->travel(121)->minutes();
     $this->get(route('pages.content_kpi'))->assertRedirect(route('login'));
 
+    // Back with the password and the second factor (ux §4.5: "Ritorno al login con 2FA").
     $this->post(route('login.store'), ['email' => $user->email, 'password' => 'Una-password-di-prova-2027'])
+        ->assertRedirect(route('two-factor.login'));
+    $this->post(route('two-factor.login.store'), ['code' => totpCode()])
         ->assertRedirect(route('pages.content_kpi'));
 });
 
