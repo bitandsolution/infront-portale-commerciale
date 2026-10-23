@@ -37,8 +37,8 @@ class DevelopmentUsersSeeder extends Seeder
 
     public function run(): void
     {
-        $password = $this->password();
-        $secret = $this->totpSecret();
+        $password = $this->password(config('auth.development_users.password'));
+        $secret = $this->totpSecret(config('auth.development_users.totp_secret'));
 
         foreach (self::USERS as [$firstName, $lastName, $email, $role, $active, $sharedKey]) {
             $twoFactor = $sharedKey && $secret !== null;
@@ -68,10 +68,11 @@ class DevelopmentUsersSeeder extends Seeder
             : 'Test users: no second factor (set DEV_USERS_TOTP_SECRET in .env to share one key).');
     }
 
-    private function password(): ?string
+    /**
+     * Values read from the .env of the machine: unknown at analysis time, hence mixed.
+     */
+    private function password(mixed $password): ?string
     {
-        $password = config('auth.development_users.password');
-
         if (! is_string($password) || $password === '') {
             return null;
         }
@@ -83,10 +84,8 @@ class DevelopmentUsersSeeder extends Seeder
         return $password;
     }
 
-    private function totpSecret(): ?string
+    private function totpSecret(mixed $secret): ?string
     {
-        $secret = config('auth.development_users.totp_secret');
-
         if (! is_string($secret) || $secret === '') {
             return null;
         }
