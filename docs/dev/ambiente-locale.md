@@ -87,7 +87,28 @@ sail npm ci
 sail npm run build
 ```
 
-Fino all'accesso vero (PR-03) puoi entrare come un qualsiasi utente con l'**accesso di sviluppo** (D-268): imposta `DEV_LOGIN=true` nel `.env` della VM (`sed -i 's#^DEV_LOGIN=.*#DEV_LOGIN=true#' .env`) e apri **http://localhost:8080/sviluppo/accesso**. Funziona solo con `APP_ENV=local`: su staging e produzione la pagina non esiste.
+Al primo accesso (**http://localhost:8080**) il portale chiede e-mail e password, poi la configurazione della **verifica in due passaggi** (D-136): inquadri il codice QR con l'app di autenticazione dello smartphone, confermi con il codice a 6 cifre e salvi gli 8 codici di recupero, che vengono mostrati una sola volta. Da quel momento ogni accesso chiede il codice dell'app.
+
+### Utenti di prova con password e chiave note (solo VM)
+
+Per entrare come gestore o agente di prova senza configurare la verifica per ognuno, il `.env` della VM può dare a tutti gli utenti di prova una **password nota** e una **chiave TOTP condivisa** (PR-03). Le due variabili valgono solo con `APP_ENV=local`, non vanno mai su un server e non entrano nel repository.
+
+```bash
+# 1. Genera una chiave (16 caratteri, lettere A-Z e cifre 2-7)
+sail artisan tinker --execute="echo (new PragmaRX\Google2FA\Google2FA)->generateSecretKey(16), PHP_EOL;"
+
+# 2. Scrivila nel .env con una password di almeno 12 caratteri (solo per la VM)
+grep -q '^DEV_USERS_PASSWORD=' .env || printf 'DEV_USERS_PASSWORD=\nDEV_USERS_TOTP_SECRET=\n' >> .env
+sed -i 's#^DEV_USERS_PASSWORD=.*#DEV_USERS_PASSWORD=<password-di-prova>#' .env
+sed -i 's#^DEV_USERS_TOTP_SECRET=.*#DEV_USERS_TOTP_SECRET=<chiave>#' .env
+
+# 3. Ricrea gli utenti di prova (poi ricrea l'admin)
+sail artisan config:clear
+sail artisan migrate:fresh --seed
+sail artisan users:create-admin
+```
+
+Nell'app dello smartphone aggiungi **una sola voce** inserendo la chiave a mano (account "Infront locale", tipo "basato sul tempo"): vale per `gestore1`, `gestore2`, `agente1` e `agente3` (disattivato). `agente2` resta senza verifica, per provare la configurazione obbligatoria. Senza le due variabili le password sono casuali e nessun utente di prova ha la verifica.
 
 Apri nel browser di Windows:
 - portale: **http://localhost:8080**
@@ -119,10 +140,10 @@ Comandi utili:
 | Vedere i log dell'applicazione | `sail artisan pail` oppure `tail -f storage/logs/laravel.log` |
 | Ricreare il database con i dati di prova | `sail artisan migrate:fresh --seed` (poi `sail artisan users:create-admin`) |
 | Creare il primo admin | `sail artisan users:create-admin` (si rifiuta se un admin esiste già) |
-| Entrare come un utente (fino alla PR-03) | `DEV_LOGIN=true` nel `.env`, poi **http://localhost:8080/sviluppo/accesso** |
-
-Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`.
+| Sbloccare subito un accesso bloccato (5 tentativi) | `sail artisan cache:clear` (altrimenti si attendono 15 minuti) |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
+
+Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".
 
 💡 Prima di provare una PR che cambia molto, fai un'**istantanea** della VM da VirtualBox (*Macchina* → *Istantanea*): se qualcosa va storto torni indietro in un clic.
 
@@ -136,7 +157,10 @@ Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale):
 | `Release file … is not valid yet` | Orologio della VM indietro | `sudo date -s "AAAA-MM-GG HH:MM:SS"` con l'ora attuale, poi `sudo apt install -y chrony && sudo systemctl enable --now chrony` (dalla 25.10 Ubuntu usa chrony, non `systemd-timesyncd`) |
 | La VM è molto lenta (tartaruga verde in basso) | Hyper-V attivo su Windows | Vedi §1, punto 2 |
 | `sail artisan migrate` si ferma con `The users table contains rows` | La PR-02 rifà la tabella `users` e nel database c'è ancora l'utente di prova dello scheletro | `sail artisan migrate:fresh --seed`, poi `sail artisan users:create-admin` |
-| `/sviluppo/accesso` risponde 404 | `DEV_LOGIN` non è `true` nel `.env`, oppure `APP_ENV` non è `local` | Correggi il `.env`, poi `sail artisan config:clear` |
+| L'admin creato prima della PR-03 non riesce più ad accedere | Dalla PR-03 le password sono in Argon2id (D-214) e quelle salvate prima non sono più accettate | `sail artisan migrate:fresh --seed`, poi `sail artisan users:create-admin` |
+| Il codice dell'app viene sempre rifiutato | L'orologio della VM non è sincronizzato: i codici dipendono dall'ora | `timedatectl` deve mostrare `System clock synchronized: yes`; altrimenti vedi la riga `Release file … is not valid yet` |
+| `DEV_USERS_TOTP_SECRET must be a base32 key…` durante il seed | La chiave contiene caratteri diversi da A-Z e 2-7 o è più corta di 16 | Rigenera la chiave come al §3 |
+| Dopo 2 ore di inattività il portale torna al login | Scadenza della sessione per ruolo (D-214): 2 ore per admin e gestore, 8 ore per l'agente | Comportamento previsto: accedi di nuovo |
 
 ## 6. Più avanti
 

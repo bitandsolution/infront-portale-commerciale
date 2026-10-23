@@ -11,15 +11,18 @@ use Illuminate\Support\Facades\Route;
 |
 | A new route must be added here: "every route is in the matrix" fails otherwise.
 |
+| Actors: guest; agent, manager and admin with the second factor configured; a deactivated
+| admin (RB-05); an active agent who has not configured the second factor yet (M01-CA1).
+|
 | Expected answers:
-|   200, 403, 500 HTTP status
-|   'home'        redirect to the home page: guests until the login arrives (PR-03 points it to the
-|                 login) and deactivated users, whose session is closed (RB-05)
+|   200, 403, 302 HTTP status (302: back to the form, e.g. validation of an empty submission)
+|   'login'       redirect to the login: guests (D-269), deactivated users, whose session is
+|                 closed (RB-05), and every logout
 |   'dashboard'   redirect to the dashboard
-|   'dev_login'   redirect to the development access page
+|   'setup'       redirect to the mandatory setup of the second factor (D-136, M01-CA1)
 */
 
-const MATRIX_ACTORS = ['guest', 'agent', 'manager', 'admin', 'inactive'];
+const MATRIX_ACTORS = ['guest', 'agent', 'manager', 'admin', 'inactive', 'no_2fa'];
 
 /**
  * Framework routes outside the matrix: they are not part of the portal pages.
@@ -27,20 +30,33 @@ const MATRIX_ACTORS = ['guest', 'agent', 'manager', 'admin', 'inactive'];
 const MATRIX_IGNORED_URIS = ['up', 'storage/{path}'];
 
 /**
- * @return array<string, array{method: string, expected: array{int|string, int|string, int|string, int|string, int|string}}>
+ * @return array<string, array{method: string, expected: array{int|string, int|string, int|string, int|string, int|string, int|string}}>
  */
 function routeMatrix(): array
 {
-    // guest, agent, manager, admin, inactive
-    $everyone = [200, 200, 200, 200, 'home'];
-    $signedIn = ['home', 200, 200, 200, 'home'];
-    $agent = ['home', 200, 403, 403, 'home'];
-    $agentAndAdmin = ['home', 200, 403, 200, 'home'];
-    $backOffice = ['home', 403, 200, 200, 'home'];
-    $admin = ['home', 403, 403, 200, 'home'];
+    // guest, agent, manager, admin, inactive, no_2fa
+    $signedIn = ['login', 200, 200, 200, 'login', 'setup'];
+    $agent = ['login', 200, 403, 403, 'login', 'setup'];
+    $agentAndAdmin = ['login', 200, 403, 200, 'login', 'setup'];
+    $backOffice = ['login', 403, 200, 200, 'login', 'setup'];
+    $admin = ['login', 403, 403, 200, 'login', 'setup'];
 
     return [
-        'home' => ['method' => 'GET', 'expected' => $everyone],
+        'home' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'setup']],
+
+        // Login (D-214): guests only; signed-in users go to their dashboard
+        'login' => ['method' => 'GET', 'expected' => [200, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        'login.store' => ['method' => 'POST', 'expected' => [302, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        // Second step: without a pending login, back to the login
+        'two-factor.login' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        'two-factor.login.store' => ['method' => 'POST', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        'logout' => ['method' => 'POST', 'expected' => ['login', 'login', 'login', 'login', 'login', 'login']],
+
+        // Mandatory setup of the second factor (D-136): only who has not configured it yet
+        'two-factor.setup' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 200]],
+        'two-factor.confirm' => ['method' => 'POST', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 302]],
+        // Recovery codes: only once, right after the confirmation (TwoFactorSetupTest)
+        'two-factor.recovery-codes' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'setup']],
 
         // Every role
         'pages.dashboard' => ['method' => 'GET', 'expected' => $signedIn],
@@ -93,15 +109,6 @@ function routeMatrix(): array
         // M01 — users admin only (D-139); settings admin only
         'pages.users' => ['method' => 'GET', 'expected' => $admin],
         'pages.settings' => ['method' => 'GET', 'expected' => $admin],
-
-        // Development access (D-268): local and testing environments only
-        'dev.login' => ['method' => 'GET', 'expected' => $everyone],
-        'dev.login.store' => ['method' => 'POST', 'expected' => ['dashboard', 'dashboard', 'dashboard', 'dashboard', 'home']],
-        'dev.logout' => ['method' => 'POST', 'expected' => ['dev_login', 'dev_login', 'dev_login', 'dev_login', 'home']],
-
-        // Layout preview (D-264): local and testing environments only
-        'preview.layout' => ['method' => 'GET', 'expected' => $everyone],
-        'preview.error' => ['method' => 'POST', 'expected' => [500, 500, 500, 500, 'home']],
     ];
 }
 
@@ -113,6 +120,7 @@ function matrixActor(string $actor): ?User
         'manager' => User::factory()->manager()->create(),
         'admin' => User::factory()->admin()->create(),
         'inactive' => User::factory()->admin()->inactive()->create(),
+        'no_2fa' => User::factory()->agent()->withoutTwoFactor()->create(),
         default => throw new InvalidArgumentException($actor),
     };
 }
@@ -123,8 +131,6 @@ function matrixActor(string $actor): ?User
 function matrixParameters(string $route): array
 {
     return match ($route) {
-        'dev.login.store' => ['user' => User::factory()->agent()->create()],
-        'preview.layout' => ['role' => 'admin'],
         default => [],
     };
 }
@@ -146,9 +152,9 @@ it('D-215: answers each route as the M01 §4 matrix expects', function (string $
     $response = $this->call($method, route($route, matrixParameters($route)));
 
     match ($expected) {
-        'home' => $response->assertRedirect(route('home')),
+        'login' => $response->assertRedirect(route('login')),
         'dashboard' => $response->assertRedirect(route('pages.dashboard')),
-        'dev_login' => $response->assertRedirect(route('dev.login')),
+        'setup' => $response->assertRedirect(route('two-factor.setup')),
         default => $response->assertStatus($expected),
     };
 })->with('route matrix');

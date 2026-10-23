@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Support\DevLogin;
 use App\Support\Navigation\LayoutProps;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,7 +21,6 @@ class PlaceholderPageController extends Controller
 
         return Inertia::render('Placeholder', [
             'layout' => LayoutProps::for($user, $page),
-            'devLoginUrl' => DevLogin::enabled() ? route('dev.login') : null,
         ]);
     }
 }

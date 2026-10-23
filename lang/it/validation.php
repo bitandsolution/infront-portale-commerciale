@@ -31,5 +31,7 @@ return [
         'email' => 'e-mail',
         'phone' => 'telefono',
         'password' => 'password',
+        'code' => 'codice di verifica',
+        'recovery_code' => 'codice di recupero',
     ],
 ];

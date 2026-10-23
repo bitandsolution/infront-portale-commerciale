@@ -78,6 +78,58 @@ return [
 
     'auth' => [
         'deactivated' => "Il tuo account è disattivato. Per riattivarlo rivolgiti all'amministratore",
+        'session_expired' => 'Sessione scaduta per inattività: accedi di nuovo per continuare',
+
+        'login' => [
+            'title' => 'Accedi',
+            'intro' => 'Inserisci la tua e-mail aziendale e la password.',
+            'email' => 'E-mail',
+            'password' => 'Password',
+            'submit' => 'Accedi',
+            'submitting' => 'Accesso in corso…',
+            'locked' => 'Accesso bloccato per troppi tentativi. Potrai riprovare tra :time.',
+            'help' => "Password dimenticata o smartphone perso? Rivolgiti all'amministratore del portale.",
+        ],
+
+        'challenge' => [
+            'title' => 'Verifica in due passaggi',
+            'intro' => "Inserisci il codice a 6 cifre che vedi nell'app di autenticazione.",
+            'code' => 'Codice di verifica',
+            'recovery_intro' => 'Inserisci uno dei codici di recupero che hai salvato. Ogni codice si usa una sola volta.',
+            'recovery_code' => 'Codice di recupero',
+            'use_recovery' => 'Non hai lo smartphone? Usa un codice di recupero',
+            'use_code' => "Usa il codice dell'app di autenticazione",
+            'submit' => 'Verifica',
+            'submitting' => 'Verifica in corso…',
+            'back' => "Torna all'accesso",
+        ],
+
+        'setup' => [
+            'title' => 'Configura la verifica in due passaggi',
+            'intro' => "Per proteggere il portale, ogni accesso richiede anche un codice dall'app di autenticazione dello smartphone (per esempio Google Authenticator o Microsoft Authenticator).",
+            'step_scan' => "Apri l'app di autenticazione e inquadra il codice QR.",
+            'step_key' => 'Se non puoi inquadrarlo, aggiungi un account inserendo questa chiave:',
+            'account' => 'Account: :account',
+            'step_confirm' => "Scrivi il codice a 6 cifre che l'app mostra per il portale.",
+            'qr_alt' => 'Codice QR da inquadrare con l\'app di autenticazione',
+            'code' => 'Codice di verifica',
+            'submit' => 'Attiva la verifica',
+            'submitting' => 'Verifica in corso…',
+            'logout' => 'Esci',
+        ],
+
+        'recovery' => [
+            'title' => 'Codici di recupero',
+            'intro' => 'Se perdi lo smartphone puoi accedere con uno di questi codici, una sola volta ciascuno. Conservali in un luogo sicuro, fuori dallo smartphone.',
+            'warning' => 'Questi codici vengono mostrati solo ora: salvali prima di continuare.',
+            'copy' => 'Copia i codici',
+            'copied' => 'Codici copiati',
+            'download' => 'Scarica i codici',
+            'file_name' => 'codici-recupero-portale-infront.txt',
+            'file_header' => 'Portale Commerciale Infront - codici di recupero (ogni codice vale una volta)',
+            'confirm' => 'Ho salvato i codici di recupero',
+            'continue' => 'Continua',
+        ],
     ],
 
     'placeholder' => [
@@ -85,26 +137,11 @@ return [
         'message' => 'Questa pagina sarà disponibile nelle prossime fasi dello sviluppo. Il menu mostra già le voci previste per il tuo ruolo.',
     ],
 
-    'dev_login' => [
-        'title' => 'Accesso di sviluppo',
-        'notice' => "Solo nell'ambiente locale: entra come un utente senza password per provare menu e permessi. Sparisce con l'accesso vero (PR-03).",
-        'open' => 'Accesso di sviluppo',
-        'change_user' => 'Cambia utente',
-        'empty' => 'Nessun utente nel database. Esegui "sail artisan migrate:fresh --seed" e "sail artisan users:create-admin".',
-        'name' => 'Nome',
-        'email' => 'E-mail',
-        'role' => 'Ruolo',
-        'status' => 'Stato',
-        'active' => 'Attivo',
-        'inactive' => 'Disattivato',
-        'current' => 'In uso',
-        'sign_in' => 'Entra',
-        'sign_in_as' => 'Entra come :name',
-        'sign_out' => 'Esci',
-    ],
 
     'user' => [
         'area' => 'Utente collegato',
+        'menu' => 'Menu utente',
+        'logout' => 'Esci',
     ],
 
     'states' => [
@@ -128,29 +165,5 @@ return [
         'back_home' => 'Torna alla pagina iniziale',
         'forbidden_title' => 'Accesso non consentito',
         'forbidden' => 'Non hai i permessi per questa funzione',
-    ],
-
-    'preview' => [
-        'title' => 'Anteprima del layout',
-        'notice' => "Pagina di anteprima, visibile solo nell'ambiente locale: utente, stagione e voci di menu sono segnaposto fino all'arrivo di utenti e anagrafiche.",
-        'role' => 'Menu del ruolo',
-        'user_name' => 'Utente di prova',
-        'user_initials' => 'UP',
-        'season' => '2027-28',
-        'states_title' => 'Stati dell\'interfaccia',
-        'state_content' => 'Contenuto',
-        'state_empty' => 'Vuoto',
-        'state_loading' => 'Caricamento',
-        'state_error' => 'Errore',
-        'content_text' => 'Qui compariranno i contenuti della pagina selezionata nel menu.',
-        'empty_title' => 'Nessuna proposta ancora',
-        'empty_message' => 'Crea la tua prima proposta: scegli il cliente, i club e il pacchetto. Il documento viene generato dopo l\'approvazione.',
-        'empty_action' => 'Crea la tua prima proposta',
-        'toast_title' => 'Notifiche',
-        'toast_server' => 'Simula un errore di sistema',
-        'toast_offline' => 'Simula la connessione assente',
-        'toast_success' => 'Mostra una conferma',
-        'toast_success_message' => 'Operazione completata',
-        'open' => 'Apri l\'anteprima del layout',
     ],
 ];

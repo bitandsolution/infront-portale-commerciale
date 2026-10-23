@@ -28,4 +28,16 @@ enum Role: string
     {
         return $this !== self::Agent;
     }
+
+    /**
+     * Session expiry after inactivity (M01 §6, D-214): 8 hours for the agent, who works on
+     * proposals during the day; 2 hours for admin and manager. Applied by EnforceIdleTimeout.
+     */
+    public function idleTimeoutMinutes(): int
+    {
+        return match ($this) {
+            self::Agent => 480,
+            self::Admin, self::Manager => 120,
+        };
+    }
 }

@@ -1,63 +1,52 @@
 <?php
 
-use App\Http\Controllers\Dev\DevLoginController;
+use App\Http\Controllers\Auth\TwoFactorChallengeController;
+use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\PlaceholderPageController;
-use App\Http\Controllers\Preview\LayoutPreviewController;
-use App\Http\Middleware\EnsureDevLoginEnabled;
-use App\Http\Middleware\EnsureLayoutPreviewEnabled;
-use App\Support\DevLogin;
+use App\Http\Middleware\EnsureTwoFactorIsConfigured;
 use App\Support\Navigation\PortalPages;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
 /*
 | Every route is listed in tests/Feature/Authorization/RouteMatrixTest.php with the expected
-| answer for guest, agent, manager, admin and deactivated user (D-215): a route missing from
-| the matrix makes the test fail.
+| answer for guest, agent, manager, admin, deactivated user and user without the second factor
+| (D-215): a route missing from the matrix makes the test fail.
+|
+| Fortify's own routes are not registered (App\Providers\FortifyServiceProvider): the portal
+| declares here the few it uses, with Fortify's controllers.
 */
 
-// Guest page until the login arrives (PR-03). Guests asking for a protected page are sent here.
-Route::get('/', fn () => Inertia::render('Home', [
-    'title' => __('app.home.title'),
-    'subtitle' => __('app.home.subtitle'),
-    'previewUrl' => EnsureLayoutPreviewEnabled::enabled()
-        ? route('preview.layout', ['role' => 'agente'])
-        : null,
-    'devLoginUrl' => DevLogin::enabled() ? route('dev.login') : null,
-]))->name('home');
-
-// Menu pages (PR-02, D-269): signed-in users only, each behind the Gate of its area (M01 §4).
-Route::middleware('auth')->group(function (): void {
-    foreach (PortalPages::PAGES as $key => [$path, $ability]) {
-        Route::get($path, PlaceholderPageController::class)
-            ->defaults('page', $key)
-            ->middleware('can:'.$ability->value)
-            ->name(PortalPages::routeName($key));
-    }
+// Login (D-214): e-mail and password, then the code of the second factor at every login.
+Route::middleware('guest')->group(function (): void {
+    Route::get('accesso', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('accesso', [AuthenticatedSessionController::class, 'store'])->name('login.store');
+    Route::get('accesso/verifica', [TwoFactorChallengeController::class, 'create'])->name('two-factor.login');
+    Route::post('accesso/verifica', [TwoFactorChallengeController::class, 'store'])->name('two-factor.login.store');
 });
 
-// Development access (D-268): local machine only, removed by PR-03.
-if (DevLogin::enabled()) {
-    Route::middleware(EnsureDevLoginEnabled::class)
-        ->prefix('sviluppo')
-        ->name('dev.')
-        ->group(function (): void {
-            Route::get('accesso', [DevLoginController::class, 'index'])->name('login');
-            Route::post('accesso/{user}', [DevLoginController::class, 'store'])->name('login.store');
-            Route::post('esci', [DevLoginController::class, 'destroy'])->name('logout');
-        });
-}
+// Signed-in users. A password change closes the other sessions of the user (auth.session, D-214).
+Route::middleware(['auth', 'auth.session'])->group(function (): void {
+    Route::post('esci', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
-// Layout preview (PR-01, D-264): local and testing environments only, removed by PR-03.
-if (EnsureLayoutPreviewEnabled::enabled()) {
-    Route::middleware(EnsureLayoutPreviewEnabled::class)
-        ->prefix('anteprima')
-        ->name('preview.')
-        ->group(function (): void {
-            Route::get('layout/{role}', [LayoutPreviewController::class, 'show'])
-                ->whereIn('role', array_keys(LayoutPreviewController::ROLES))
-                ->name('layout');
-            Route::post('errore', [LayoutPreviewController::class, 'error'])
-                ->name('error');
-        });
-}
+    // Mandatory setup of the second factor (D-136, M01-CA1), recovery codes shown once.
+    Route::get('verifica-in-due-passaggi', [TwoFactorSetupController::class, 'show'])->name('two-factor.setup');
+    Route::post('verifica-in-due-passaggi', [TwoFactorSetupController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('two-factor.confirm');
+    Route::get('verifica-in-due-passaggi/codici-di-recupero', [TwoFactorSetupController::class, 'recoveryCodes'])
+        ->name('two-factor.recovery-codes');
+
+    // Portal pages: only with the second factor configured.
+    Route::middleware(EnsureTwoFactorIsConfigured::class)->group(function (): void {
+        Route::redirect('/', PortalPages::PAGES['dashboard'][0])->name('home');
+
+        // Menu pages (PR-02, D-269), each behind the Gate of its area (M01 §4).
+        foreach (PortalPages::PAGES as $key => [$path, $ability]) {
+            Route::get($path, PlaceholderPageController::class)
+                ->defaults('page', $key)
+                ->middleware('can:'.$ability->value)
+                ->name(PortalPages::routeName($key));
+        }
+    });
+});

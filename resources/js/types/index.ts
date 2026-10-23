@@ -1,6 +1,6 @@
 /** Shapes of the props sent by the server (app/Http/Middleware/HandleInertiaRequests.php and controllers). */
 
-export type ToastType = 'error' | 'success';
+export type ToastType = 'error' | 'success' | 'info';
 
 export interface Toast {
     id: string;
@@ -38,6 +38,7 @@ export interface LayoutData {
         name: string;
         initials: string;
         role: string;
+        logoutUrl: string;
     };
     season: {
         label: string;
