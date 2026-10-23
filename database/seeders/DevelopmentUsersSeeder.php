@@ -41,6 +41,8 @@ class DevelopmentUsersSeeder extends Seeder
         $secret = $this->totpSecret(config('auth.development_users.totp_secret'));
 
         foreach (self::USERS as [$firstName, $lastName, $email, $role, $active, $sharedKey]) {
+            // Depends on the .env of the machine, which static analysis cannot know.
+            /** @var bool $twoFactor */
             $twoFactor = $sharedKey && $secret !== null;
 
             User::query()->updateOrCreate(['email' => $email], [
