@@ -4,6 +4,7 @@ namespace App\Models\Builders;
 
 use App\Domain\Audit\Exceptions\AuditEventImmutable;
 use App\Models\AuditEvent;
+use Illuminate\Contracts\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -47,7 +48,7 @@ class AuditEventBuilder extends Builder
     }
 
     /**
-     * @param  string|\Illuminate\Contracts\Database\Query\Expression  $column
+     * @param  string|Expression  $column
      * @param  float|int  $amount
      * @param  array<string, mixed>  $extra
      * @return int
@@ -58,7 +59,7 @@ class AuditEventBuilder extends Builder
     }
 
     /**
-     * @param  string|\Illuminate\Contracts\Database\Query\Expression  $column
+     * @param  string|Expression  $column
      * @param  float|int  $amount
      * @param  array<string, mixed>  $extra
      * @return int
