@@ -99,7 +99,7 @@ class AuditListCommand extends Command
                 $event->occurred_at->setTimezone('Europe/Rome')->format('d/m/Y H:i:s'),
                 self::author($event),
                 $event->action,
-                trim(($event->object_type ?? '').' '.($event->object_id ?? '').' '.($event->object_label ?? '')),
+                implode(' ', array_filter([$event->object_type, $event->object_id, $event->object_label], fn (mixed $part): bool => $part !== null && $part !== '')),
                 self::changes($event),
                 self::reason($event),
                 $event->ip_address ?? '',
