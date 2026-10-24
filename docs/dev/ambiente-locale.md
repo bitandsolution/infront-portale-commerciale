@@ -161,6 +161,8 @@ Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale):
 | Il codice dell'app viene sempre rifiutato | L'orologio della VM non è sincronizzato: i codici dipendono dall'ora | `timedatectl` deve mostrare `System clock synchronized: yes`; altrimenti vedi la riga `Release file … is not valid yet` |
 | `DEV_USERS_TOTP_SECRET must be a base32 key…` durante il seed | La chiave contiene caratteri diversi da A-Z e 2-7 o è più corta di 16 | Rigenera la chiave come al §3 |
 | Dopo 2 ore di inattività il portale torna al login | Scadenza della sessione per ruolo (D-214): 2 ore per admin e gestore, 8 ore per l'agente | Comportamento previsto: accedi di nuovo |
+| Codici di recupero dell'admin persi (solo VM) | I codici si vedono una sola volta, dopo la configurazione della verifica | `sail artisan tinker --execute="App\Models\User::where('role', 'admin')->firstOrFail()->forceFill(['two_factor_secret' => null, 'two_factor_recovery_codes' => null, 'two_factor_confirmed_at' => null])->save();"`, poi elimina la voce dall'app e riconfigura al login successivo. Dal portale il reset arriva con la PR-04 |
+| `Class OwnedRecord located in ./tests/Feature/Authorization/OwnerScopeTest.php …` durante `sail composer install` | Avviso dell'autoload su una classe di prova definita dentro un test | Nessuna: non ha effetti |
 
 ## 6. Più avanti
 
