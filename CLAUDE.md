@@ -58,7 +58,7 @@ lang/it/                   tutti i testi dell'interfaccia
 docs/                      specifiche e decisioni (vedi §2)
 ```
 
-Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più l'area trasversale `Files` (archiviazione dei file, C10).
+Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più le aree trasversali `Files` (archiviazione dei file, C10) e `Settings` (impostazioni di sistema, PR-07).
 
 Regole:
 - **La logica di dominio sta nelle Action e nei Service**, mai nei controller, nei modelli o nei componenti Vue. Calcoli di prezzo, partite, residui e composizione dei documenti hanno **una sola implementazione**, lato server, usata anche dal simulatore e dai riepiloghi.
@@ -148,6 +148,10 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Residuo | `remaining` (calcolato, mai salvato) |
 | Forzatura | `is_forced`, `forced_reason` |
 | Impostazioni | `Setting` · `settings` |
+| Chiave di un'impostazione (tipo, predefinito, limiti, modificabilità) | `SettingKey` (`availability_method`, `led_step_seconds`, `hospitality_max_seats`, `forced_reason_min_length`, `audit_ip_retention_days`) |
+| Lettura delle impostazioni (predefinito se la riga manca) / modifica dall'admin | `Settings` (`App\Domain\Settings\Services`) / `UpdateSettings` (`App\Domain\Settings\Actions`) |
+| Metodo di calcolo della disponibilità | `AvailabilityMethod`: `seasonal` (Stagionale), `per_match` (Per partita, futuro) |
+| Dati di sistema (impostazioni, poi cataloghi) | `SystemDataSeeder`, idempotente, in ogni ambiente e a ogni deploy |
 | Settore merceologico | `CommoditySector` · `commodity_sectors` |
 | Cliente | `Client` · `clients` |
 | Ragione sociale | `company_name` (+ `company_name_normalized`) |
@@ -239,6 +243,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail up -d                 # ambiente locale (app, mariadb, redis, mailpit, chromium)
 ./vendor/bin/sail artisan migrate --seed
 ./vendor/bin/sail artisan users:create-admin   # primo admin (interattivo)
+./vendor/bin/sail artisan db:seed --class=SystemDataSeeder  # dati di sistema mancanti (PR-07; anche con migrate --seed)
 ./vendor/bin/sail artisan test          # Pest
 ./vendor/bin/sail composer analyse      # Larastan
 ./vendor/bin/sail composer format       # Pint

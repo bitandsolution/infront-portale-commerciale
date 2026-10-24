@@ -29,10 +29,11 @@ Passi del deploy, con utente SSH dedicato senza sudo (R6):
 2. `composer install --no-dev`, build del frontend nella pipeline (gli asset compilati arrivano già pronti).
 3. Collegamento di `.env` e `storage/` condivisi.
 4. `php artisan migrate --database=migrator --force` (migrazioni compatibili all'indietro), con l'utente MariaDB delle migrazioni: l'utente applicativo non ha permessi DDL (R7, D-283; `docs/dev/database-utenti.md`).
-5. Cache di configurazione, rotte e viste.
-6. Cambio atomico del link `current`; ricaricamento di PHP-FPM; `horizon:terminate` per riavviare i worker.
-7. Controllo `/health`; se fallisce, **ritorno automatico** al rilascio precedente.
-8. Conservazione degli ultimi 5 rilasci.
+5. `php artisan db:seed --class=SystemDataSeeder --force` (dati di sistema, PR-07): inserisce solo ciò che manca e non cambia mai una riga, quindi i valori modificati dall'admin restano; basta l'utente applicativo (solo `INSERT`). Al primo deploy crea le impostazioni con i valori iniziali.
+6. Cache di configurazione, rotte e viste.
+7. Cambio atomico del link `current`; ricaricamento di PHP-FPM; `horizon:terminate` per riavviare i worker.
+8. Controllo `/health`; se fallisce, **ritorno automatico** al rilascio precedente.
+9. Conservazione degli ultimi 5 rilasci.
 
 ## 3. Prerequisiti di Antonio
 - Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248).

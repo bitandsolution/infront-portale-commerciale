@@ -19,6 +19,8 @@ I permessi di MariaDB si possono solo aggiungere: un utente con `UPDATE`/`DELETE
 | Applicativo | `DB_USERNAME`, `DB_PASSWORD` | `SELECT, INSERT, UPDATE, DELETE` sul database, nessun DDL | Il portale (PHP-FPM, worker, scheduler) |
 | Manutenzione | `DB_AUDIT_MAINTENANCE_USERNAME`, `DB_AUDIT_MAINTENANCE_PASSWORD` | Su `audit_events` soltanto: `SELECT`, `DELETE`, `UPDATE (ip_address)` | Il comando notturno `audit:prune` |
 
+Dalla PR-07 `audit:prune` legge i giorni di conservazione dell'IP dalla tabella `settings` con la connessione dell'utente **applicativo**, poi cancella e svuota con l'utente di manutenzione: a quest'ultimo non serve alcun permesso in più e lo script non cambia.
+
 ⚠️ Un amministratore di MariaDB (root) può sempre togliere i trigger: la protezione è contro un portale compromesso, non contro chi amministra il server.
 
 ## 2. Applicare lo script in produzione

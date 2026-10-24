@@ -120,9 +120,11 @@ function routeMatrix(): array
         'pages.reports_access' => ['method' => 'GET', 'expected' => $admin],
         'pages.audit' => ['method' => 'GET', 'expected' => $admin],
 
-        // M01 — users admin only (D-139, M01-CA3); settings admin only
+        // M01 — users admin only (D-139, M01-CA3); settings admin only (PR-07): the page and its
+        // form, sent empty
         'pages.users' => ['method' => 'GET', 'expected' => $admin],
         'pages.settings' => ['method' => 'GET', 'expected' => $admin],
+        'settings.update' => ['method' => 'PUT', 'expected' => $adminForm],
 
         // M01 — personal profile of every role (D-267): an empty form goes back with the errors
         'profile.update' => ['method' => 'PUT', 'expected' => $signedInForm],

@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 /**
  * Nightly retention of the audit trail (RB-A2, M10-CA7; D-210, D-211): scheduled in
- * routes/console.php, can also be run by hand.
+ * routes/console.php, can also be run by hand. The IP retention comes from the settings (D-286).
  */
 class AuditPruneCommand extends Command
 {
@@ -25,7 +25,7 @@ class AuditPruneCommand extends Command
         $this->line(Text::get('audit.prune.done', [
             'deleted' => (string) $result['deleted'],
             'ip_cleared' => (string) $result['ip_cleared'],
-            'days' => (string) AuditRetention::ipRetentionDays(),
+            'days' => (string) $result['ip_retention_days'],
         ]));
 
         return self::SUCCESS;

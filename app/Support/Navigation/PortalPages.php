@@ -3,6 +3,7 @@
 namespace App\Support\Navigation;
 
 use App\Enums\Ability;
+use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Users\ProfileController;
 use App\Http\Controllers\Users\UserController;
 
@@ -73,6 +74,7 @@ final class PortalPages
     public const CONTROLLERS = [
         'profile' => [ProfileController::class, 'show'],
         'users' => [UserController::class, 'index'],
+        'settings' => [SettingsController::class, 'index'],
     ];
 
     /**

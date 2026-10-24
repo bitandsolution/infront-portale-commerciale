@@ -2,6 +2,8 @@
 
 namespace App\Domain\Audit\Data;
 
+use App\Enums\SettingKey;
+use App\Models\Setting;
 use App\Models\User;
 
 /**
@@ -21,6 +23,15 @@ final readonly class AuditSubject
     public static function user(User $user): self
     {
         return new self('user', $user->id, $user->fullName().' ('.$user->email.')');
+    }
+
+    /**
+     * A system setting (PR-07): the label carries the stable key, so the event stays readable if
+     * the Italian label changes.
+     */
+    public static function setting(SettingKey $key, Setting $setting): self
+    {
+        return new self('setting', $setting->id, $key->label().' ('.$key->value.')');
     }
 
     /**

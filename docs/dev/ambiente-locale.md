@@ -149,6 +149,7 @@ Comandi utili:
 | Provare i controlli sui file caricati (PR-06) | `sail artisan files:try`: genera file di prova (loghi, slide, Excel, PDF, file travestiti), li passa al servizio e mostra esito e messaggio di ciascuno; i file accettati restano salvati. Esiste solo nell'ambiente di sviluppo |
 | Scaricare un file salvato (PR-06) | **http://localhost:8080/file/&lt;id&gt;**, collegato come admin (fino alle fette che usano i file gli altri ruoli ricevono 403). I file stanno in `storage/app/private/files`, mai serviti direttamente |
 | Pulire i file senza riga in `stored_files` (PR-06) | `sail artisan files:prune-orphans` (con `--dry-run` li elenca soltanto); cancella solo quelli più vecchi di 24 ore. In produzione gira ogni notte alle 3:45 |
+| Scrivere le impostazioni di sistema mancanti (PR-07) | `sail artisan db:seed --class=SystemDataSeeder`: aggiunge solo le chiavi che non ci sono e non cambia i valori già salvati; lo esegue anche `migrate:fresh --seed`. Le impostazioni si vedono e si modificano da admin su **http://localhost:8080/impostazioni** |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".

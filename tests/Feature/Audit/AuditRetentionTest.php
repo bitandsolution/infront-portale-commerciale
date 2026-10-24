@@ -4,14 +4,15 @@ use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
 use App\Enums\AuditAction;
 use App\Models\AuditEvent;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Console\Scheduling\Event as ScheduledEvent;
 use Illuminate\Console\Scheduling\Schedule;
 
 /*
 | Retention of the audit trail (RB-A2, M10-CA7; D-128, D-210, D-211, D-283): audit:prune deletes the
-| events older than 5 years and clears the IP address after config('audit.ip_retention_days'),
-| every night.
+| events older than 5 years and clears the IP address after the setting "audit_ip_retention_days"
+| (D-286, PR-07; config('audit.ip_retention_days') while the row is missing), every night.
 */
 
 /**
@@ -41,8 +42,8 @@ it('M10-CA7: deletes the events older than 5 years, the others stay', function (
         ->and(AuditEvent::query()->whereKey([$old->id, $older->id])->exists())->toBeFalse();
 });
 
-it('D-211: clears the IP address after the configured days, the event staying', function () {
-    config(['audit.ip_retention_days' => 30]);
+it('D-286: clears the IP address after the days of the settings table, the event staying', function () {
+    Setting::query()->create(['key' => 'audit_ip_retention_days', 'value' => 30]);
     $user = User::factory()->create();
     $expired = auditEventAt($user, now()->subDays(31));
     $kept = auditEventAt($user, now()->subDays(29));
@@ -53,6 +54,31 @@ it('D-211: clears the IP address after the configured days, the event staying', 
 
     expect($expired->fresh())->ip_address->toBeNull()->user_id->toBe($user->id)->action->toBe('access.login_succeeded')
         ->and($kept->fresh()?->ip_address)->toBe('127.0.0.1');
+});
+
+it('D-286: the settings table wins over config/audit.php', function () {
+    config(['audit.ip_retention_days' => 10]);
+    Setting::query()->create(['key' => 'audit_ip_retention_days', 'value' => 60]);
+    $user = User::factory()->create();
+    $event = auditEventAt($user, now()->subDays(30));
+
+    $this->artisan('audit:prune')
+        ->expectsOutputToContain('IP svuotato su 0 eventi oltre 60 giorni')
+        ->assertSuccessful();
+
+    expect($event->fresh()?->ip_address)->toBe('127.0.0.1');
+});
+
+it('D-286: without the row the value of config/audit.php is used', function () {
+    config(['audit.ip_retention_days' => 30]);
+    $user = User::factory()->create();
+    $expired = auditEventAt($user, now()->subDays(31));
+
+    $this->artisan('audit:prune')
+        ->expectsOutputToContain('IP svuotato su 1 eventi oltre 30 giorni')
+        ->assertSuccessful();
+
+    expect($expired->fresh()?->ip_address)->toBeNull();
 });
 
 it('D-211: by default keeps the IP address for 5 years, as the events', function () {

@@ -21,7 +21,7 @@ class AuditListCommand extends Command
     /** @var string */
     protected $signature = 'audit:list
         {--limit=20 : Number of events, newest first (max 500)}
-        {--area= : Only one area (access, users)}
+        {--area= : Only one area (access, users, settings)}
         {--action= : Only one action, e.g. access.login_failed}
         {--user= : Only the events of a user (e-mail) or about him}';
 
@@ -35,7 +35,10 @@ class AuditListCommand extends Command
         $area = $this->stringOption('area');
         if ($area !== null) {
             if (AuditArea::tryFrom($area) === null) {
-                $this->line(Text::get('audit.list.unknown_area', ['area' => $area]));
+                $this->line(Text::get('audit.list.unknown_area', [
+                    'area' => $area,
+                    'areas' => implode(', ', array_map(fn (AuditArea $case): string => $case->value, AuditArea::cases())),
+                ]));
 
                 return self::FAILURE;
             }

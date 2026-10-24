@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Console\Development\FilesTryCommand;
+use App\Domain\Settings\Services\Settings;
 use App\Enums\Ability;
 use App\Models\User;
 use App\Support\SupportCode;
@@ -19,6 +20,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // One support code per request (D-265).
         $this->app->scoped(SupportCode::class);
+
+        // System settings read once per request or job (PR-07): a queue worker gets fresh values
+        // at every job.
+        $this->app->scoped(Settings::class);
     }
 
     /**
