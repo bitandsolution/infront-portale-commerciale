@@ -58,7 +58,7 @@ lang/it/                   tutti i testi dell'interfaccia
 docs/                      specifiche e decisioni (vedi §2)
 ```
 
-Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10).
+Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più l'area trasversale `Files` (archiviazione dei file, C10).
 
 Regole:
 - **La logica di dominio sta nelle Action e nei Service**, mai nei controller, nei modelli o nei componenti Vue. Calcoli di prezzo, partite, residui e composizione dei documenti hanno **una sola implementazione**, lato server, usata anche dal simulatore e dai riepiloghi.
@@ -194,6 +194,13 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Blocco appena scattato (5 tentativi) | evento `LoginLockedOut` (`App\Domain\Users\Auth`) |
 | Conservazione dell'audit (5 anni, IP) | `AuditRetention`, comando `audit:prune` (notturno) |
 | Utenti MariaDB: migrazioni / applicativo / manutenzione | connessioni `migrator` / predefinita / `audit_maintenance` (`docs/dev/database-utenti.md`) |
+| File salvato (logo, slide, Excel, PDF) | `StoredFile` · `stored_files`; le entità puntano a `…_file_id` (C10) |
+| Tipo d'uso del file (con le sue regole) | `FilePurpose`: `client_logo`, `club_logo`, `slide_image`, `calendar_import`, `generated_pdf` |
+| Tipo di file riconosciuto dal contenuto | `FileType`: `png`, `jpeg`, `xlsx`, `pdf` |
+| Archiviazione dei file / verifica del contenuto / ricodifica delle immagini | `FileStorage` / `FileInspector` / `ImageReencoder` (`App\Domain\Files\Services`) |
+| File rifiutato (messaggio in italiano) | `InvalidFile`; regola di validazione dei campi `AcceptableFile` |
+| Disco privato dei file | disco `files` (`FILES_ROOT`, predefinito `storage/app/private/files`); download solo dalla rotta `files.download` |
+| Pulizia dei file orfani | comando `files:prune-orphans` (notturno) |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 
@@ -241,6 +248,8 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan horizon       # worker delle code
 ./vendor/bin/sail artisan audit:list    # ultimi eventi di audit (sola lettura, PR-05)
 ./vendor/bin/sail artisan audit:prune   # conservazione dell'audit (notturna in produzione)
+./vendor/bin/sail artisan files:prune-orphans  # file del disco privato senza riga (notturno in produzione, PR-06)
+./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
 ```
 
 ## 13. Definizione di "fatto"

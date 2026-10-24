@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Development\FilesTryCommand;
 use App\Enums\Ability;
 use App\Models\User;
 use App\Support\SupportCode;
@@ -31,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
         // Single definition, reused by the first-admin command and, from PR-04, by activation,
         // reset and change of the password.
         Password::defaults(fn (): Password => Password::min(12)->uncompromised());
+
+        // Development commands (PR-06): never registered in production.
+        if ($this->app->runningInConsole() && $this->app->environment('local', 'testing')) {
+            $this->commands([FilesTryCommand::class]);
+        }
     }
 
     /**

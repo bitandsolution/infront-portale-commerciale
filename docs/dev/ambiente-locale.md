@@ -146,6 +146,9 @@ Comandi utili:
 | Vedere gli ultimi eventi di audit (PR-05) | `sail artisan audit:list` (filtri: `--area=access`, `--action=access.login_failed`, `--user=<e-mail>`, `--limit=50`) |
 | Eseguire la conservazione dell'audit (PR-05) | `sail artisan audit:prune`: nella VM lo scheduler non gira, il comando si lancia a mano; `sail artisan schedule:list` mostra la pianificazione notturna |
 | Aprire il database come amministratore (PR-05) | `sail exec mariadb mariadb -uroot -ppassword infront_portale` (la password di root è `DB_PASSWORD` del `.env`; per uscire `exit`) |
+| Provare i controlli sui file caricati (PR-06) | `sail artisan files:try`: genera file di prova (loghi, slide, Excel, PDF, file travestiti), li passa al servizio e mostra esito e messaggio di ciascuno; i file accettati restano salvati. Esiste solo nell'ambiente di sviluppo |
+| Scaricare un file salvato (PR-06) | **http://localhost:8080/file/&lt;id&gt;**, collegato come admin (fino alle fette che usano i file gli altri ruoli ricevono 403). I file stanno in `storage/app/private/files`, mai serviti direttamente |
+| Pulire i file senza riga in `stored_files` (PR-06) | `sail artisan files:prune-orphans` (con `--dry-run` li elenca soltanto); cancella solo quelli più vecchi di 24 ore. In produzione gira ogni notte alle 3:45 |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".

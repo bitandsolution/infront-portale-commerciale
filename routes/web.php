@@ -4,6 +4,7 @@ use App\Enums\Ability;
 use App\Http\Controllers\Auth\AccessLinkController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\TwoFactorSetupController;
+use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Users\ProfileController;
 use App\Http\Controllers\Users\UserAccessController;
@@ -74,6 +75,13 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
                 ->middleware('throttle:10,1')
                 ->name('profile.password');
         });
+
+        // Stored files (D-218, C10): the only way to read a file of the private disk, each file
+        // checked by StoredFilePolicy. Files are stored by the domain Actions, not by a route.
+        Route::get('file/{storedFile}', StoredFileDownloadController::class)
+            ->whereNumber('storedFile')
+            ->middleware('can:view,storedFile')
+            ->name('files.download');
 
         // Users (M01 §5; D-139): admin only. The list is the "utenti" page above.
         Route::middleware('can:'.Ability::UsersManage->value)->group(function (): void {
