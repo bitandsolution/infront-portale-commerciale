@@ -1,13 +1,19 @@
 <?php
 
+use App\Domain\Files\Services\FileStorage;
 use App\Enums\AccessLinkType;
 use App\Enums\AuditAction;
+use App\Enums\FilePurpose;
 use App\Mail\AccessLinkMail;
 use App\Models\AuditEvent;
+use App\Models\StoredFile;
+use App\Models\User;
+use App\Support\Files\SampleFiles;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use PragmaRX\Google2FA\Google2FA;
@@ -96,4 +102,26 @@ function auditEventsOf(AuditAction $action): Collection
 function soleAuditEvent(AuditAction $action): AuditEvent
 {
     return AuditEvent::query()->where('action', $action->value)->sole();
+}
+
+/*
+| Helpers of the file tests (PR-06). Storage::fake(StoredFile::DISK) must be active.
+*/
+
+/**
+ * Stores a file through the service, inside a transaction as the domain Actions do. Without a
+ * content, a 600×300 PNG drawn with GD.
+ */
+function storeTestFile(
+    FilePurpose $purpose = FilePurpose::ClientLogo,
+    ?User $author = null,
+    ?string $contents = null,
+    ?string $name = 'logo-prova.png',
+): StoredFile {
+    return DB::transaction(fn (): StoredFile => app(FileStorage::class)->storeContents(
+        $contents ?? SampleFiles::png(600, 300),
+        $purpose,
+        $author,
+        $name,
+    ));
 }

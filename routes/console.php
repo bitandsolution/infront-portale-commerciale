@@ -19,3 +19,11 @@ Schedule::command('audit:prune')
     ->timezone('Europe/Rome')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Files of the private disk without a stored_files row, older than 24 hours (C10, PR-06), e.g. left
+// by a process killed between the write and the commit.
+Schedule::command('files:prune-orphans')
+    ->dailyAt('03:45')
+    ->timezone('Europe/Rome')
+    ->withoutOverlapping()
+    ->onOneServer();

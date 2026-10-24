@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\FilePurpose;
+use App\Models\StoredFile;
 use App\Models\User;
 use Illuminate\Routing\Route as RouteDefinition;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 | Route × role matrix (D-215, CLAUDE.md §11): every route of the application with the expected
@@ -26,9 +29,10 @@ use Illuminate\Support\Facades\Route;
 const MATRIX_ACTORS = ['guest', 'agent', 'manager', 'admin', 'inactive', 'no_2fa'];
 
 /**
- * Framework routes outside the matrix: they are not part of the portal pages.
+ * Framework routes outside the matrix: they are not part of the portal pages. The private disk is
+ * never published at storage/{path} (PR-06, D-218): that route must not exist at all.
  */
-const MATRIX_IGNORED_URIS = ['up', 'storage/{path}'];
+const MATRIX_IGNORED_URIS = ['up'];
 
 /**
  * @return array<string, array{method: string, expected: array{int|string, int|string, int|string, int|string, int|string, int|string}}>
@@ -135,6 +139,10 @@ function routeMatrix(): array
         'users.reset-password' => ['method' => 'POST', 'expected' => $adminForm],
         'users.reset-two-factor' => ['method' => 'POST', 'expected' => $adminForm],
         'users.resend-link' => ['method' => 'POST', 'expected' => $adminForm],
+
+        // Stored files (D-218): until the slices that use them, only the admin (StoredFilePolicy).
+        // Target: a client logo stored by the system
+        'files.download' => ['method' => 'GET', 'expected' => $admin],
     ];
 }
 
@@ -162,6 +170,7 @@ function matrixParameters(string $route): array
                 'user' => User::factory()->agent()->create()->id,
             ],
         str_starts_with($route, 'access.') => ['token' => str_repeat('x', 64)],
+        $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
         default => [],
     };
 }
@@ -176,6 +185,7 @@ dataset('route matrix', function (): Generator {
 
 it('D-215: answers each route as the M01 §4 matrix expects', function (string $route, string $method, string $actor, int|string $expected) {
     Mail::fake();
+    Storage::fake(StoredFile::DISK);
     $user = matrixActor($actor);
     if ($user !== null) {
         $this->actingAs($user);

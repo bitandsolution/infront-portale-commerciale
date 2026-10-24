@@ -30,11 +30,24 @@ return [
 
     'disks' => [
 
+        // No "serve": Laravel would publish the disk at storage/{path} with signed URLs, outside
+        // the Policies. Files are downloaded only from the route "files.download" (D-218).
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            'serve' => false,
             'throw' => false,
+            'report' => false,
+        ],
+
+        // Private disk of the stored files (C10, D-218): outside the web root, never published.
+        // FILES_ROOT empty = storage/app/private/files, shared between releases in production.
+        'files' => [
+            'driver' => 'local',
+            'root' => env('FILES_ROOT') ?: storage_path('app/private/files'),
+            'visibility' => 'private',
+            'serve' => false,
+            'throw' => true,
             'report' => false,
         ],
 
