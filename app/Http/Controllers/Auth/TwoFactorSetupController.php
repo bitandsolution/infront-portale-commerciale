@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Domain\Users\Actions\ConfirmTwoFactorSetup;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\EnsureTwoFactorIsUnchanged;
 use App\Models\User;
@@ -11,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Fortify;
 
@@ -50,7 +50,7 @@ class TwoFactorSetupController extends Controller
         ]);
     }
 
-    public function store(Request $request, ConfirmTwoFactorAuthentication $confirm): RedirectResponse
+    public function store(Request $request, ConfirmTwoFactorSetup $confirm): RedirectResponse
     {
         $user = $this->user($request);
 
@@ -61,7 +61,8 @@ class TwoFactorSetupController extends Controller
         $validated = $request->validate(['code' => ['required', 'string']]);
 
         try {
-            $confirm($user, preg_replace('/\s+/', '', $validated['code']));
+            $code = is_string($validated['code']) ? $validated['code'] : '';
+            $confirm->handle($user, preg_replace('/\s+/', '', $code) ?? '');
         } catch (ValidationException) {
             throw ValidationException::withMessages(['code' => [__('auth.two_factor.invalid_code')]]);
         }

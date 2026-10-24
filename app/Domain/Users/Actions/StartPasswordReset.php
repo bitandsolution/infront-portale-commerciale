@@ -2,9 +2,12 @@
 
 namespace App\Domain\Users\Actions;
 
+use App\Domain\Audit\Data\AuditSubject;
+use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Users\Exceptions\UserActionNotAllowed;
 use App\Domain\Users\Services\SendAccessLink;
 use App\Enums\AccessLinkType;
+use App\Enums\AuditAction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -19,11 +22,14 @@ use Illuminate\Support\Str;
  * Only for a user who has the second factor; otherwise the admin sends a new access link
  * (ResendAccessLink). The self-service reset from the login page arrives with PR-08.
  *
- * ⚠️ Audit: user.password_reset_requested from PR-05 (D-127), with $actor as author.
+ * Audit (D-127): user.password_reset_requested, author $actor, in the same transaction.
  */
 final class StartPasswordReset
 {
-    public function __construct(private readonly SendAccessLink $sendAccessLink) {}
+    public function __construct(
+        private readonly SendAccessLink $sendAccessLink,
+        private readonly AuditLog $audit,
+    ) {}
 
     public function handle(User $user, User $actor): User
     {
@@ -31,7 +37,7 @@ final class StartPasswordReset
             throw UserActionNotAllowed::ownAccount();
         }
 
-        return DB::transaction(function () use ($user): User {
+        return DB::transaction(function () use ($user, $actor): User {
             /** @var User $locked */
             $locked = User::query()->lockForUpdate()->findOrFail($user->id);
 
@@ -44,6 +50,8 @@ final class StartPasswordReset
             }
 
             $locked->forceFill(['password' => Str::random(64)])->save();
+
+            $this->audit->record(AuditAction::UserPasswordResetRequested, $actor, AuditSubject::user($locked));
 
             ($this->sendAccessLink)($locked, AccessLinkType::PasswordReset);
 

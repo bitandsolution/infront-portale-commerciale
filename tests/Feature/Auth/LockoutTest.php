@@ -1,16 +1,16 @@
 <?php
 
+use App\Domain\Users\Auth\LoginLockedOut;
 use App\Domain\Users\Auth\LoginRateLimiter;
 use App\Models\User;
-use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia as Assert;
 
 /*
 | Lockout after 5 failed attempts for 15 minutes (M01-CA2, D-214), per e-mail and IP address.
-| The audit event of the lockout ("l'evento è in audit") arrives with PR-05, which listens to
-| Illuminate\Auth\Events\Lockout; the e-mails to the user and the admin arrive with PR-08.
+| The lock dispatches LoginLockedOut once: the audit records it (tests/Feature/Audit/AccessAuditTest,
+| "l'evento è in audit"), the e-mails to the user and the admin arrive with PR-08.
 */
 
 const LOCKOUT_PASSWORD = 'Una-password-di-prova-2027';
@@ -23,7 +23,7 @@ function failLogin(string $email, int $times = 1): void
 }
 
 it('M01-CA2: locks the account for 15 minutes after 5 failed logins', function () {
-    Event::fake([Lockout::class]);
+    Event::fake([LoginLockedOut::class]);
     $user = User::factory()->withoutTwoFactor()->withPassword(LOCKOUT_PASSWORD)->create();
 
     failLogin($user->email, 4);
@@ -31,7 +31,7 @@ it('M01-CA2: locks the account for 15 minutes after 5 failed logins', function (
         ->post(route('login.store'), ['email' => $user->email, 'password' => 'password-sbagliata'])
         ->assertRedirect(route('login'))
         ->assertSessionHasErrors(['email' => __('auth.throttle', ['minutes' => '15'])]);
-    Event::assertDispatchedTimes(Lockout::class, 1);
+    Event::assertDispatchedTimes(LoginLockedOut::class, 1);
 
     // Even the right password is refused during the lock.
     $this->from(route('login'))

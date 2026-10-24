@@ -2,9 +2,12 @@
 
 namespace App\Domain\Users\Actions;
 
+use App\Domain\Audit\Data\AuditSubject;
+use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Users\Exceptions\UserActionNotAllowed;
 use App\Domain\Users\Services\SendAccessLink;
 use App\Enums\AccessLinkType;
+use App\Enums\AuditAction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -20,11 +23,15 @@ use Illuminate\Support\Str;
  * Not on his own account: the admin who lost his second factor uses the server command
  * users:reset-two-factor (D-276).
  *
- * ⚠️ Audit: user.two_factor_reset from PR-05 (D-127), with $actor as author.
+ * Audit (D-127): user.two_factor_reset, author $actor, in the same transaction (no values: the
+ * secret and the codes never reach the audit).
  */
 final class ResetTwoFactor
 {
-    public function __construct(private readonly SendAccessLink $sendAccessLink) {}
+    public function __construct(
+        private readonly SendAccessLink $sendAccessLink,
+        private readonly AuditLog $audit,
+    ) {}
 
     public function handle(User $user, User $actor): User
     {
@@ -32,7 +39,7 @@ final class ResetTwoFactor
             throw UserActionNotAllowed::ownAccount();
         }
 
-        return DB::transaction(function () use ($user): User {
+        return DB::transaction(function () use ($user, $actor): User {
             /** @var User $locked */
             $locked = User::query()->lockForUpdate()->findOrFail($user->id);
 
@@ -46,6 +53,8 @@ final class ResetTwoFactor
                 'two_factor_recovery_codes' => null,
                 'two_factor_confirmed_at' => null,
             ])->save();
+
+            $this->audit->record(AuditAction::UserTwoFactorReset, $actor, AuditSubject::user($locked));
 
             ($this->sendAccessLink)($locked, $locked->activated_at === null
                 ? AccessLinkType::Activation

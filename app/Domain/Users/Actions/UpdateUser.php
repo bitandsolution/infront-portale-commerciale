@@ -2,12 +2,16 @@
 
 namespace App\Domain\Users\Actions;
 
+use App\Domain\Audit\Data\AuditSubject;
+use App\Domain\Audit\Services\AuditLog;
+use App\Domain\Users\Data\UserAuditValues;
 use App\Domain\Users\Data\UserDetailsData;
 use App\Domain\Users\Exceptions\UserActionNotAllowed;
 use App\Domain\Users\Services\AccessLinks;
 use App\Domain\Users\Services\ActiveAdminGuard;
 use App\Domain\Users\Services\SendAccessLink;
 use App\Enums\AccessLinkType;
+use App\Enums\AuditAction;
 use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -20,8 +24,8 @@ use Illuminate\Support\Facades\DB;
  * - Change of e-mail: the link sent to the old address stops working; if the user has still to
  *   set password and second factor, a new link goes to the new address (D-281).
  *
- * ⚠️ Audit: user.updated / user.role_changed from PR-05 (D-127), with $actor as author and the old
- * values read here before the change.
+ * Audit (D-127): user.role_changed when the role changes, otherwise user.updated, with only the
+ * changed fields before and after (read here, on the locked row); no event when nothing changes.
  */
 final class UpdateUser
 {
@@ -29,6 +33,7 @@ final class UpdateUser
         private readonly ActiveAdminGuard $adminGuard,
         private readonly AccessLinks $links,
         private readonly SendAccessLink $sendAccessLink,
+        private readonly AuditLog $audit,
     ) {}
 
     public function handle(User $user, UserDetailsData $data, User $actor): User
@@ -50,6 +55,7 @@ final class UpdateUser
             }
 
             $oldEmail = $locked->email;
+            $before = UserAuditValues::of($locked);
 
             $locked->fill([
                 'first_name' => trim($data->firstName),
@@ -58,6 +64,18 @@ final class UpdateUser
                 'phone' => CreateUser::phone($data->phone),
                 'role' => $data->role,
             ])->save();
+
+            [$old, $new] = AuditLog::changes($before, UserAuditValues::of($locked));
+
+            if ($new !== []) {
+                $this->audit->record(
+                    array_key_exists('role', $new) ? AuditAction::UserRoleChanged : AuditAction::UserUpdated,
+                    $actor,
+                    AuditSubject::user($locked),
+                    $old,
+                    $new,
+                );
+            }
 
             if ($locked->email !== $oldEmail) {
                 $this->links->deleteFor($oldEmail);

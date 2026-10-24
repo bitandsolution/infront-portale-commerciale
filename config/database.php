@@ -84,6 +84,51 @@ return [
             ]) : [],
         ],
 
+        // Same database, MariaDB user with the DDL privileges, used only by the deploy for
+        // "php artisan migrate --database=migrator" (D-283, R7). Without DB_MIGRATION_USERNAME it is
+        // the default user (development, CI).
+        'migrator' => [
+            'driver' => 'mariadb',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_MIGRATION_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DB_MIGRATION_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_uca1400_ai_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        // Same database, MariaDB user that can only delete expired audit events and clear their IP
+        // address (D-210, D-211, R7). Used by audit:prune when DB_AUDIT_MAINTENANCE_USERNAME is set.
+        'audit_maintenance' => [
+            'driver' => 'mariadb',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_AUDIT_MAINTENANCE_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DB_AUDIT_MAINTENANCE_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_uca1400_ai_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
