@@ -49,7 +49,7 @@ final class FilesTryCommand extends Command
                 Text::get($file !== null ? 'files.console.try_accepted' : 'files.console.try_refused')
                     .' ('.Text::get($ok ? 'files.console.try_expected_ok' : 'files.console.try_expected_ko').')',
                 $file !== null ? 'id '.$file->id : (string) $error,
-                $file?->mime_type ?? '',
+                $file !== null ? $file->mime_type : '',
                 $file !== null && $file->width !== null ? "{$file->width}×{$file->height}" : '',
                 $file !== null ? (string) $file->size_bytes : (string) strlen($contents),
                 $file !== null ? substr($file->sha256, 0, 12) : '',

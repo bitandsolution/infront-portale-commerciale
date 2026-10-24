@@ -157,7 +157,7 @@ final class SampleFiles
 
     private static function canvas(int $width, int $height): GdImage
     {
-        $image = imagecreatetruecolor($width, $height);
+        $image = imagecreatetruecolor(max(1, $width), max(1, $height));
         if ($image === false) {
             throw new RuntimeException('GD cannot create the sample image.');
         }
