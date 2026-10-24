@@ -178,6 +178,10 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Permesso d'area (riga della matrice M01 §4) | `Ability` (enum; ogni caso è un Gate) |
 | Utente disattivato | `is_active` = false, `deactivated_at`, `deactivated_by` |
 | Visibile all'utente (scope per proprietario) | `visibleTo($user)` (trait `HasOwner`) |
+| Verifica in due passaggi (2FA) | `two_factor_*` su `users` (Fortify); configurata = `two_factor_confirmed_at` valorizzato |
+| Codici di recupero | `recoveryCodes()` (8, monouso) |
+| Blocco dopo i tentativi falliti | `LoginRateLimiter` (`App\Domain\Users\Auth`) |
+| Scadenza per inattività | `Role::idleTimeoutMinutes()`, middleware `EnforceIdleTimeout` |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 

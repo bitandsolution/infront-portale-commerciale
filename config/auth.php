@@ -114,4 +114,21 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fictitious users of the local machine
+    |--------------------------------------------------------------------------
+    |
+    | Read only by Database\Seeders\DevelopmentUsersSeeder, which runs only with
+    | APP_ENV=local: one known password and one shared TOTP key (base32) for the
+    | test users, so the collaudo on the VM needs a single entry in the
+    | authenticator app. Never set them on a server (docs/dev/ambiente-locale.md).
+    |
+    */
+
+    'development_users' => [
+        'password' => env('DEV_USERS_PASSWORD'),
+        'totp_secret' => env('DEV_USERS_TOTP_SECRET'),
+    ],
+
 ];

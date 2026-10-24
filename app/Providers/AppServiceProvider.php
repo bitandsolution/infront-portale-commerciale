@@ -28,7 +28,8 @@ class AppServiceProvider extends ServiceProvider
         $this->registerAuthorization();
 
         // D-214: at least 12 characters, checked against known breached passwords.
-        // Single definition, reused by the first-admin command and by Fortify (PR-03).
+        // Single definition, reused by the first-admin command and, from PR-04, by activation,
+        // reset and change of the password.
         Password::defaults(fn (): Password => Password::min(12)->uncompromised());
     }
 

@@ -12,11 +12,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * Portal user (M01; D-208, D-209).
  *
  * One fixed role per user (RB-01); users are deactivated, never deleted (RB-05).
+ * Two-factor authentication is mandatory (D-136): secret and recovery codes are encrypted by
+ * Fortify; the account is protected only once two_factor_confirmed_at is set.
  *
  * @property int $id
  * @property string $first_name
@@ -25,6 +28,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $phone
  * @property Role $role
  * @property string $password
+ * @property string|null $two_factor_secret
+ * @property string|null $two_factor_recovery_codes
  * @property bool $is_active
  * @property Carbon|null $two_factor_confirmed_at
  * @property Carbon|null $activated_at
@@ -39,7 +44,7 @@ use Illuminate\Support\Carbon;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * @return array<string, string>

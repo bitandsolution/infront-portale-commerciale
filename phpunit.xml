@@ -21,7 +21,8 @@
         <env name="APP_ENV" value="testing"/>
         <env name="APP_KEY" value="base64:dGVzdGluZy1rZXktbm90LWEtc2VjcmV0LTEyMzQ1Njc="/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
-        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="ARGON_MEMORY" value="1024"/>
+        <env name="ARGON_TIME" value="1"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <!-- Test database: MariaDB 11.8, as in production (CLAUDE.md §11). No SQLite. -->
@@ -29,7 +30,6 @@
         <env name="DB_DATABASE" value="testing"/>
         <env name="DB_URL" value=""/>
         <!-- Development access (D-268): enabled in tests so the route matrix covers it. -->
-        <env name="DEV_LOGIN" value="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

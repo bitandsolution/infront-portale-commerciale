@@ -4,6 +4,7 @@ import { X } from '@lucide/vue';
 import { onBeforeUnmount, onMounted, watch } from 'vue';
 import { useToasts } from '@/composables/useToasts';
 import { useTrans } from '@/composables/useTrans';
+import type { ToastType } from '@/types';
 
 /**
  * Toast area (ux-architettura §4.5). Shows the toasts flashed by the server (props.toast,
@@ -13,6 +14,12 @@ import { useTrans } from '@/composables/useTrans';
 const page = usePage();
 const { toasts, push, show, dismiss } = useToasts();
 const { t } = useTrans();
+
+const toastClasses: Record<ToastType, string> = {
+    error: 'bg-ink text-white',
+    success: 'border border-success/30 bg-success-soft text-success',
+    info: 'border border-line-strong bg-white text-ink',
+};
 
 let removeNetworkListener: VoidFunction | null = null;
 
@@ -46,7 +53,7 @@ watch(
             :key="toast.id"
             :role="toast.type === 'error' ? 'alert' : 'status'"
             class="pointer-events-auto flex w-full max-w-[480px] items-start gap-3 rounded-xl px-4 py-3.5 text-sm shadow-lg"
-            :class="toast.type === 'error' ? 'bg-ink text-white' : 'border border-success/30 bg-success-soft text-success'"
+            :class="toastClasses[toast.type]"
         >
             <p class="flex-1 leading-relaxed">
                 <template v-if="toast.code">

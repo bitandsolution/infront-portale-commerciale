@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * A deactivated user loses access immediately (M01 §5, RB-05): his session is closed at the next
- * request and he is sent back to the guest page with a message. Gate::before denies him every
+ * request and he is sent back to the login page with a message. Gate::before denies him every
  * permission as well, as a second guard.
  */
 class EnsureUserIsActive
@@ -31,7 +31,7 @@ class EnsureUserIsActive
                 $request->session()->regenerateToken();
             }
 
-            return redirect()->route('home')->with('toast', [
+            return redirect()->route('login')->with('toast', [
                 'id' => (string) Str::uuid(),
                 'type' => 'error',
                 'message' => __('ui.auth.deactivated'),

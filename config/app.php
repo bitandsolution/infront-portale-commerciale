@@ -43,19 +43,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Development access (D-268)
-    |--------------------------------------------------------------------------
-    |
-    | Sign in as any user without a password, to check roles before the real
-    | login (PR-03). Honoured only in the local and testing environments
-    | (App\Support\DevLogin): staging and production ignore it.
-    |
-    */
-
-    'dev_login' => (bool) env('DEV_LOGIN', false),
-
-    /*
-    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |

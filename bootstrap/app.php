@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnforceIdleTimeout;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Support\Navigation\PortalPages;
 use App\Support\SupportCode;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
@@ -20,18 +22,25 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             EnsureUserIsActive::class,
+            EnforceIdleTimeout::class,
             HandleInertiaRequests::class,
         ]);
 
-        // A deactivated user is signed out before any authentication or permission check runs.
+        // A deactivated user, or a session idle beyond the limit of the role (D-214), is signed out
+        // before any authentication or permission check runs.
         $middleware->prependToPriorityList(
             before: AuthenticatesRequests::class,
             prepend: EnsureUserIsActive::class,
         );
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: EnforceIdleTimeout::class,
+        );
 
-        // No login page before PR-03: guests asking for a protected page go back to the home page.
-        // PR-03 points this to the login.
-        $middleware->redirectGuestsTo(fn (): string => route('home'));
+        // Guests asking for a protected page go to the login (D-269) and come back to it afterwards;
+        // signed-in users asking for the login go to their dashboard.
+        $middleware->redirectGuestsTo(fn (): string => route('login'));
+        $middleware->redirectUsersTo(fn (): string => PortalPages::url('dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
