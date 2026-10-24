@@ -25,18 +25,21 @@ beforeEach(function () {
 });
 
 /**
- * The admin runs an action of the Users page; then the browser is the user's again.
+ * The admin runs an action of the Users page and sees the toast; then the browser is the user's
+ * again (the toast is checked before the logout, which clears the session).
  */
-function adminRuns(object $test, string $route, User $target): mixed
+function adminRuns(object $test, string $route, User $target, ?string $toast = null): void
 {
     $admin = User::factory()->admin()->create();
     $test->actingAs($admin);
 
-    $response = $test->post(route($route, $target));
+    $response = $test->post(route($route, $target))->assertRedirect();
+
+    if ($toast !== null) {
+        $response->assertSessionHas('toast.message', $toast);
+    }
 
     $test->post(route('logout'));
-
-    return $response;
 }
 
 it('D-279: the password reset by the admin stops working at once and closes the sessions of the user', function () {
@@ -106,8 +109,8 @@ it('D-279: a wrong app code keeps the link valid and changes nothing', function 
 it('D-279: the password reset is only for a user with the second factor', function () {
     $pending = User::factory()->agent()->withoutTwoFactor()->create(['activated_at' => null]);
 
-    adminRuns($this, 'users.reset-password', $pending)
-        ->assertSessionHas('toast.message', "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso.");
+    adminRuns($this, 'users.reset-password', $pending,
+        "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso.");
 
     Mail::assertNothingSent();
 });
@@ -154,14 +157,15 @@ it('D-280: from the link the user sets password and second factor again, the acc
     $url = sentAccessLink($agent->email, AccessLinkType::TwoFactorReset);
 
     $secret = '';
-    $this->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->component('Auth/Activate')
-        ->where('renewal', true)
-        ->where('secret', function (string $value) use (&$secret): bool {
-            $secret = str_replace(' ', '', $value);
+    $this->get($url)->assertOk()->assertInertia(function (Assert $page) use (&$secret): void {
+        $page->component('Auth/Activate')
+            ->where('renewal', true)
+            ->where('secret', function (string $value) use (&$secret): bool {
+                $secret = str_replace(' ', '', $value);
 
-            return true;
-        }));
+                return $secret !== '';
+            });
+    });
 
     $code = app(Google2FA::class)->getCurrentOtp($secret);
     $this->post($url, ['password' => NEW_PASSWORD, 'password_confirmation' => NEW_PASSWORD, 'code' => $code])
@@ -188,8 +192,8 @@ it('D-281: the admin does not reset his own access from the Users page', functio
 it('D-277: a new link only for a user who has still to set password and second factor', function () {
     $agent = User::factory()->agent()->create();
 
-    adminRuns($this, 'users.resend-link', $agent)
-        ->assertSessionHas('toast.message', "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi.");
+    adminRuns($this, 'users.resend-link', $agent,
+        "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi.");
 
     Mail::assertNothingSent();
 });

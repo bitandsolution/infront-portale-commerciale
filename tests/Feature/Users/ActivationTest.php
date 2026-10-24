@@ -48,13 +48,15 @@ function activationSecret(object $test, string $url): string
 {
     $secret = '';
 
-    $test->get($url)->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->component('Auth/Activate')
-        ->where('secret', function (string $value) use (&$secret): bool {
-            $secret = str_replace(' ', '', $value);
+    // A full closure (not fn): arrow functions capture $secret by value.
+    $test->get($url)->assertOk()->assertInertia(function (Assert $page) use (&$secret): void {
+        $page->component('Auth/Activate')
+            ->where('secret', function (string $value) use (&$secret): bool {
+                $secret = str_replace(' ', '', $value);
 
-            return $secret !== '';
-        }));
+                return $secret !== '';
+            });
+    });
 
     return $secret;
 }

@@ -14,7 +14,7 @@ it('D-276: resets the second factor of the only admin after the confirmation', f
     $admin = User::factory()->admin()->withPassword('Password-Admin-2027!')->create(['email' => 'admin@example.test']);
 
     $this->artisan('users:reset-two-factor', ['email' => ' Admin@Example.test '])
-        ->expectsOutputToContain('admin@example.test')
+        ->expectsOutputToContain('(admin@example.test), Admin.')
         ->expectsConfirmation(RESET_2FA_CONFIRM, 'yes')
         ->expectsOutputToContain('Verifica in due passaggi azzerata per admin@example.test')
         ->assertSuccessful();
