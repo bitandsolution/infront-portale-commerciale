@@ -129,7 +129,7 @@ L'hosting (fornitore, macchina, amministrazione di sistema) è **definito e gest
 | R4 | Risorse riservate: indicativamente 4 vCPU, 8 GB RAM, 100 GB disco (staging: 2 vCPU, 4 GB, 40 GB) | Chromium usa 1–2 GB per documento; archivio PDF in crescita |
 | R5 | Backup anche **fuori dall'host**, con un ripristino provato almeno una volta | RTO di 4 ore anche in caso di guasto hardware |
 | R6 | Accesso SSH per il deploy con utente dedicato, senza sudo | Pipeline di deploy (§5.2.6) |
-| R7 | Due utenti MariaDB per il portale: applicativo (senza UPDATE/DELETE su `audit_events`) e di manutenzione (solo cancellazione degli eventi scaduti) | Audit append-only (D-210) |
+| R7 | Utenti MariaDB distinti per il portale (D-283): migrazioni (DDL, solo per il deploy), applicativo (soli dati, senza DDL) e manutenzione (su `audit_events` solo cancellazione degli eventi scaduti e svuotamento dell'IP); script `database/sql/audit-users.sql` | Audit append-only (D-210, D-283) |
 
 Ambienti:
 | Ambiente | Dati |
@@ -566,14 +566,14 @@ erDiagram
 |---|---|---|---|
 | `audit_events` | `occurred_at` (DATETIME(6)), `user_id`, `user_name`, `user_role`, `area`, `action`, `object_type`, `object_id`, `object_label` (es. "Proposta n. 192"), `old_values` JSON, `new_values` JSON, `reason`, `ip_address`, `request_id` | **Nessuna FK** (l'evento sopravvive a qualunque oggetto). IDX `occurred_at`; (`object_type`, `object_id`); (`user_id`, `occurred_at`); (`area`, `action`, `occurred_at`) | D-127…D-129 |
 
-- 💡 **Append-only garantito dal database**, non solo dal codice:
-  - l'utente MariaDB dell'applicazione ha su `audit_events` **solo INSERT e SELECT**;
-  - un trigger rifiuta comunque `UPDATE` e `DELETE`;
-  - la cancellazione dopo 5 anni (RB-A2) la esegue un job notturno con un **secondo utente MariaDB**, che ha il solo permesso di DELETE sulle righe scadute.
-- 💡 **Conservazione dell'IP separata**: `settings.audit_ip_retention_days` (default 5 anni, come D-128). Se il DPO di Infront chiede un periodo più breve (D-180), il job svuota solo l'IP e l'evento resta.
+- ✅ **Append-only garantito dal database** (D-210, precisato da D-283):
+  - due trigger rifiutano `UPDATE` e `DELETE` a qualunque utente, con due sole eccezioni: svuotare solo `ip_address` e cancellare eventi oltre 5 anni;
+  - l'utente applicativo non ha permessi DDL, quindi non può togliere i trigger; le migrazioni girano con un utente dedicato;
+  - la conservazione (RB-A2) la esegue il job notturno `audit:prune` con l'utente di manutenzione (D-286). Dettagli in `docs/dev/database-utenti.md`.
+- ✅ **Conservazione dell'IP separata** (D-211, D-286): `settings.audit_ip_retention_days` dalla PR-07, fino ad allora `AUDIT_IP_RETENTION_DAYS` (default 5 anni, come D-128). Se il DPO di Infront chiede un periodo più breve (D-180), il job svuota solo l'IP e l'evento resta.
 - `user_name` e `user_role` sono copiati nell'evento: restano leggibili anche dopo cambi di ruolo o disattivazioni (M10 §8).
 - Volumi attesi: decine di migliaia di eventi l'anno. Non serve partizionare la tabella.
-- Scrittura con un trait/observer sui modelli e con eventi espliciti per le azioni di dominio (approvazione, forzatura, download), senza pacchetti esterni.
+- Scrittura con il servizio `AuditLog`, chiamato dalle Action nella loro transazione (D-284), e per gli accessi dagli eventi di autenticazione (D-285), senza pacchetti esterni.
 
 #### Report (R-01…R-07)
 Nessuna tabella dedicata: le query leggono le versioni congelate (`current_version_id`), gli impegni, le capacità e l'audit (R-07). Ai volumi previsti non servono tabelle di riepilogo; eventuali viste SQL si valutano in sviluppo.
