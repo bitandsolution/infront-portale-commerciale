@@ -3,7 +3,6 @@
 namespace App\Domain\Users\Auth;
 
 use App\Http\Responses\Auth\LockoutResponse;
-use Illuminate\Auth\Events\Lockout;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Laravel\Fortify\LoginRateLimiter as FortifyLoginRateLimiter;
@@ -90,8 +89,8 @@ class LoginRateLimiter extends FortifyLoginRateLimiter
         $this->limiter->clear($key);
         $this->limiter->hit($this->lockKey($email, $request), self::LOCKOUT_SECONDS);
 
-        // Listened to by the audit from PR-05 and by the e-mails from PR-08 (M01 §7).
-        event(new Lockout($request));
+        // Listened to by the audit (PR-05) and by the e-mails from PR-08 (M01 §7).
+        event(new LoginLockedOut($request, $email));
 
         throw LockoutResponse::exception($request, self::LOCKOUT_SECONDS);
     }

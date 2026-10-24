@@ -21,4 +21,5 @@ Note:
 - Il collaudo di ogni PR si fa sulla VM locale di Antonio (`docs/dev/ambiente-locale.md`, D-261). Ogni PR che cambia l'avvio in locale aggiorna la guida.
 - ⚠️ Lo staging su server è rinviato (D-261): la fetta si chiude senza deploy, che si attiva quando l'ambiente R1–R7 è pronto, al più tardi entro il 26/2/2027 per la milestone B.
 - Alla fine di F0 parte **S1 Prova della pipeline PDF** (D-239), che usa `docs/layout-dinamici.md`.
+- PR-05: la conservazione dell'IP degli eventi di audit è in `config/audit.php` (`AUDIT_IP_RETENTION_DAYS`, predefinita 1826 giorni); con la **PR-07** passa a `settings.audit_ip_retention_days` e la configurazione resta il valore predefinito. Consultazione dell'audit fino a F8: comando `audit:list` (D-283).
 - PR-04: M01-CA4 è coperto per la parte possibile senza clienti (l'agente disattivato resta con i suoi dati); riassegnazione dei clienti e conteggio nel dialogo "Disattiva utente" con la fetta F3 (D-282). Le e-mail dei link di accesso sono una versione semplice, inviata subito, che la PR-08 sostituisce cambiando solo `SendAccessLink` e `AccessLinkMail` (D-277).

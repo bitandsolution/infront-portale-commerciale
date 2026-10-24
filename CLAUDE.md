@@ -186,6 +186,14 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | In attesa di attivazione | `activated_at` nullo |
 | Almeno un admin attivo | `ActiveAdminGuard` (`App\Domain\Users\Services`) |
 | Regola di gestione utenti che rifiuta l'operazione | `UserActionNotAllowed` |
+| Scrittura degli eventi di audit | `AuditLog` (`App\Domain\Audit\Services`): `record()` per le Action, `access()` per gli accessi (con IP) |
+| Azione / area dell'evento di audit | `AuditAction` (nomi stabili, es. `user.created`, `access.login_failed`) / `AuditArea` |
+| Oggetto dell'evento di audit | `AuditSubject` (`object_type` breve e stabile, es. `user`; `object_label` leggibile) |
+| Autore "sistema" (comandi da server) | `user_id` nullo, `user_name` e `user_role` = `AuditEvent::SYSTEM` |
+| Motivo di un login fallito o di una sessione chiusa | `AccessReason` (es. `unknown_email`, `locked`, `idle`) |
+| Blocco appena scattato (5 tentativi) | evento `LoginLockedOut` (`App\Domain\Users\Auth`) |
+| Conservazione dell'audit (5 anni, IP) | `AuditRetention`, comando `audit:prune` (notturno) |
+| Utenti MariaDB: migrazioni / applicativo / manutenzione | connessioni `migrator` / predefinita / `audit_maintenance` (`docs/dev/database-utenti.md`) |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 
@@ -231,6 +239,8 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail npm run typecheck     # vue-tsc
 ./vendor/bin/sail npm run lint          # ESLint
 ./vendor/bin/sail artisan horizon       # worker delle code
+./vendor/bin/sail artisan audit:list    # ultimi eventi di audit (sola lettura, PR-05)
+./vendor/bin/sail artisan audit:prune   # conservazione dell'audit (notturna in produzione)
 ```
 
 ## 13. Definizione di "fatto"

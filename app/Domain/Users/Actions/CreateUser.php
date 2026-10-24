@@ -2,9 +2,13 @@
 
 namespace App\Domain\Users\Actions;
 
+use App\Domain\Audit\Data\AuditSubject;
+use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Users\Data\NewUserData;
+use App\Domain\Users\Data\UserAuditValues;
 use App\Domain\Users\Services\SendAccessLink;
 use App\Enums\AccessLinkType;
+use App\Enums\AuditAction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -19,11 +23,15 @@ use Illuminate\Validation\Rules\Password;
  *
  * The e-mail is sent inside the transaction: if it cannot be sent, no user is left half created.
  *
- * ⚠️ Audit: the user.created event is written from PR-05 (D-127), with $createdBy as author.
+ * Audit (D-127): user.created with the data of the new user, in the same transaction; author
+ * $createdBy, or the system for the first-admin command.
  */
 final class CreateUser
 {
-    public function __construct(private readonly SendAccessLink $sendAccessLink) {}
+    public function __construct(
+        private readonly SendAccessLink $sendAccessLink,
+        private readonly AuditLog $audit,
+    ) {}
 
     /**
      * Validation rules shared by every creation path (M01 §9: unique and valid e-mail).
@@ -48,7 +56,7 @@ final class CreateUser
 
     public function handle(NewUserData $data, ?User $createdBy = null): User
     {
-        return DB::transaction(function () use ($data): User {
+        return DB::transaction(function () use ($data, $createdBy): User {
             $withPassword = $data->password !== null;
 
             $user = User::query()->create([
@@ -63,6 +71,8 @@ final class CreateUser
                 'is_active' => true,
                 'activated_at' => $withPassword ? now() : null,
             ]);
+
+            $this->audit->record(AuditAction::UserCreated, $createdBy, AuditSubject::user($user), new: UserAuditValues::of($user));
 
             if (! $withPassword) {
                 ($this->sendAccessLink)($user, AccessLinkType::Activation);

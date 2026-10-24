@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Audit\Services\AuditLog;
+use App\Enums\AccessReason;
+use App\Enums\AuditAction;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -17,10 +20,14 @@ use Symfony\Component\HttpFoundation\Response;
  * When the limit is passed the session is closed and the user goes back to the login with a
  * message; after the login (with the second factor) he returns to the page he asked for
  * (ux-architettura §4.5, "Sessione scaduta").
+ *
+ * Audit (D-128, D-283): access.session_expired with reason "idle", written before the logout.
  */
 class EnforceIdleTimeout
 {
     public const SESSION_KEY = 'auth.last_activity_at';
+
+    public function __construct(private readonly AuditLog $audit) {}
 
     /**
      * @param  Closure(Request): Response  $next
@@ -38,6 +45,7 @@ class EnforceIdleTimeout
         $now = now()->getTimestamp();
 
         if (is_int($lastActivity) && $now - $lastActivity > $user->role->idleTimeoutMinutes() * 60) {
+            $this->audit->access(AuditAction::SessionExpired, $user, reason: AccessReason::Idle->value);
             Auth::guard('web')->logout();
             $session->invalidate();
             $session->regenerateToken();

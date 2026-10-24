@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Domain\Audit\Services\AuditLog;
+use App\Enums\AccessReason;
+use App\Enums\AuditAction;
 use App\Models\User;
 use App\Support\Text;
 use App\Support\Toast;
@@ -22,10 +25,14 @@ use Symfony\Component\HttpFoundation\Response;
  * The session keeps the moment the second factor of the user was confirmed (0 when it was not
  * configured), written at the login and at the confirmation of the setup. When it no longer
  * matches the user, the session is closed and the user goes back to the login.
+ *
+ * Audit (D-128, D-283): access.session_closed with reason "two_factor_reset", before the logout.
  */
 class EnsureTwoFactorIsUnchanged
 {
     public const SESSION_KEY = 'auth.two_factor_stamp';
+
+    public function __construct(private readonly AuditLog $audit) {}
 
     /**
      * @param  Closure(Request): Response  $next
@@ -47,6 +54,7 @@ class EnsureTwoFactorIsUnchanged
         }
 
         if ($session->get(self::SESSION_KEY) !== self::stamp($user)) {
+            $this->audit->access(AuditAction::SessionClosed, $user, reason: AccessReason::TwoFactorReset->value);
             Auth::guard('web')->logout();
             $session->invalidate();
             $session->regenerateToken();

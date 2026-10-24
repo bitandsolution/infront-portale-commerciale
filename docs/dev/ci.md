@@ -28,7 +28,7 @@ Passi del deploy, con utente SSH dedicato senza sudo (R6):
 1. Caricamento del rilascio in `releases/<data-ora>`.
 2. `composer install --no-dev`, build del frontend nella pipeline (gli asset compilati arrivano già pronti).
 3. Collegamento di `.env` e `storage/` condivisi.
-4. `php artisan migrate --force` (migrazioni compatibili all'indietro).
+4. `php artisan migrate --database=migrator --force` (migrazioni compatibili all'indietro), con l'utente MariaDB delle migrazioni: l'utente applicativo non ha permessi DDL (R7, D-283; `docs/dev/database-utenti.md`).
 5. Cache di configurazione, rotte e viste.
 6. Cambio atomico del link `current`; ricaricamento di PHP-FPM; `horizon:terminate` per riavviare i worker.
 7. Controllo `/health`; se fallisce, **ritorno automatico** al rilascio precedente.
@@ -39,9 +39,11 @@ Passi del deploy, con utente SSH dedicato senza sudo (R6):
 - Collaudo durante lo sviluppo su VM locale (`docs/dev/ambiente-locale.md`, D-261). Staging su server conforme a R1–R7 quando disponibile, al più tardi entro il 26/2/2027 (milestone B); produzione entro il 15/1/2027 (D-243).
 - Utente di deploy e chiave SSH dedicata, da salvare nel GitHub Environment.
 - `DOCUMENT_FONTS_PATH` sul server con i file Interstate autorizzati.
+- I tre utenti MariaDB di `database/sql/audit-users.sql` (migrazioni, applicativo, manutenzione dell'audit), da creare come in `docs/dev/database-utenti.md` (R7, D-283).
 
 ## 4. Note di esercizio (PR-00, 2026-10-21)
 - Gli errori di ogni passo sono riportati come **annotazioni** del check (`.github/scripts/run.sh`), leggibili anche dove i log completi dei job non sono raggiungibili.
 - Se `composer.lock` manca, la CI lo risolve e lo **committa sul branch della PR** (unico caso in cui il job ha permesso di scrittura). Una volta presente, la CI usa sempre `composer install` dal lock.
 - Pacchetto nuovo (PR-03): la PR lo aggiunge al `composer.json` e la CI risolve **solo quel pacchetto** e le sue dipendenze (`composer update <pacchetti> --with-dependencies`, elenco da `.github/scripts/missing-locked-packages.php`), poi committa il `composer.lock` aggiornato sul branch. ⚠️ Il commit del bot non fa ripartire la CI (limite del `GITHUB_TOKEN`): serve un altro push sul branch, che conferma il lock con `composer install`.
 - ⚠️ Nelle sessioni cloud di Claude **packagist.org non è raggiungibile** e PHP è alla 8.3: la parte PHP si verifica solo in CI; la parte frontend anche in locale. Per lavorare più velocemente serve abilitare packagist.org nella rete delle sessioni, oppure sviluppare in locale con Sail.
+- Suite di test (PR-05): `Unit`, `Feature` (in transazione), `Concurrency` e `Database` (con troncamento delle tabelle). La suite `Database` crea utenti MariaDB e richiede un amministratore: in CI la connessione è root, sulla VM i suoi test risultano saltati.

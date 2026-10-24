@@ -2,9 +2,12 @@
 
 namespace App\Domain\Users\Actions;
 
+use App\Domain\Audit\Data\AuditSubject;
+use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Users\Exceptions\UserActionNotAllowed;
 use App\Domain\Users\Services\AccessLinks;
 use App\Domain\Users\Services\ActiveAdminGuard;
+use App\Enums\AuditAction;
 use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -21,13 +24,14 @@ use Illuminate\Support\Facades\DB;
  * For an agent the reassignment of his clients arrives with slice F3 (M01-CA4, D-082, D-282);
  * his proposals stay in his name (D-083).
  *
- * ⚠️ Audit: user.deactivated from PR-05 (D-127), with $actor as author.
+ * Audit (D-127): user.deactivated, author $actor, in the same transaction.
  */
 final class DeactivateUser
 {
     public function __construct(
         private readonly ActiveAdminGuard $adminGuard,
         private readonly AccessLinks $links,
+        private readonly AuditLog $audit,
     ) {}
 
     public function handle(User $user, User $actor): User
@@ -57,6 +61,8 @@ final class DeactivateUser
             ])->save();
 
             $this->links->delete($locked);
+
+            $this->audit->record(AuditAction::UserDeactivated, $actor, AuditSubject::user($locked), ['is_active' => true], ['is_active' => false]);
 
             return $locked;
         });
