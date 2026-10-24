@@ -141,6 +141,8 @@ Comandi utili:
 | Ricreare il database con i dati di prova | `sail artisan migrate:fresh --seed` (poi `sail artisan users:create-admin`) |
 | Creare il primo admin | `sail artisan users:create-admin` (si rifiuta se un admin esiste già) |
 | Sbloccare subito un accesso bloccato (5 tentativi) | `sail artisan cache:clear` (altrimenti si attendono 15 minuti) |
+| Azzerare la verifica in due passaggi di un utente, anche dell'unico admin (PR-04) | `sail artisan users:reset-two-factor <e-mail>` (chiede conferma; l'utente la riconfigura al login successivo) |
+| Leggere le e-mail con i link di attivazione e di reset (PR-04) | Mailpit: **http://localhost:8025** |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".
@@ -161,7 +163,9 @@ Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale):
 | Il codice dell'app viene sempre rifiutato | L'orologio della VM non è sincronizzato: i codici dipendono dall'ora | `timedatectl` deve mostrare `System clock synchronized: yes`; altrimenti vedi la riga `Release file … is not valid yet` |
 | `DEV_USERS_TOTP_SECRET must be a base32 key…` durante il seed | La chiave contiene caratteri diversi da A-Z e 2-7 o è più corta di 16 | Rigenera la chiave come al §3 |
 | Dopo 2 ore di inattività il portale torna al login | Scadenza della sessione per ruolo (D-214): 2 ore per admin e gestore, 8 ore per l'agente | Comportamento previsto: accedi di nuovo |
-| Codici di recupero dell'admin persi (solo VM) | I codici si vedono una sola volta, dopo la configurazione della verifica | `sail artisan tinker --execute="App\Models\User::where('role', 'admin')->firstOrFail()->forceFill(['two_factor_secret' => null, 'two_factor_recovery_codes' => null, 'two_factor_confirmed_at' => null])->save();"`, poi elimina la voce dall'app e riconfigura al login successivo. Dal portale il reset arriva con la PR-04 |
+| Codici di recupero dell'admin persi o smartphone cambiato | I codici si vedono una sola volta, dopo la configurazione della verifica | `sail artisan users:reset-two-factor <e-mail-dell-admin>` e conferma con `yes`; poi elimina la voce dall'app e riconfigura la verifica al login successivo (PR-04, D-276) |
+| Il link dell'e-mail (attivazione o nuova password) porta alla dashboard invece che alla pagina del link | Nel browser sei già collegato con un altro utente: le pagine dei link sono solo per chi non è collegato | Apri il link in una **finestra anonima** (Ctrl+Maiusc+N) oppure esci prima dal portale |
+| Il link dell'e-mail mostra "Link non valido" | Il link è scaduto (48 ore), è già stato usato, oppure ne è stato inviato uno più recente | Dalla scheda dell'utente: "Invia di nuovo il link" (utente da attivare) o di nuovo il reset |
 | `Class OwnedRecord located in ./tests/Feature/Authorization/OwnerScopeTest.php …` durante `sail composer install` | Avviso dell'autoload su una classe di prova definita dentro un test | Nessuna: non ha effetti |
 
 ## 6. Più avanti

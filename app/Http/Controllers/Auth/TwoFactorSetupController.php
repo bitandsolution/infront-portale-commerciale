@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureTwoFactorIsUnchanged;
 use App\Models\User;
 use App\Support\Navigation\PortalPages;
 use Illuminate\Http\RedirectResponse;
@@ -67,6 +68,7 @@ class TwoFactorSetupController extends Controller
 
         // The account now has its second factor: new session identifier for the new privilege.
         $request->session()->regenerate();
+        EnsureTwoFactorIsUnchanged::remember($request->session(), $user);
         $request->session()->flash(self::SHOW_RECOVERY_CODES, true);
 
         return redirect()->route('two-factor.recovery-codes');

@@ -182,6 +182,10 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Codici di recupero | `recoveryCodes()` (8, monouso) |
 | Blocco dopo i tentativi falliti | `LoginRateLimiter` (`App\Domain\Users\Auth`) |
 | Scadenza per inattività | `Role::idleTimeoutMinutes()`, middleware `EnforceIdleTimeout` |
+| Link di accesso (attivazione, reset) | `AccessLinks` (token in `password_reset_tokens`, 48 h, monouso), `AccessLinkType`, `SendAccessLink` |
+| In attesa di attivazione | `activated_at` nullo |
+| Almeno un admin attivo | `ActiveAdminGuard` (`App\Domain\Users\Services`) |
+| Regola di gestione utenti che rifiuta l'operazione | `UserActionNotAllowed` |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 

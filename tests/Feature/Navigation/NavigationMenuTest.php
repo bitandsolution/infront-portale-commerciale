@@ -21,15 +21,18 @@ function menuKeys(Role $role): array
     return $keys;
 }
 
-it('D-161: shows the agent only Dashboard, Nuova proposta, Le mie proposte, I miei clienti, Profilo', function () {
+it('D-161, D-267: shows the agent only Dashboard, Nuova proposta, Le mie proposte, I miei clienti', function () {
     expect(menuKeys(Role::Agent))->toBe([
         'dashboard',
         'proposals_new',
         'proposals_mine',
         'clients_mine',
-        'profile',
     ]);
 });
+
+it('D-267: no role has "Profilo" in the side menu: it is in the user menu of the top bar', function (Role $role) {
+    expect(menuKeys($role))->not->toContain('profile');
+})->with(Role::cases());
 
 it('D-161: hides the admin-only entries from the manager', function () {
     $manager = menuKeys(Role::Manager);

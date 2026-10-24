@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnforceIdleTimeout;
+use App\Http\Middleware\EnsureTwoFactorIsUnchanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\Navigation\PortalPages;
@@ -23,11 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             EnsureUserIsActive::class,
             EnforceIdleTimeout::class,
+            EnsureTwoFactorIsUnchanged::class,
             HandleInertiaRequests::class,
         ]);
 
-        // A deactivated user, or a session idle beyond the limit of the role (D-214), is signed out
-        // before any authentication or permission check runs.
+        // A deactivated user, a session idle beyond the limit of the role (D-214) or opened with a
+        // second factor reset in the meantime (D-280) is signed out before any authentication or
+        // permission check runs.
         $middleware->prependToPriorityList(
             before: AuthenticatesRequests::class,
             prepend: EnsureUserIsActive::class,
@@ -35,6 +38,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(
             before: AuthenticatesRequests::class,
             prepend: EnforceIdleTimeout::class,
+        );
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: EnsureTwoFactorIsUnchanged::class,
         );
 
         // Guests asking for a protected page go to the login (D-269) and come back to it afterwards;

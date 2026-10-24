@@ -29,7 +29,7 @@ final class NavigationMenu
             new NavigationItem('proposals_new', 'Plus', $agent),
             new NavigationItem('proposals_mine', 'FileText', $agent),
             new NavigationItem('clients_mine', 'Users', $agent),
-            new NavigationItem('profile', 'UserRound', $agent),
+            // "Profilo" left the side menu with PR-04: every role opens it from the user menu (D-267).
 
             // Manager and admin
             new NavigationItem('proposals', 'FileText', $backOffice, [

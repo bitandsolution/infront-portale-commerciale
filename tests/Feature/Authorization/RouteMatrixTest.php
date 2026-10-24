@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Routing\Route as RouteDefinition;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,6 +41,8 @@ function routeMatrix(): array
     $agentAndAdmin = ['login', 200, 403, 200, 'login', 'setup'];
     $backOffice = ['login', 403, 200, 200, 'login', 'setup'];
     $admin = ['login', 403, 403, 200, 'login', 'setup'];
+    $signedInForm = ['login', 302, 302, 302, 'login', 'setup'];
+    $adminForm = ['login', 403, 403, 302, 'login', 'setup'];
 
     return [
         'home' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'setup']],
@@ -51,6 +54,13 @@ function routeMatrix(): array
         'two-factor.login' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
         'two-factor.login.store' => ['method' => 'POST', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
         'logout' => ['method' => 'POST', 'expected' => ['login', 'login', 'login', 'login', 'login', 'login']],
+
+        // Access links sent by e-mail (D-277…D-280): guests only, like the login. With an unknown
+        // token the page says the link is not valid; an empty form goes back with the errors.
+        'access.activation' => ['method' => 'GET', 'expected' => [200, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        'access.activation.store' => ['method' => 'POST', 'expected' => [302, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        'access.reset' => ['method' => 'GET', 'expected' => [200, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        'access.reset.store' => ['method' => 'POST', 'expected' => [302, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
 
         // Mandatory setup of the second factor (D-136): only who has not configured it yet
         'two-factor.setup' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 200]],
@@ -106,9 +116,25 @@ function routeMatrix(): array
         'pages.reports_access' => ['method' => 'GET', 'expected' => $admin],
         'pages.audit' => ['method' => 'GET', 'expected' => $admin],
 
-        // M01 — users admin only (D-139); settings admin only
+        // M01 — users admin only (D-139, M01-CA3); settings admin only
         'pages.users' => ['method' => 'GET', 'expected' => $admin],
         'pages.settings' => ['method' => 'GET', 'expected' => $admin],
+
+        // M01 — personal profile of every role (D-267): an empty form goes back with the errors
+        'profile.update' => ['method' => 'PUT', 'expected' => $signedInForm],
+        'profile.password' => ['method' => 'PUT', 'expected' => $signedInForm],
+
+        // M01 — user management, admin only (D-139, M01-CA3). Target: an active agent with the
+        // second factor; forms are sent empty, actions go back to the page with a toast
+        'users.create' => ['method' => 'GET', 'expected' => $admin],
+        'users.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'users.show' => ['method' => 'GET', 'expected' => $admin],
+        'users.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'users.deactivate' => ['method' => 'POST', 'expected' => $adminForm],
+        'users.reactivate' => ['method' => 'POST', 'expected' => $adminForm],
+        'users.reset-password' => ['method' => 'POST', 'expected' => $adminForm],
+        'users.reset-two-factor' => ['method' => 'POST', 'expected' => $adminForm],
+        'users.resend-link' => ['method' => 'POST', 'expected' => $adminForm],
     ];
 }
 
@@ -130,7 +156,12 @@ function matrixActor(string $actor): ?User
  */
 function matrixParameters(string $route): array
 {
-    return match ($route) {
+    return match (true) {
+        in_array($route, ['users.show', 'users.update', 'users.deactivate', 'users.reactivate',
+            'users.reset-password', 'users.reset-two-factor', 'users.resend-link'], true) => [
+                'user' => User::factory()->agent()->create()->id,
+            ],
+        str_starts_with($route, 'access.') => ['token' => str_repeat('x', 64)],
         default => [],
     };
 }
@@ -144,6 +175,7 @@ dataset('route matrix', function (): Generator {
 });
 
 it('D-215: answers each route as the M01 §4 matrix expects', function (string $route, string $method, string $actor, int|string $expected) {
+    Mail::fake();
     $user = matrixActor($actor);
     if ($user !== null) {
         $this->actingAs($user);

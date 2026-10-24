@@ -3,13 +3,17 @@
 namespace App\Support\Navigation;
 
 use App\Enums\Ability;
+use App\Http\Controllers\Users\ProfileController;
+use App\Http\Controllers\Users\UserController;
 
 /**
  * One route per page of the side menu, protected by its area Gate (PR-02, D-269).
  *
  * Until each function arrives the route shows the "coming soon" empty state; the slice that
- * builds the page replaces only the controller and keeps the URL, the Gate and its row
- * in the route × role matrix test (D-215).
+ * builds the page replaces only the controller (CONTROLLERS) and keeps the URL, the Gate and its
+ * row in the route × role matrix test (D-215).
+ *
+ * "profile" is not in the side menu: every role reaches it from the user menu of the top bar (D-267).
  */
 final class PortalPages
 {
@@ -60,6 +64,23 @@ final class PortalPages
         'users' => ['utenti', Ability::UsersManage],
         'settings' => ['impostazioni', Ability::SettingsManage],
     ];
+
+    /**
+     * Pages already built: page key → controller action. The others show "Funzione in arrivo".
+     *
+     * @var array<string, array{class-string, string}>
+     */
+    public const CONTROLLERS = [
+        'profile' => [ProfileController::class, 'show'],
+        'users' => [UserController::class, 'index'],
+    ];
+
+    /**
+     * Pages reached from the user menu of the top bar instead of the side menu (D-267).
+     *
+     * @var list<string>
+     */
+    public const USER_MENU_PAGES = ['profile'];
 
     public static function routeName(string $key): string
     {

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { ChevronDown, LogOut } from '@lucide/vue';
+import { Link, router } from '@inertiajs/vue3';
+import { ChevronDown, LogOut, UserRound } from '@lucide/vue';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useTrans } from '@/composables/useTrans';
 import type { LayoutData } from '@/types';
 
 /**
- * User block of the top bar: name, role and a menu with the logout (PR-03).
- * The personal profile joins this menu with PR-04 (D-267).
+ * User block of the top bar: name, role and a menu with the personal profile (D-267, every role)
+ * and the logout (PR-03).
  */
 const props = defineProps<{ user: LayoutData['user'] }>();
 
@@ -109,6 +109,19 @@ onBeforeUnmount(() => {
                     {{ user.role }}
                 </div>
             </div>
+            <Link
+                :href="user.profileUrl"
+                role="menuitem"
+                class="flex min-h-11 w-full items-center gap-2.5 rounded-lg px-3 text-left text-sm font-medium text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
+                @click="close()"
+            >
+                <UserRound
+                    :size="18"
+                    :stroke-width="2"
+                    aria-hidden="true"
+                />
+                {{ t('user.profile') }}
+            </Link>
             <button
                 type="button"
                 role="menuitem"

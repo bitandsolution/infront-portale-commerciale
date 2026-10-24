@@ -14,6 +14,8 @@ it('D-139: lets only the admin list, create, edit and deactivate users', functio
         ->and($user->can('create', User::class))->toBe($allowed)
         ->and($user->can('update', $other))->toBe($allowed)
         ->and($user->can('deactivate', $other))->toBe($allowed)
+        ->and($user->can('reactivate', $other))->toBe($allowed)
+        ->and($user->can('resetAccess', $other))->toBe($allowed)
         ->and($user->can('view', $other))->toBe($allowed);
 })->with([
     'agente' => ['agent', false],
@@ -27,10 +29,13 @@ it('lets every user see his own profile', function (string $role) {
     expect($user->can('view', $user))->toBeTrue();
 })->with(['agent', 'manager', 'admin']);
 
-it('does not let the admin deactivate himself', function () {
+it('D-281: does not let the admin deactivate himself or reset his own access from the Users page', function () {
     $admin = User::factory()->admin()->create();
 
-    expect($admin->can('deactivate', $admin))->toBeFalse();
+    expect($admin->can('deactivate', $admin))->toBeFalse()
+        ->and($admin->can('reactivate', $admin))->toBeFalse()
+        ->and($admin->can('resetAccess', $admin))->toBeFalse()
+        ->and($admin->can('update', $admin))->toBeTrue();
 });
 
 it('RB-05: a deactivated admin can do nothing', function () {
