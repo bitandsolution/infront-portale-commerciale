@@ -26,7 +26,7 @@ final class AccessLinkMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: $this->text('subject'));
+        return new Envelope(subject: $this->typeText('subject'));
     }
 
     public function content(): Content
@@ -35,8 +35,8 @@ final class AccessLinkMail extends Mailable
             markdown: 'mail.access-link',
             with: [
                 'greeting' => Text::get('users.mail.greeting', ['name' => $this->firstName]),
-                'intro' => $this->text('intro'),
-                'action' => $this->text('action'),
+                'intro' => $this->typeText('intro'),
+                'action' => $this->typeText('action'),
                 'expiry' => Text::get('users.mail.expiry', ['hours' => (string) AccessLinks::LIFETIME_HOURS]),
                 'ignore' => Text::get('users.mail.ignore'),
                 'url' => $this->url,
@@ -44,7 +44,7 @@ final class AccessLinkMail extends Mailable
         );
     }
 
-    private function text(string $key): string
+    private function typeText(string $key): string
     {
         return Text::get('users.mail.'.$this->type->value.'.'.$key);
     }

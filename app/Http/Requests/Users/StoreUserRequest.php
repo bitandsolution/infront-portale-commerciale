@@ -31,7 +31,7 @@ class StoreUserRequest extends FormRequest
         ];
     }
 
-    public function data(): NewUserData
+    public function newUserData(): NewUserData
     {
         return new NewUserData(
             firstName: $this->string('first_name')->toString(),

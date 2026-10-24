@@ -33,7 +33,7 @@ class UpdateUserRequest extends FormRequest
         ];
     }
 
-    public function data(): UserDetailsData
+    public function detailsData(): UserDetailsData
     {
         return new UserDetailsData(
             firstName: $this->string('first_name')->toString(),

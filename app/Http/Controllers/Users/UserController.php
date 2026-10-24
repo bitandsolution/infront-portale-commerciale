@@ -59,7 +59,7 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request, CreateUser $createUser): RedirectResponse
     {
-        $user = $createUser->handle($request->data(), $this->actor($request));
+        $user = $createUser->handle($request->newUserData(), $this->actor($request));
 
         return redirect()->route('users.show', $user)->with('toast', Toast::success(
             Text::get('users.toasts.created', ['email' => $user->email]),
@@ -104,7 +104,7 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user, UpdateUser $updateUser): RedirectResponse
     {
-        $updateUser->handle($user, $request->data(), $this->actor($request));
+        $updateUser->handle($user, $request->detailsData(), $this->actor($request));
 
         return back()->with('toast', Toast::success(Text::get('users.toasts.updated')));
     }

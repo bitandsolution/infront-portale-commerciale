@@ -30,15 +30,16 @@ final class ActiveAdminGuard
             throw new LogicException('The active admins must be locked inside a transaction.');
         }
 
-        return User::query()
+        $ids = User::query()
             ->where('role', Role::Admin->value)
             ->where('is_active', true)
             ->orderBy('id')
             ->lockForUpdate()
             ->pluck('id')
             ->map(fn (mixed $id): int => (int) $id)
-            ->values()
             ->all();
+
+        return array_values($ids);
     }
 
     /**
