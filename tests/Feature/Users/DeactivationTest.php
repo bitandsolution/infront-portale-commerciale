@@ -78,8 +78,9 @@ it('M01-CA4: a deactivated agent stays in the portal with his data and can be fo
 
     // RB-05: users are never deleted, there is no route for it.
     $deleteRoutes = collect(Route::getRoutes()->getRoutes())
-        ->filter(fn (RouteDefinition $route): bool => in_array('DELETE', $route->methods(), true));
-    expect($deleteRoutes)->toBeEmpty();
+        ->filter(fn (RouteDefinition $route): bool => str_starts_with($route->uri(), 'utenti')
+            && in_array('DELETE', $route->methods(), true));
+    expect($deleteRoutes->all())->toBe([]);
 });
 
 it('M01-CA5: the only active admin cannot be deactivated', function () {

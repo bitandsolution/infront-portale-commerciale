@@ -7,8 +7,6 @@ use App\Models\User;
 use App\Support\Text;
 use Illuminate\Console\Command;
 
-use function Laravel\Prompts\confirm;
-
 /**
  * Unlocks a user without his second factor, from the server (D-276): for whoever has SSH access,
  * also for the only admin, who from the portal nobody else could unlock (the reset in the portal
@@ -51,7 +49,7 @@ class ResetTwoFactorCommand extends Command
             'role' => $user->role->label(),
         ]));
 
-        if (! confirm(label: Text::get('users.reset_two_factor.confirm'), default: false)) {
+        if (! $this->input->isInteractive() || ! $this->confirm(Text::get('users.reset_two_factor.confirm'), false)) {
             $this->line(Text::get('users.reset_two_factor.cancelled'));
 
             return self::FAILURE;

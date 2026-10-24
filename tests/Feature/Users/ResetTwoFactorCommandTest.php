@@ -62,6 +62,7 @@ it('D-276: without interaction the answer is no', function () {
     $agent = User::factory()->agent()->create();
 
     $this->artisan('users:reset-two-factor', ['email' => $agent->email, '--no-interaction' => true])
+        ->expectsOutputToContain('Operazione annullata')
         ->assertFailed();
 
     expect($agent->fresh()?->two_factor_confirmed_at)->not->toBeNull();
