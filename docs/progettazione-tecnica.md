@@ -123,7 +123,7 @@ L'hosting (fornitore, macchina, amministrazione di sistema) è **definito e gest
 
 | # | Requisito | Perché |
 |---|---|---|
-| R1 | Software installabile: PHP 8.4 (estensioni Laravel), MariaDB 11.8, Redis, Chromium (con sandbox attiva), Ghostscript, qpdf, Composer, **Node.js + Puppeteer anche a runtime** (D-223) | Stack D-174 e generazione PDF (M09) |
+| R1 | Software installabile: PHP 8.4 (estensioni Laravel, più `gd` con PNG e JPEG, `fileinfo` e `zip`: D-291), MariaDB 11.8, Redis, Chromium (con sandbox attiva), Ghostscript, qpdf, Composer, **Node.js + Puppeteer anche a runtime** (D-223) | Stack D-174 e generazione PDF (M09) |
 | R2 | Processi sempre attivi per i worker delle code (Supervisor o systemd) e cron ogni minuto | Code PDF/e-mail, scheduler Laravel |
 | R3 | **Isolamento**: utente e pool PHP-FPM dedicati al portale, file non condivisi con altri siti, `open_basedir` sulla cartella dell'applicazione | Precedente di compromissione: un sito vulnerabile non deve poter raggiungere il portale |
 | R4 | Risorse riservate: indicativamente 4 vCPU, 8 GB RAM, 100 GB disco (staging: 2 vCPU, 4 GB, 40 GB) | Chromium usa 1–2 GB per documento; archivio PDF in crescita |
