@@ -57,16 +57,27 @@ it('C10: refuses two rows with the same path on the same disk', function () {
         ->toThrow(QueryException::class);
 });
 
-it('C9: refuses an empty size, an invalid SHA-256 and half the dimensions', function (array $row) {
-    expect(fn () => filesRawRow($row))->toThrow(QueryException::class);
-})->with([
-    'size 0' => [['size_bytes' => 0]],
-    'SHA-256 too short' => [['sha256' => str_repeat('a', 63)]],
-    'SHA-256 in capitals' => [['sha256' => strtoupper(hash('sha256', 'prova'))]],
-    'SHA-256 not hexadecimal' => [['sha256' => str_repeat('z', 64)]],
-    'width without height' => [['height' => null]],
-    'zero height' => [['height' => 0]],
-]);
+it('C9: refuses an empty size, an invalid SHA-256 and half the dimensions', function () {
+    $cases = [
+        'size 0' => ['size_bytes' => 0],
+        'SHA-256 too short' => ['sha256' => str_repeat('a', 63)],
+        'SHA-256 in capitals' => ['sha256' => strtoupper(hash('sha256', 'prova'))],
+        'SHA-256 not hexadecimal' => ['sha256' => str_repeat('z', 64)],
+        'width without height' => ['height' => null],
+        'zero height' => ['height' => 0],
+    ];
+
+    $accepted = [];
+    foreach ($cases as $case => $row) {
+        try {
+            filesRawRow($row);
+            $accepted[] = $case;
+        } catch (QueryException) {
+        }
+    }
+
+    expect($accepted)->toBe([], 'Rows accepted by the database: '.implode(', ', $accepted));
+});
 
 it('C9: accepts a file without dimensions, such as an Excel', function () {
     $id = filesRawRow(['purpose' => 'calendar_import', 'width' => null, 'height' => null]);
