@@ -1,8 +1,13 @@
 <?php
 
+use App\Enums\Ability;
+use App\Http\Controllers\Auth\AccessLinkController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\PlaceholderPageController;
+use App\Http\Controllers\Users\ProfileController;
+use App\Http\Controllers\Users\UserAccessController;
+use App\Http\Controllers\Users\UserController;
 use App\Http\Middleware\EnsureTwoFactorIsConfigured;
 use App\Support\Navigation\PortalPages;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +28,17 @@ Route::middleware('guest')->group(function (): void {
     Route::post('accesso', [AuthenticatedSessionController::class, 'store'])->name('login.store');
     Route::get('accesso/verifica', [TwoFactorChallengeController::class, 'create'])->name('two-factor.login');
     Route::post('accesso/verifica', [TwoFactorChallengeController::class, 'store'])->name('two-factor.login.store');
+
+    // Access links sent by e-mail (M01 §5; D-277…D-280): activation, or setup again after the reset
+    // of the second factor (password + second factor); new password after a reset by the admin.
+    Route::get('attivazione/{token}', [AccessLinkController::class, 'showActivation'])->name('access.activation');
+    Route::post('attivazione/{token}', [AccessLinkController::class, 'storeActivation'])
+        ->middleware('throttle:10,1')
+        ->name('access.activation.store');
+    Route::get('nuova-password/{token}', [AccessLinkController::class, 'showReset'])->name('access.reset');
+    Route::post('nuova-password/{token}', [AccessLinkController::class, 'storeReset'])
+        ->middleware('throttle:10,1')
+        ->name('access.reset.store');
 });
 
 // Signed-in users. A password change closes the other sessions of the user (auth.session, D-214).
@@ -41,12 +57,35 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
     Route::middleware(EnsureTwoFactorIsConfigured::class)->group(function (): void {
         Route::redirect('/', PortalPages::PAGES['dashboard'][0])->name('home');
 
-        // Menu pages (PR-02, D-269), each behind the Gate of its area (M01 §4).
+        // Menu pages (PR-02, D-269), each behind the Gate of its area (M01 §4); the pages not built
+        // yet show "Funzione in arrivo".
         foreach (PortalPages::PAGES as $key => [$path, $ability]) {
-            Route::get($path, PlaceholderPageController::class)
-                ->defaults('page', $key)
-                ->middleware('can:'.$ability->value)
-                ->name(PortalPages::routeName($key));
+            $route = array_key_exists($key, PortalPages::CONTROLLERS)
+                ? Route::get($path, PortalPages::CONTROLLERS[$key])
+                : Route::get($path, PlaceholderPageController::class)->defaults('page', $key);
+
+            $route->middleware('can:'.$ability->value)->name(PortalPages::routeName($key));
         }
+
+        // Personal profile of every role (D-267): data and change of the password (D-273).
+        Route::middleware('can:'.Ability::Profile->value)->group(function (): void {
+            Route::put('profilo', [ProfileController::class, 'update'])->name('profile.update');
+            Route::put('profilo/password', [ProfileController::class, 'password'])
+                ->middleware('throttle:10,1')
+                ->name('profile.password');
+        });
+
+        // Users (M01 §5; D-139): admin only. The list is the "utenti" page above.
+        Route::middleware('can:'.Ability::UsersManage->value)->group(function (): void {
+            Route::get('utenti/nuovo', [UserController::class, 'create'])->name('users.create');
+            Route::post('utenti', [UserController::class, 'store'])->name('users.store');
+            Route::get('utenti/{user}', [UserController::class, 'show'])->whereNumber('user')->name('users.show');
+            Route::put('utenti/{user}', [UserController::class, 'update'])->whereNumber('user')->name('users.update');
+            Route::post('utenti/{user}/disattiva', [UserAccessController::class, 'deactivate'])->whereNumber('user')->name('users.deactivate');
+            Route::post('utenti/{user}/riattiva', [UserAccessController::class, 'reactivate'])->whereNumber('user')->name('users.reactivate');
+            Route::post('utenti/{user}/reset-password', [UserAccessController::class, 'resetPassword'])->whereNumber('user')->name('users.reset-password');
+            Route::post('utenti/{user}/reset-verifica', [UserAccessController::class, 'resetTwoFactor'])->whereNumber('user')->name('users.reset-two-factor');
+            Route::post('utenti/{user}/invia-link', [UserAccessController::class, 'resendLink'])->whereNumber('user')->name('users.resend-link');
+        });
     });
 });

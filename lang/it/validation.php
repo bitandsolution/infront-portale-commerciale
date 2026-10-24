@@ -7,7 +7,9 @@
 
 return [
     'confirmed' => 'Il campo :attribute non coincide con la conferma.',
+    'current_password' => 'La password attuale non è corretta.',
     'email' => 'Il campo :attribute deve essere un indirizzo e-mail valido.',
+    'enum' => 'Il valore scelto per :attribute non è valido.',
     'max' => [
         'string' => 'Il campo :attribute non può superare :max caratteri.',
     ],
@@ -30,6 +32,8 @@ return [
         'last_name' => 'cognome',
         'email' => 'e-mail',
         'phone' => 'telefono',
+        'role' => 'ruolo',
+        'current_password' => 'password attuale',
         'password' => 'password',
         'code' => 'codice di verifica',
         'recovery_code' => 'codice di recupero',

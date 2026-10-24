@@ -65,5 +65,7 @@ it('D-161: never shows a menu entry whose page the role cannot open', function (
 })->with(['agent', 'manager', 'admin']);
 
 it('D-269: has a protected route for every page of the menu, and no route without a menu page', function () {
-    expect(array_keys(PortalPages::PAGES))->toEqualCanonicalizing(NavigationMenu::pageKeys());
+    // The profile is reached from the user menu of the top bar (D-267).
+    expect(array_keys(PortalPages::PAGES))
+        ->toEqualCanonicalizing([...NavigationMenu::pageKeys(), ...PortalPages::USER_MENU_PAGES]);
 });

@@ -38,12 +38,44 @@ export interface LayoutData {
         name: string;
         initials: string;
         role: string;
+        profileUrl: string;
         logoutUrl: string;
     };
     season: {
         label: string;
         enabled: boolean;
     };
+}
+
+/** Account status of a user (UserPresenter::status on the server). */
+export type UserStatus = 'active' | 'pending' | 'inactive';
+
+export interface Option {
+    value: string;
+    label: string;
+}
+
+/** One row of the Users page (UserPresenter::row). */
+export interface UserRow {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    roleLabel: string;
+    status: UserStatus;
+    twoFactor: boolean;
+    lastLogin: string | null;
+    url: string;
+}
+
+export interface UserDetail extends UserRow {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    createdAt: string | null;
+    activatedAt: string | null;
+    deactivatedAt: string | null;
+    deactivatedBy: string | null;
 }
 
 export interface SharedProps {

@@ -7,7 +7,8 @@ use App\Models\User;
 
 /**
  * Users (M01 §5; D-139): only the admin creates, edits and deactivates users.
- * Everyone can see his own profile (the page arrives with PR-04, D-267).
+ * Everyone can see his own profile (D-267). The admin never deactivates himself nor resets his
+ * own access from the Users page (D-281): he uses his profile, or the server command (D-276).
  * Deactivated users are already refused by Gate::before (AppServiceProvider).
  */
 class UserPolicy
@@ -33,9 +34,22 @@ class UserPolicy
     }
 
     /**
-     * The "at least one active admin" check (RB-04) runs in the deactivation Action (PR-04), in a transaction.
+     * The "at least one active admin" check (RB-04) runs in the Action, in a transaction.
      */
     public function deactivate(User $user, User $model): bool
+    {
+        return Ability::UsersManage->allows($user->role) && ! $user->is($model);
+    }
+
+    public function reactivate(User $user, User $model): bool
+    {
+        return Ability::UsersManage->allows($user->role) && ! $user->is($model);
+    }
+
+    /**
+     * Reset of the second factor or of the password, new access link (M01 §5, D-140).
+     */
+    public function resetAccess(User $user, User $model): bool
     {
         return Ability::UsersManage->allows($user->role) && ! $user->is($model);
     }

@@ -17,6 +17,8 @@ use Illuminate\Validation\ValidationException;
  *   takes the same time.
  * - Right password of a deactivated user: the dedicated message of PR-02 (M01 §5, RB-05),
  *   counted as a failed attempt as well.
+ * - User not activated yet (PR-04): null as for a wrong password. His password is random anyway;
+ *   he enters only through the activation link (D-278).
  */
 class AuthenticateUser
 {
@@ -36,7 +38,7 @@ class AuthenticateUser
         // Same work when the user does not exist (timing, see above).
         $hash = $user !== null ? $user->password : Hash::make(Str::random(40));
 
-        if (! Hash::check($password, $hash) || $user === null) {
+        if (! Hash::check($password, $hash) || $user === null || $user->activated_at === null) {
             return null;
         }
 
