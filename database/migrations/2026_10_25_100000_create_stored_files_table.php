@@ -47,7 +47,7 @@ return new class extends Migration
         // C9: constraints in the database where possible.
         DB::statement('ALTER TABLE stored_files ADD CONSTRAINT stored_files_size_positive CHECK (size_bytes > 0)');
         DB::statement("ALTER TABLE stored_files ADD CONSTRAINT stored_files_sha256_hex CHECK (sha256 REGEXP '(?-i)^[0-9a-f]{64}$')");
-        DB::statement('ALTER TABLE stored_files ADD CONSTRAINT stored_files_dimensions CHECK ((width IS NULL AND height IS NULL) OR (width > 0 AND height > 0))');
+        DB::statement('ALTER TABLE stored_files ADD CONSTRAINT stored_files_dimensions CHECK ((width IS NULL AND height IS NULL) OR (width IS NOT NULL AND height IS NOT NULL AND width > 0 AND height > 0))');
 
         DB::unprepared(<<<'SQL'
             CREATE TRIGGER stored_files_before_update BEFORE UPDATE ON stored_files FOR EACH ROW
