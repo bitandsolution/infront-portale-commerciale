@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\AccessLinkType;
 use App\Domain\Files\Services\FileStorage;
+use App\Enums\AccessLinkType;
 use App\Enums\AuditAction;
 use App\Enums\FilePurpose;
 use App\Mail\AccessLinkMail;
