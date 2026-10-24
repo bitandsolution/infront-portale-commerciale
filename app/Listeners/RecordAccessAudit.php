@@ -71,9 +71,7 @@ class RecordAccessAudit
 
     public function handleTwoFactorFailed(TwoFactorAuthenticationFailed $event): void
     {
-        if ($event->user instanceof User) {
-            $this->audit->access(AuditAction::TwoFactorFailed, $event->user);
-        }
+        $this->audit->access(AuditAction::TwoFactorFailed, $event->user);
     }
 
     public function handleLogout(Logout $event): void
