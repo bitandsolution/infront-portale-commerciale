@@ -2,7 +2,10 @@
 
 namespace App\Domain\Users\Actions;
 
+use App\Domain\Audit\Data\AuditSubject;
+use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Users\Services\AccessLinks;
+use App\Enums\AuditAction;
 use App\Models\User;
 use App\Support\Text;
 use Illuminate\Support\Facades\DB;
@@ -19,13 +22,15 @@ use Laravel\Fortify\RecoveryCode;
  *
  * The token is checked again inside the transaction and deleted: the link works once.
  *
- * ⚠️ Audit: user.activated / user.two_factor_configured from PR-05 (D-127).
+ * Audit (D-127): user.activated at the first activation, user.two_factor_configured after a reset
+ * of the second factor; the user as author, in the same transaction.
  */
 final class ActivateAccount
 {
     public function __construct(
         private readonly AccessLinks $links,
         private readonly TwoFactorAuthenticationProvider $twoFactor,
+        private readonly AuditLog $audit,
     ) {}
 
     /**
@@ -50,6 +55,8 @@ final class ActivateAccount
                 throw ValidationException::withMessages(['code' => [Text::get('users.access.invalid')]]);
             }
 
+            $firstActivation = $locked->activated_at === null;
+
             $locked->forceFill([
                 'password' => $password,
                 'two_factor_secret' => Fortify::currentEncrypter()->encrypt($secret),
@@ -61,6 +68,12 @@ final class ActivateAccount
             ])->save();
 
             $this->links->delete($locked);
+
+            $this->audit->record(
+                $firstActivation ? AuditAction::UserActivated : AuditAction::UserTwoFactorConfigured,
+                $locked,
+                AuditSubject::user($locked),
+            );
 
             return $locked;
         });

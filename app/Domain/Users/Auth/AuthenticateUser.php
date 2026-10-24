@@ -2,6 +2,9 @@
 
 namespace App\Domain\Users\Auth;
 
+use App\Domain\Audit\Services\AuditLog;
+use App\Enums\AccessReason;
+use App\Enums\AuditAction;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,10 +22,16 @@ use Illuminate\Validation\ValidationException;
  *   counted as a failed attempt as well.
  * - User not activated yet (PR-04): null as for a wrong password. His password is random anyway;
  *   he enters only through the activation link (D-278).
+ *
+ * Audit (D-128): Fortify reports the null answers with its Failed event (RecordAccessAudit); the
+ * deactivated user is answered here, so his failed login is recorded here.
  */
 class AuthenticateUser
 {
-    public function __construct(private readonly LoginRateLimiter $limiter) {}
+    public function __construct(
+        private readonly LoginRateLimiter $limiter,
+        private readonly AuditLog $audit,
+    ) {}
 
     public function __invoke(Request $request): ?User
     {
@@ -43,6 +52,7 @@ class AuthenticateUser
         }
 
         if (! $user->is_active) {
+            $this->audit->access(AuditAction::LoginFailed, $user, reason: AccessReason::Deactivated->value);
             $this->limiter->increment($request);
 
             throw ValidationException::withMessages([

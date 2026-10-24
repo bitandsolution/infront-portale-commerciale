@@ -1,8 +1,11 @@
 <?php
 
 use App\Enums\AccessLinkType;
+use App\Enums\AuditAction;
 use App\Mail\AccessLinkMail;
+use App\Models\AuditEvent;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -15,6 +18,8 @@ use Tests\TestCase;
 |
 | Concurrency tests (PR-04) need two real database sessions that see each other's committed rows,
 | so they cannot run inside the transaction of RefreshDatabase: they truncate the tables instead.
+| The same holds for the database tests (PR-05), which connect as other MariaDB users. TRUNCATE
+| does not fire the triggers of audit_events, so committed audit events are cleaned up too.
 */
 
 pest()->extend(TestCase::class)
@@ -23,7 +28,7 @@ pest()->extend(TestCase::class)
 
 pest()->extend(TestCase::class)
     ->use(DatabaseTruncation::class)
-    ->in('Concurrency');
+    ->in('Concurrency', 'Database');
 
 /*
 | Helpers of the login tests (PR-03).
@@ -69,4 +74,26 @@ function sentAccessLink(string $email, ?AccessLinkType $type = null): string
     });
 
     return $url;
+}
+
+/*
+| Helpers of the audit tests (PR-05).
+*/
+
+/**
+ * Audit events of an action, oldest first.
+ *
+ * @return Collection<int, AuditEvent>
+ */
+function auditEventsOf(AuditAction $action): Collection
+{
+    return AuditEvent::query()->where('action', $action->value)->orderBy('id')->get();
+}
+
+/**
+ * The only audit event of an action (fails when there is none or more than one).
+ */
+function soleAuditEvent(AuditAction $action): AuditEvent
+{
+    return AuditEvent::query()->where('action', $action->value)->sole();
 }

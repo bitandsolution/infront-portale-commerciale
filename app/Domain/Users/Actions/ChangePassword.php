@@ -2,7 +2,11 @@
 
 namespace App\Domain\Users\Actions;
 
+use App\Domain\Audit\Data\AuditSubject;
+use App\Domain\Audit\Services\AuditLog;
+use App\Enums\AuditAction;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Change of the password from the profile (M01 §5; D-214, D-273). The current password is checked
@@ -12,14 +16,20 @@ use App\Models\User;
  * change stays open: it is the same User instance of the request, whose new hash auth.session
  * stores at the end of the request.
  *
- * ⚠️ Audit: user.password_changed from PR-05 (D-127).
+ * Audit (D-127): user.password_changed, the user as author, without values.
  */
 final class ChangePassword
 {
+    public function __construct(private readonly AuditLog $audit) {}
+
     public function handle(User $user, string $password): User
     {
-        $user->forceFill(['password' => $password])->save();
+        return DB::transaction(function () use ($user, $password): User {
+            $user->forceFill(['password' => $password])->save();
 
-        return $user;
+            $this->audit->record(AuditAction::UserPasswordChanged, $user, AuditSubject::user($user));
+
+            return $user;
+        });
     }
 }

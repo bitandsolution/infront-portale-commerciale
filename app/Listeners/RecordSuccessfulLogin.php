@@ -13,7 +13,7 @@ use Illuminate\Auth\Events\Login;
  * - start of the inactivity count of the new session (EnforceIdleTimeout, D-214);
  * - the second factor the session is opened with (EnsureTwoFactorIsUnchanged, D-280).
  *
- * The audit event of the login arrives with PR-05.
+ * The audit event of the login is written by RecordAccessAudit (PR-05).
  */
 class RecordSuccessfulLogin
 {

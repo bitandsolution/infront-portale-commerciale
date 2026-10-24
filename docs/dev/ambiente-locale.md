@@ -143,6 +143,9 @@ Comandi utili:
 | Sbloccare subito un accesso bloccato (5 tentativi) | `sail artisan cache:clear` (altrimenti si attendono 15 minuti) |
 | Azzerare la verifica in due passaggi di un utente, anche dell'unico admin (PR-04) | `sail artisan users:reset-two-factor <e-mail>` (chiede conferma; l'utente la riconfigura al login successivo) |
 | Leggere le e-mail con i link di attivazione e di reset (PR-04) | Mailpit: **http://localhost:8025** |
+| Vedere gli ultimi eventi di audit (PR-05) | `sail artisan audit:list` (filtri: `--area=access`, `--action=access.login_failed`, `--user=<e-mail>`, `--limit=50`) |
+| Eseguire la conservazione dell'audit (PR-05) | `sail artisan audit:prune`: nella VM lo scheduler non gira, il comando si lancia a mano; `sail artisan schedule:list` mostra la pianificazione notturna |
+| Aprire il database come amministratore (PR-05) | `sail exec mariadb mariadb -uroot -ppassword infront_portale` (la password di root è `DB_PASSWORD` del `.env`; per uscire `exit`) |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".
