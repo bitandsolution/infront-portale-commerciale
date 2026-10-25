@@ -53,11 +53,13 @@ function healthQueueJob(int $seconds): void
 {
     /** @var RedisQueue $queue */
     $queue = Queue::connection(HealthCheck::QUEUE_CONNECTION);
-    $queue->pushRaw((string) json_encode([
+    $name = config('health.queues')[0];
+    // Straight into the list: Horizon's queue driver would overwrite pushedAt with the real time.
+    $queue->getConnection()->rpush($queue->getQueue($name), (string) json_encode([
         'uuid' => 'health-test',
         'displayName' => 'HealthTestJob',
         'pushedAt' => (string) (now()->getTimestamp() - $seconds),
-    ]), config('health.queues')[0]);
+    ]));
 }
 
 /**

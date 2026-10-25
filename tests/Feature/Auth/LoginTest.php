@@ -125,6 +125,4 @@ it('D-268, D-264: the development access and the layout preview no longer exist'
     ['POST', '/anteprima/errore'],
 ]);
 
-it('exposes the health endpoint', function () {
-    $this->get('/up')->assertOk();
-});
+// The health endpoint is /health (PR-09): tests/Feature/Operations/HealthCheckTest.php.
