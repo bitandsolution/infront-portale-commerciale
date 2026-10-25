@@ -40,7 +40,7 @@ function visualCasePage(string $case, string $folder): DocumentPage
         return new StaticSlidePage($folder.'/statica.png');
     }
 
-    file_put_contents($folder.'/sfondo.png', SampleDeck::background('Proposta economica'));
+    file_put_contents($folder.'/sfondo.png', SampleDeck::background('Infront Network - Recap proposta commerciale'));
 
     [$clubs, $discount, $longNames, $page] = match ($case) {
         'recap_two_clubs' => [2, SampleDeck::DISCOUNT_NONE, false, 0],

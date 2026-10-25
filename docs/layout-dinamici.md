@@ -37,6 +37,7 @@ Il vecchio sistema compone ogni pagina da un **JPEG di sfondo 1920×1080** (circ
 - Tutti i file Interstate dichiarano l'incorporamento "anteprima e stampa" (fsType 4). È compatibile con un PDF in sola lettura come il nostro. Licenza per l'uso su server **confermata** (D-256).
 - ⚠️ Il file Bold e il file Black dichiarano internamente la sottofamiglia "Regular", come il Regular. Se fossero installati come font di sistema, Chromium li confonderebbe. 💡 **Regola**: i font si caricano solo **da file**, con `@font-face` e `font-weight` esplicito (400 Regular, 700 Bold, 900 Black). Non si installano mai nel sistema.
 - `Interstate-black-euro.ttf` non è un font valido e non si usa: il simbolo € è già presente nei file originali.
+- ⚠️ **Caratteri assenti in Interstate** (verifica S1-02, tutti e tre i pesi): `%`, `′` e `″`; il segno `×` esiste ma ha un disegno ornamentale. Nei testi dei layout non si usano: i minuti si scrivono con `'` e `"` (§2.2), al posto di "× 2" si scrive "· 2 posti". Un carattere assente viene disegnato da Chromium con un font di sistema: la pipeline lo segnala con un avviso ("Nel PDF compare il font …").
 - 💡 I file dei font **non vanno nel repository**, per via della licenza. Stanno in un percorso configurato (`DOCUMENT_FONTS_PATH`), predisposto sul server da Antonio. In CI e nei test si usa un font libero sostitutivo, per esempio DejaVu Sans.
 
 ### 2.2 Formati
@@ -190,27 +191,26 @@ Valori in Interstate Black 72 px, centrati, colore `accent_color`. Icone ed etic
 Icone ed etichette nello sfondo. ❓ La somma del totale va confermata con Infront: nel PPTX Lazio "3,5 mln" non coincide con la somma dei valori esposti.
 
 ### 4.8 Recap economico network
-Misure dal PDF (pagina 14):
+✅ **Grafica dell'originale** (pagina 14 del network di esempio; D-314, che modifica il punto "prezzo su ogni riga" di D-254). Riferimento visivo: le immagini `tests/Pdf/references/recap_*.png` approvate da Antonio.
 
-| Elemento | Misura (px) |
-|---|---|
-| Colonne | Club 56–510 · Format 510–789 · N. match 789–994 · Min./partita 994–1198 · N. spot/partita 1198–1402 · Proposta economica 1402–1855 |
-| Intestazione | Top 226, alta 105, fondo #CC0033 |
-| Righe club | Da top 332, alte 45; logo 37 px a x = 68; testi Interstate Bold 20 px, #333333 |
-| Riga dei totali | Alta 90; "Totale / stagione" allineato a destra a x = 733; totali di match, minuti e spot in Interstate Bold 37,3 px |
-| Proposta economica | Cella unica sulla colonna 6 con il totale, Calibri Bold 46,7 px nel vecchio documento; nel nuovo Interstate Black (D-249) |
-| Nota sulle squadre retrocesse | [56,941 1790×30], Interstate Bold 21,3 px, da `layout_texts` |
+| Elemento | Misura (px) | Stile |
+|---|---|---|
+| Colonne | CLUB 56–510 · Format 510–790 · No di Match 790–994 · Min. / Partita 994–1198 · N.Spot / game 1198–1402 · PROPOSTA ECONOMICA 1402–1855 | Griglia completa di bordi neri da 1 px, fondo trasparente |
+| Intestazione | Top 226, alta 106, fondo #CC0033 | Titoli originali (CLUB, Format, No di Match, Min. / Partita, N.Spot / game, PROPOSTA ECONOMICA) in Interstate Bold 20 px **#FFFFFF** (nell'originale rosso su rosso, difetto 1 di §2.4) |
+| Righe | Da top 332, alte 45; logo 37 px a x = 68; nome a x = 136 | Nome del club **in maiuscolo**, valori centrati; Interstate Bold 20 px, #333333 |
+| Riga dei totali | Alta 91; "Totale / stagione" senza bordo, allineato a destra a x = 733 | Totali di match, minuti e spot in celle bordate, Interstate Bold 37,3 px |
+| PROPOSTA ECONOMICA | **Cella unica** dalla prima riga al fondo dei totali | Totale finale in Interstate Black 46,7 px (Calibri sostituito, D-249). Con sconto: listino barrato in Interstate Bold 30 px **sopra** il totale finale, senza sovrapposizione (difetto 2 di §2.4) e senza riga "Sconto" |
+| Nota sulle squadre retrocesse | [56,935 1790×30], Interstate Bold 21,3 px, da `layout_texts` | Testo originale |
+| Nota IVA | Sotto la tabella, 12 px dopo i totali | Interstate Regular 16 px (§4.10) |
 
-💡 Adeguamenti richiesti dalle specifiche approvate (RB-05 M09, D-103), senza cambiare la grafica:
-- l'ultima colonna mostra il **prezzo di listino di ogni club** (partnership + LED + hospitality) su ogni riga;
-- la cella dei totali mostra **totale di listino**, poi **sconto** ("Sconto 15%" o "Sconto 10.000,00 €"), poi **totale finale**, su tre righe **separate** (niente sovrapposizioni). Senza sconto compare solo il totale;
-- colonna Format: "{LIVELLO} · {format}" quando c'è una partnership ("TOP PARTNER · 1ª fila"), solo il format se Libera, "—" senza LED;
-- l'hospitality ha una riga secondaria sotto il club ("Hospitality Premium × 2"), Interstate Bold 16 px, con prezzo nella stessa riga;
-- intestazioni leggibili: testo #FFFFFF in Interstate Black 20 px.
-
-Capienza: **10 righe** per slide, con il totale solo nell'ultima. Oltre 10 righe (club o righe hospitality) la tabella continua su una slide successiva con lo stesso sfondo.
+- Nessun prezzo per club: il prezzo di ogni club non compare, come nell'originale (D-314).
+- Colonna Format: "{LIVELLO} · {format}" quando c'è una partnership ("TOP PARTNER · 1ª fila"), solo il format se Libera, "—" senza LED.
+- **Hospitality**: una riga della griglia sotto il suo club, uguale alle altre, con la variante e i posti nella colonna CLUB ("HOSPITALITY PREMIUM · 2 POSTI") e le celle LED vuote; il suo importo entra solo nel totale.
+- Capienza: **10 righe** per slide (club e hospitality), totali e note solo sull'ultima; una riga hospitality resta sulla slide del suo club. Nelle slide precedenti la cella PROPOSTA ECONOMICA è disegnata vuota.
 
 ### 4.9 Recap economico club
+❓ **Da confermare in F7**: D-314 riguarda il recap network. L'originale del club (pagina 29) ha la stessa struttura a griglia con la cella unica PROPOSTA ECONOMICA; la tabella qui sotto, con un prezzo per riga, va riallineata all'originale quando si costruisce questo layout.
+
 Misure dal PDF Udinese (pagina 29): stessa griglia di colonne del network; intestazione a top 453, alta 105, nel colore del club (#97989B); riga club da top 559, alta 60; riga dei totali da top 619, alta 90.
 
 💡 Righe del nuovo recap club (RB-05 M09, M08 §4.3):

@@ -208,6 +208,16 @@ final class PdfPipeline
         $bytes = (int) filesize($pdf);
         $warnings = [];
 
+        // A font that is not the document font means a character missing from it (for example "%"
+        // in Interstate): Chromium drew it with a system font.
+        $family = $this->fonts->usesSubstitute() ? 'DejaVuSans' : 'Interstate';
+
+        foreach ($fonts as $font) {
+            if (! str_contains($font->name, $family)) {
+                $warnings[] = Text::get('documents.warnings.fallback_font', ['font' => preg_replace('/^[A-Z]{6}\+/', '', $font->name) ?? $font->name]);
+            }
+        }
+
         if ($bytes > self::WARNING_BYTES) {
             $warnings[] = Text::get('documents.warnings.too_heavy', ['size' => number_format($bytes / 1048576, 1, ',', '.')]);
         }

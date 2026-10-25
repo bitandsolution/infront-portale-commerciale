@@ -61,7 +61,8 @@ final class DocumentsTryCommand extends Command
             }
         }
 
-        $folder = storage_path('app/document-try/'.now()->format('Ymd-His'));
+        // Folder named with the local time of Rome, as the user reads it (system times stay in UTC, C7).
+        $folder = storage_path('app/document-try/'.now('Europe/Rome')->format('Ymd-His'));
         File::ensureDirectoryExists($folder);
 
         $this->line(Text::get('documents.console.try_intro', [

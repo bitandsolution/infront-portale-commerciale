@@ -10,13 +10,14 @@
 
 return [
     'network_recap' => [
+        // Column titles of the original recap (D-314).
         'columns' => [
-            'club' => 'Club',
+            'club' => 'CLUB',
             'format' => 'Format',
-            'matches' => 'N. match',
-            'minutes' => 'Min./partita',
-            'spots' => 'N. spot/partita',
-            'price' => 'Proposta economica',
+            'matches' => 'No di Match',
+            'minutes' => 'Min. / Partita',
+            'spots' => 'N.Spot / game',
+            'price' => 'PROPOSTA ECONOMICA',
         ],
         'total' => 'Totale / stagione',
         'none' => '—',
@@ -27,6 +28,7 @@ return [
 
     'warnings' => [
         'too_heavy' => 'Il PDF pesa :size MB, oltre la soglia di 20 MB (M09 §9).',
+        'fallback_font' => 'Nel PDF compare il font :font: qualche carattere non esiste nel font del documento ed è stato sostituito.',
     ],
 
     'errors' => [

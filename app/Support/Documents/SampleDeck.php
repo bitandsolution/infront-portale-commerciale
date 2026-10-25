@@ -101,7 +101,7 @@ final class SampleDeck
                 $seats = 2 + $index % 3;
                 $hospitalityCents = 150_000 * $seats;
                 $rows[] = new RecapRow(
-                    label: 'Hospitality Premium × '.$seats,
+                    label: 'Hospitality Premium · '.$seats.' posti',
                     logoPath: null,
                     format: '',
                     matches: null,
@@ -130,7 +130,7 @@ final class SampleDeck
         return new NetworkRecap(
             $rows,
             new RecapTotals($matchesTotal, $secondsTotal, $spotsTotal, self::decimal($listCents), $label, self::decimal($finalCents)),
-            $clubs > 6 ? 'Le squadre retrocesse a fine stagione non sono incluse nel calcolo delle partite della stagione successiva.' : null,
+            $clubs > 6 ? 'N.B. Eventuali squadre retrocesse verranno sostituite con altre presenti nella medesima serie con previa disponibilità degli spazi al momento della conferma' : null,
         );
     }
 
@@ -160,7 +160,7 @@ final class SampleDeck
 
         if ($background === null) {
             $background = $folder.'/recap-background.png';
-            file_put_contents($background, self::background('Proposta economica'));
+            file_put_contents($background, self::background('Infront Network - Recap proposta commerciale'));
         }
 
         // One different picture for each static slide, so the weight of the PDF is realistic
@@ -193,14 +193,18 @@ final class SampleDeck
     }
 
     /**
-     * Background of a layout: white page, red band with the title at the top, thin footer line.
+     * Background of a layout in the style of the network template: light page, red pill and title in
+     * capitals at the top left, red corner at the bottom right (layout-dinamici §4.8, slide 42).
      */
     public static function background(string $title): string
     {
-        $image = self::canvas(1920, 1080, [255, 255, 255]);
-        imagefilledrectangle($image, 0, 0, 1919, 150, self::color($image, [204, 0, 51]));
-        self::text($image, $title, 56, 100, 44, [255, 255, 255]);
-        imagefilledrectangle($image, 56, 1020, 1863, 1022, self::color($image, [204, 0, 51]));
+        $image = self::canvas(1920, 1080, [246, 246, 246]);
+        $red = self::color($image, [237, 28, 36]);
+        imagefilledrectangle($image, 89, 78, 162, 104, $red);
+        imagefilledellipse($image, 89, 91, 26, 26, $red);
+        imagefilledellipse($image, 162, 91, 26, 26, $red);
+        self::text($image, mb_strtoupper($title), 76, 182, 60, [17, 17, 17]);
+        imagefilledpolygon($image, [1845, 1079, 1919, 985, 1919, 1079], $red);
         self::text($image, 'Documento di prova con dati fittizi', 56, 1060, 16, [120, 120, 120]);
 
         return self::png($image);

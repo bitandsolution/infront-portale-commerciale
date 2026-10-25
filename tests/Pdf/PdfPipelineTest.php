@@ -27,7 +27,7 @@ afterEach(function () {
 it('S1 (D-309): a static slide and the network recap become one optimised PDF', function () {
     $folder = $this->pipelineFolder;
     file_put_contents($folder.'/statica.png', SampleDeck::staticSlide(1));
-    file_put_contents($folder.'/sfondo.png', SampleDeck::background('Proposta economica'));
+    file_put_contents($folder.'/sfondo.png', SampleDeck::background('Infront Network - Recap proposta commerciale'));
 
     $pages = [
         new StaticSlidePage($folder.'/statica.png'),
