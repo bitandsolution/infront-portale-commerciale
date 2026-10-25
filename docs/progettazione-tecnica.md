@@ -123,7 +123,7 @@ L'hosting (fornitore, macchina, amministrazione di sistema) è **definito e gest
 
 | # | Requisito | Perché |
 |---|---|---|
-| R1 | Software installabile: PHP 8.4 (estensioni Laravel, più `gd` con PNG e JPEG, `fileinfo` e `zip`: D-291), MariaDB 11.8, Redis, Chromium (con sandbox attiva), Ghostscript, qpdf, Composer, **Node.js + Puppeteer anche a runtime** (D-223) | Stack D-174 e generazione PDF (M09) |
+| R1 | Software installabile: PHP 8.4 (estensioni Laravel, più `gd` con PNG e JPEG, `fileinfo` e `zip`: D-291), MariaDB 11.8, Redis, Chromium (con sandbox attiva; **chrome-headless-shell di Chrome for Testing installato da Puppeteer, non il pacchetto snap**, con le librerie di sistema elencate in `docs/dev/ambiente-locale.md`: D-308), Ghostscript, qpdf, Composer, **Node.js + Puppeteer anche a runtime** (D-223) | Stack D-174 e generazione PDF (M09) |
 | R2 | Processi sempre attivi per i worker delle code (Supervisor o systemd) e cron ogni minuto | Code PDF/e-mail, scheduler Laravel |
 | R3 | **Isolamento**: utente e pool PHP-FPM dedicati al portale, file non condivisi con altri siti, `open_basedir` sulla cartella dell'applicazione | Precedente di compromissione: un sito vulnerabile non deve poter raggiungere il portale |
 | R4 | Risorse riservate: indicativamente 4 vCPU, 8 GB RAM, 100 GB disco (staging: 2 vCPU, 4 GB, 40 GB) | Chromium usa 1–2 GB per documento; archivio PDF in crescita |
@@ -697,7 +697,7 @@ Stato: **approvato il 2026-10-16 (D-220…D-226)**. Font: **Interstate / Interst
 ### 5.5.2 Pipeline del documento (💡)
 1. **Evento**: approvazione, nuova versione o rigenerazione dell'admin (D-120, D-125).
 2. **Composizione** (servizio condiviso con il simulatore di M08 F-04): tipo documento (D-121), selezione delle slide per ambito, stagione, tipo, lingua e condizioni (D-202), ordinamento per sezione e posizione. Dati dei layout dinamici dalla versione congelata e dai KPI correnti → `kpi_snapshot` e `page_model` salvati sul documento (D-204).
-3. **Immagini**: ogni PNG 1920×1080 viene convertito **una sola volta** in JPEG qualità 85 e conservato come derivato del file (cache): i documenti successivi riusano il derivato.
+3. **Immagini**: ogni PNG 1920×1080 viene convertito **una sola volta** in JPEG qualità 85 e conservato come derivato del file (cache): i documenti successivi riusano il derivato. Il derivato è un file nuovo collegato all'originale da una tabella di sole inserzioni `stored_file_derivatives` (F7), perché `stored_files` rifiuta ogni `UPDATE` (D-310).
 4. **HTML**: una pagina per slide su una tela 1920×1080 (`@page` 16:9). Slide statica = immagine a piena pagina; slide dinamica = sfondo + template Blade del layout con testi vettoriali. Font locali, nessuna risorsa esterna, JavaScript disattivato.
 5. **Rendering** con **Chromium headless via Browsershot**: sandbox attiva, **nessun accesso alla rete** (solo file locali, D-176), timeout per documento.
 6. **Ottimizzazione** con **qpdf**: linearizzazione ("fast web view"), compressione degli oggetti, metadati (titolo, autore "Infront Italy", stagione). Ghostscript solo come ripiego se il file supera la soglia di 20 MB.
@@ -727,7 +727,7 @@ Stime 💡 per circa 40 slide: composizione < 1 s, conversione immagini solo la 
 | Controlli di salute: disco, certificati, ultimo backup (D-179) | Ogni ora |
 
 ### 5.5.6 Impatto sui requisiti dell'ambiente
-✅ R1 precisato (D-223): Node.js e Puppeteer anche in produzione.
+✅ R1 precisato (D-223): Node.js e Puppeteer anche in produzione; Chrome for Testing installato da Puppeteer, non snap (D-308).
 
 ## 5.6 Piano di avvio (D-225)
 
