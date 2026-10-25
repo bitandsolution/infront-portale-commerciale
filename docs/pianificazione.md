@@ -97,8 +97,8 @@ flowchart LR
 | Periodo | Attività | Settimane | Esito |
 |---|---|---|---|
 | 20/10 – 30/10/2026 | **6.3** Preparazione del repository e verifica D-226 | 1,5 | `CLAUDE.md`, `docs/`, layout verificati |
-| 2/11 – 18/11 | **F0** Fondamenta | 2,5 | |
-| 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | Esito nella VM locale (D-261): resa, tempo, peso |
+| 2/11 – 18/11 | **F0** Fondamenta | 2,5 | ✅ Completata il 25/10/2026 (PR-00…PR-09) |
+| 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | ✅ Completata il 25/10/2026 (D-308…D-314). Sulla VM con Interstate: deck di 40 slide, **10,5 MB** (M09-CA4 ≤ 15 MB), **12,3 s** (composizione 2,9 · Chromium 1,8 · qpdf 0,2 · controlli 7,4); recap network con la grafica dell'originale (D-314). Da ripetere sullo staging |
 | 26/11 – 9/12 | **F1** M02 | 2 | |
 | 10/12 – 23/12 | **F2** M03 + M04 | 2 | |
 | 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | |
@@ -118,6 +118,7 @@ flowchart LR
 | giugno 2027 | Apertura vendite 2027-28 (D-242) | — | ❓ Giorno esatto da comunicare: il margine reale dipende da quello |
 
 ⚠️ **Margine ridotto**: circa 23 settimane di sviluppo su 27 disponibili.
+✅ **Avanzamento al 25/10/2026**: F0 e S1 completate circa 4 settimane prima del calendario. Il calendario approvato (D-243) non cambia: l'anticipo resta margine sul go-live e si rivede al checkpoint del 12/3/2027.
 ✅ **Checkpoint al 12/3/2027** (D-247): se il ritardo supera 2 settimane si decide solo allora una delle leve:
 - report R-01…R-05 e R-07 in un rilascio 1.0.1 entro 3 settimane dal go-live (l'audit registra comunque dal primo giorno; R-06 resta nel 1.0);
 - spostamento del go-live, se l'apertura delle vendite lo consente.
@@ -127,9 +128,9 @@ flowchart LR
 |---|---|---|---|---|
 | 23/10/2026 | Antonio | Nuovo repository GitHub privato (D-241) | 6.3 | ✅ `bitandsolution/infront-portale-commerciale` (D-248) |
 | 27/10 | Antonio | Cartella con PDF/PPTX di esempio e font Interstate collegata alla chat | Verifica D-226 | ✅ Collegata il 21/10 |
-| 30/10 | Antonio | **VM VirtualBox** locale con Docker e Sail (`docs/dev/ambiente-locale.md`) | Collaudo delle PR di F0 (D-261) | |
+| 30/10 | Antonio | **VM VirtualBox** locale con Docker e Sail (`docs/dev/ambiente-locale.md`) | Collaudo delle PR di F0 (D-261) | ✅ In uso dalla PR-00 |
 | ~~13/11~~ → 26/2/2027 | Antonio | **Staging su server** conforme a R1–R7, utente di deploy (R6). Richiesta all'amministratore: VM dedicata con root oppure pacchetti (D-261) | Deploy automatico, milestone B con agenti pilota | |
-| 13/11 | Infront | Conferma della licenza dei font per l'incorporamento nei PDF generati da server (D-224) — Regular, Bold e **Black** (D-249) | S1 | |
+| 13/11 | Infront | Conferma della licenza dei font per l'incorporamento nei PDF generati da server (D-224) — Regular, Bold e **Black** (D-249) | S1 | ✅ Confermata (D-256) |
 | 30/11 | Infront | Calendario Excel reale nel tracciato D-017 | F1, milestone A | |
 | 15/1/2027 | Antonio | **Produzione** conforme a R1–R7, backup fuori dall'host attivi | R0 (D-235) | |
 | 31/1 | Infront | Nominativi di agenti pilota e gestore (D-238) | Milestone B | |
