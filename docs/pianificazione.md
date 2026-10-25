@@ -64,7 +64,7 @@ flowchart LR
 |---|---|---|---|---|
 | **F0** | Fondamenta (M01 base + trasversali) | Scheletro applicativo, CI e deploy su staging (D-178; deploy rinviato a quando lo staging su server è pronto, D-261); login Fortify + 2FA obbligatoria, blocco tentativi, scadenze per ruolo, attivazione con token (D-214); gestione utenti dell'admin; Policy/Gate con **test di matrice** (D-215); infrastruttura **audit** append-only (D-210, D-211) con eventi di accesso; `stored_files` e upload ricodificati (D-218); `settings`; code Redis/Horizon, coda `mail`, `notification_logs`, Mailpit; struttura dell'interfaccia (menu per ruolo, selettore stagione, stati di ux §4.5); seeder A1; `/health` e monitoraggio errori. Elenco delle PR: `docs/dev/pr-f0.md` nel repository | — | M01: 1, 2, 3 (parziale), 5 · M10: 2, 3 |
 | **S1** | Prova della pipeline PDF | Una slide statica e una dinamica con font Interstate, Chromium senza rete + qpdf **nella VM locale e in CI** (D-261): tempo, peso, resa; si ripete sullo staging quando disponibile. Il codice resta come base di F7 | F0; verifica D-226 (6.3) | Anticipa M09 CA 4 |
-| **F1** | M02 Anagrafiche sportive | Discipline, stagioni, competizioni, edizioni, iscrizioni, club con alias, stadi, giornate, partite; import Excel con anteprima e alias; calcolo partite (F-12) con RB-05 (D-187) e top match; script dei club dal dump (D-229) | F0 | M02: 1–8 |
+| **F1** | M02 Anagrafiche sportive | Discipline, stagioni, competizioni, edizioni, iscrizioni, club con alias, stadi, giornate, partite; import Excel con anteprima e alias; calcolo partite (F-12) con RB-05 (D-187) e top match; script dei club dal dump (D-229). Elenco delle PR: `docs/dev/pr-f1.md` (D-315…D-322) | F0 | M02: 1–8 |
 | **F2** | M03 Catalogo e listini + M04 Capacità | Catalogo; listino per stagione bozza/pubblicato a griglia; prezzi; testi on top e benefit facoltativi; capacità con flag "gestito"; vista disponibilità e servizio residui | F1 | M03: 1–4, 7, 9 · M04: 3, 4, 10 |
 | **R0** | Rilascio interno (✅ D-235) | Produzione aperta al solo admin per caricare stagione 2027-28, club, stadi, iscrizioni, listino, capacità | F2 | — |
 | **F3** | M05 Clienti | Settori, anagrafica con controllo duplicati (D-080, D-197), proprietà, assegnazione e unione, disattivazione; completa **M01-CA4** (riassegnazione dei clienti dell'agente disattivato, conteggio dei clienti nel dialogo "Disattiva utente", D-282) | F0 (F2 per il configuratore) | M05: 1–8 · M01: 4 |
@@ -159,6 +159,7 @@ Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248). Con
 | `docs/layout-dinamici.md` | **Esito della verifica D-226** sui PDF e PPTX di esempio: misure dei 9 layout, font, formati, colori, difetti attuali, capienze e slide di continuazione |
 | `docs/dev/ci.md` | Pipeline CI e deploy (i workflow si scrivono con PR-00) |
 | `docs/dev/pr-f0.md` | Le 10 PR della fetta F0 |
+| `docs/dev/pr-f1.md` | Le 6 PR della fetta F1 (D-315) |
 | `docs/registro-decisioni.md`, `pianificazione.md`, `progettazione-tecnica.md`, `ux-architettura.md`, `features-evolutive.md` | Copie dei documenti di progetto |
 
 ### 6.3.1 Esito della verifica dei layout (sintesi; dettaglio in `docs/layout-dinamici.md`)

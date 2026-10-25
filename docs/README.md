@@ -15,6 +15,7 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 | `dev/ci.md` | Pipeline di integrazione e deploy |
 | `dev/ambiente-locale.md` | Guida della VM VirtualBox per il collaudo delle PR (D-261) |
 | `dev/pr-f0.md` | Elenco delle PR della fetta F0 |
+| `dev/pr-f1.md` | Elenco delle PR della fetta F1 (D-315) |
 
 **Mockup UX**: canvas "Portale Infront – Configuratore", 13 tavole → https://claude.ai/artifact/WnoZA4zUgQMJBHLJvF4B3c (privato).
 
