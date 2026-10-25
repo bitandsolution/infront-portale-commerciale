@@ -203,7 +203,7 @@ final class SampleDeck
         imagefilledrectangle($image, 89, 78, 162, 104, $red);
         imagefilledellipse($image, 89, 91, 26, 26, $red);
         imagefilledellipse($image, 162, 91, 26, 26, $red);
-        self::text($image, mb_strtoupper($title), 76, 182, 60, [17, 17, 17]);
+        self::text($image, mb_strtoupper($title), 76, 182, 50, [17, 17, 17]);
         imagefilledpolygon($image, [1845, 1079, 1919, 985, 1919, 1079], $red);
         self::text($image, 'Documento di prova con dati fittizi', 56, 1060, 16, [120, 120, 120]);
 
