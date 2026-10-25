@@ -21,7 +21,7 @@ it('D-034: adds a competition to a season with its standard number, with an audi
     $this->actingAs($admin)
         ->post(route('sports.editions.store', $season), ['competition_id' => $competition->id, 'standard_home_matches' => 19])
         ->assertRedirect()
-        ->assertSessionHas('toast.message', 'Serie Prova 2027-28 aggiunta alla stagione.');
+        ->assertSessionHas('toast.message', 'Serie Prova 2027-28 aggiunta alla stagione');
 
     $edition = CompetitionSeason::query()->sole();
     expect($edition->season_id)->toBe($season->id)
@@ -65,7 +65,7 @@ it('D-034: changes the standard number with the value before and after in the au
 
     $this->actingAs(User::factory()->admin()->create())
         ->put(route('sports.editions.update', $edition), ['standard_home_matches' => 17])
-        ->assertSessionHas('toast.message', 'Numero standard di '.$edition->label().' salvato.');
+        ->assertSessionHas('toast.message', 'Numero standard di '.$edition->label().' salvato');
 
     expect($edition->refresh()->standard_home_matches)->toBe(17);
 
@@ -80,7 +80,7 @@ it('removes an empty edition added by mistake, recording what it was', function 
 
     $this->actingAs(User::factory()->admin()->create())
         ->delete(route('sports.editions.destroy', $edition))
-        ->assertSessionHas('toast.message', $label.' tolta dalla stagione.');
+        ->assertSessionHas('toast.message', $label.' tolta dalla stagione');
 
     expect(CompetitionSeason::query()->count())->toBe(0);
 
@@ -94,7 +94,7 @@ it('D-317: in a closed season competitions cannot be added, changed or removed',
     $season = Season::factory()->closed()->create();
     $edition = CompetitionSeason::factory()->for($season)->create();
     $admin = User::factory()->admin()->create();
-    $message = 'La stagione '.$season->code.' è chiusa: le sue anagrafiche si consultano soltanto. Per modificarle riapri la stagione.';
+    $message = 'La stagione '.$season->code.' è chiusa: le sue anagrafiche si consultano soltanto. Per modificarle riapri la stagione';
 
     $this->actingAs($admin)
         ->post(route('sports.editions.store', $season), ['competition_id' => Competition::factory()->create()->id, 'standard_home_matches' => 19])

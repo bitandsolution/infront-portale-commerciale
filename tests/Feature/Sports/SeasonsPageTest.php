@@ -66,7 +66,7 @@ it('F-03, D-127: creates a season with an audit event carrying every field', fun
 
     $season = Season::query()->sole();
     $response->assertRedirect(route('sports.seasons.edit', $season))
-        ->assertSessionHas('toast.message', 'Stagione 2027-28 creata. Ora aggiungi le competizioni con il numero standard di partite.');
+        ->assertSessionHas('toast.message', 'Stagione 2027-28 creata. Ora aggiungi le competizioni con il numero standard di partite');
 
     expect($season->code)->toBe('2027-28')
         ->and($season->starts_on->toDateString())->toBe('2027-07-01')
@@ -93,7 +93,7 @@ it('M02 §8: refuses a season that overlaps another one, saving nothing', functi
         ->from(route('sports.seasons.create'))
         ->post(route('sports.seasons.store'), sportsSeasonForm(['code' => '2028-29', 'starts_on' => '2028-06-30', 'ends_on' => '2029-06-30']))
         ->assertRedirect(route('sports.seasons.create'))
-        ->assertSessionHas('toast.message', 'Le date si sovrappongono alla stagione 2027-28: due stagioni non possono coprire gli stessi giorni.');
+        ->assertSessionHas('toast.message', 'Le date si sovrappongono alla stagione 2027-28: due stagioni non possono coprire gli stessi giorni');
 
     expect(Season::query()->count())->toBe(1)
         ->and(AuditEvent::query()->count())->toBe(0);
@@ -124,7 +124,7 @@ it('D-317: changes name, dates and status with only the changed fields in the au
     $this->actingAs($admin)
         ->put(route('sports.seasons.update', $season), sportsSeasonForm(['code' => '2099-00', 'name' => 'Stagione sportiva 2027-28', 'status' => 'open']))
         ->assertRedirect()
-        ->assertSessionHas('toast.message', 'Stagione 2027-28 salvata.');
+        ->assertSessionHas('toast.message', 'Stagione 2027-28 salvata');
 
     $season->refresh();
     expect($season->code)->toBe('2027-28')
@@ -141,7 +141,7 @@ it('D-317: saving the same values writes nothing and says so', function () {
 
     $this->actingAs(User::factory()->admin()->create())
         ->put(route('sports.seasons.update', $season), sportsSeasonForm())
-        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare.');
+        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare');
 
     expect(AuditEvent::query()->count())->toBe(0);
 });
@@ -152,7 +152,7 @@ it('M02 §8: a season may keep its own dates, but not move onto another season',
 
     $this->actingAs(User::factory()->admin()->create())
         ->put(route('sports.seasons.update', $season), sportsSeasonForm(['ends_on' => '2028-07-15']))
-        ->assertSessionHas('toast.message', 'Le date si sovrappongono alla stagione 2028-29: due stagioni non possono coprire gli stessi giorni.');
+        ->assertSessionHas('toast.message', 'Le date si sovrappongono alla stagione 2028-29: due stagioni non possono coprire gli stessi giorni');
 
     expect($season->refresh()->ends_on->toDateString())->toBe('2028-06-30');
 });
@@ -162,7 +162,7 @@ it('D-317: a closed season can be reopened', function () {
 
     $this->actingAs(User::factory()->admin()->create())
         ->put(route('sports.seasons.update', $season), sportsSeasonForm(['status' => 'open']))
-        ->assertSessionHas('toast.message', 'Stagione 2027-28 salvata.');
+        ->assertSessionHas('toast.message', 'Stagione 2027-28 salvata');
 
     expect($season->refresh()->status)->toBe(SeasonStatus::Open);
 });

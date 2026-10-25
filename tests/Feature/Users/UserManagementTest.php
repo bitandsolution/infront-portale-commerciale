@@ -196,7 +196,7 @@ it('D-281: the admin cannot change his own role', function () {
     $this->actingAs($admin)
         ->put(route('users.update', $admin), newUserForm(['email' => $admin->email, 'role' => 'manager']))
         ->assertRedirect()
-        ->assertSessionHas('toast.message', 'Non puoi eseguire questa operazione sul tuo account: per i tuoi dati usa il profilo.');
+        ->assertSessionHas('toast.message', 'Non puoi eseguire questa operazione sul tuo account: per i tuoi dati usa il profilo');
 
     expect($admin->fresh()?->role)->toBe(Role::Admin);
 });

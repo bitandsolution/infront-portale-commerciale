@@ -37,11 +37,11 @@ return [
     ],
 
     'errors' => [
-        'last_active_admin' => 'Operazione non consentita: deve restare almeno un admin attivo. Nomina prima un altro admin.',
-        'own_account' => 'Non puoi eseguire questa operazione sul tuo account: per i tuoi dati usa il profilo.',
-        'inactive' => "L'utente è disattivato: riattivalo prima di procedere.",
-        'two_factor_not_configured' => "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso.",
-        'already_configured' => "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi.",
+        'last_active_admin' => 'Operazione non consentita: deve restare almeno un admin attivo. Nomina prima un altro admin',
+        'own_account' => 'Non puoi eseguire questa operazione sul tuo account: per i tuoi dati usa il profilo',
+        'inactive' => "L'utente è disattivato: riattivalo prima di procedere",
+        'two_factor_not_configured' => "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso",
+        'already_configured' => "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi",
     ],
 
     'toasts' => [

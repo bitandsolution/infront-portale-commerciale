@@ -41,20 +41,20 @@ return [
     ],
 
     'toasts' => [
-        'season_created' => 'Stagione :season creata. Ora aggiungi le competizioni con il numero standard di partite.',
-        'season_updated' => 'Stagione :season salvata.',
-        'competition_created' => 'Competizione :competition creata.',
-        'competition_updated' => 'Competizione :competition salvata.',
-        'edition_created' => ':edition aggiunta alla stagione.',
-        'edition_updated' => 'Numero standard di :edition salvato.',
-        'edition_removed' => ':edition tolta dalla stagione.',
-        'nothing_changed' => 'Nessuna modifica da salvare.',
+        'season_created' => 'Stagione :season creata. Ora aggiungi le competizioni con il numero standard di partite',
+        'season_updated' => 'Stagione :season salvata',
+        'competition_created' => 'Competizione :competition creata',
+        'competition_updated' => 'Competizione :competition salvata',
+        'edition_created' => ':edition aggiunta alla stagione',
+        'edition_updated' => 'Numero standard di :edition salvato',
+        'edition_removed' => ':edition tolta dalla stagione',
+        'nothing_changed' => 'Nessuna modifica da salvare',
     ],
 
     'errors' => [
-        'season_overlaps' => 'Le date si sovrappongono alla stagione :season: due stagioni non possono coprire gli stessi giorni.',
-        'season_closed' => 'La stagione :season è chiusa: le sue anagrafiche si consultano soltanto. Per modificarle riapri la stagione.',
-        'edition_exists' => ':edition è già nella stagione.',
-        'edition_in_use' => ':edition ha già club iscritti, partite o import: non si può togliere dalla stagione.',
+        'season_overlaps' => 'Le date si sovrappongono alla stagione :season: due stagioni non possono coprire gli stessi giorni',
+        'season_closed' => 'La stagione :season è chiusa: le sue anagrafiche si consultano soltanto. Per modificarle riapri la stagione',
+        'edition_exists' => ':edition è già nella stagione',
+        'edition_in_use' => ':edition ha già club iscritti, partite o import: non si può togliere dalla stagione',
     ],
 ];

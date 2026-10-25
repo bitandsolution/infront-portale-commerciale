@@ -57,7 +57,7 @@ it('F-02, D-127: creates a competition, the code in capital letters, with an aud
     $this->actingAs($admin)
         ->post(route('sports.competitions.store'), sportsCompetitionForm(['code' => ' serie_c_gd ']))
         ->assertRedirect(PortalPages::url('sports_competitions'))
-        ->assertSessionHas('toast.message', 'Competizione Serie C – Girone D creata.');
+        ->assertSessionHas('toast.message', 'Competizione Serie C – Girone D creata');
 
     $competition = Competition::query()->sole();
     expect($competition->code)->toBe('SERIE_C_GD')
@@ -92,7 +92,7 @@ it('C3, C4: changes and deactivates a competition, the code stays, the audit has
 
     $this->actingAs(User::factory()->admin()->create())
         ->put(route('sports.competitions.update', $competition), sportsCompetitionForm(['code' => 'ALTRO', 'is_active' => false]))
-        ->assertSessionHas('toast.message', 'Competizione Serie C – Girone D salvata.');
+        ->assertSessionHas('toast.message', 'Competizione Serie C – Girone D salvata');
 
     $competition->refresh();
     expect($competition->code)->toBe('SERIE_C_GD')
@@ -108,7 +108,7 @@ it('F-02: saving the same values writes nothing', function () {
 
     $this->actingAs(User::factory()->admin()->create())
         ->put(route('sports.competitions.update', $competition), sportsCompetitionForm())
-        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare.');
+        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare');
 
     expect(AuditEvent::query()->count())->toBe(0);
 });
