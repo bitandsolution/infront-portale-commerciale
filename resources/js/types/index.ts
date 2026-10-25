@@ -137,6 +137,43 @@ export interface CompetitionRow {
     url: string;
 }
 
+/** One row of the Stadiums page (SportsPresenter::stadiumRow). */
+export interface StadiumRow {
+    id: number;
+    name: string;
+    city: string;
+    capacity: number | null;
+    isActive: boolean;
+    clubs: number;
+    url: string;
+}
+
+/** One row of the Clubs page (SportsPresenter::clubRow). */
+export interface ClubRow {
+    id: number;
+    code: string;
+    name: string;
+    shortName: string;
+    homeStadiumId: number | null;
+    homeStadium: string | null;
+    primaryColor: string | null;
+    secondaryColor: string | null;
+    isInfront: boolean;
+    isTopMatchOpponent: boolean;
+    isActive: boolean;
+    logoUrl: string | null;
+    url: string;
+}
+
+/** Alias of a club (SportsPresenter::aliasRow). */
+export interface ClubAliasRow {
+    id: number;
+    alias: string;
+    source: string;
+    sourceLabel: string;
+    destroyUrl: string;
+}
+
 export interface SharedProps {
     app: {
         name: string;

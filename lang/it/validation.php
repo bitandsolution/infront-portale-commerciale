@@ -15,6 +15,7 @@ return [
     'current_password' => 'La password attuale non è corretta.',
     'date_format' => 'Il campo :attribute deve essere una data nel formato :format.',
     'email' => 'Il campo :attribute deve essere un indirizzo e-mail valido.',
+    'file' => 'Il campo :attribute deve essere un file.',
     'enum' => 'Il valore scelto per :attribute non è valido.',
     'exists' => 'Il valore scelto per :attribute non esiste.',
     'integer' => 'Il campo :attribute deve essere un numero intero.',

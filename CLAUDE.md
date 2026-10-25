@@ -131,11 +131,15 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Club Infront / avversario | `is_infront` |
 | Avversario da top match | `is_top_match_opponent` |
 | Alias del club | `ClubAlias` · `club_aliases` |
+| Origine dell'alias | `AliasSource`: `manual` (a mano), `import` (risolto in un import calendario), `legacy` (dal vecchio sistema, F1-06) |
+| Nome normalizzato (maiuscole, senza accenti né punteggiatura) | `NameNormalizer` (`App\Support\Sports`): riconoscimento di club e stadi nei calendari (D-319) |
+| Aggiunta di un alias (un alias non indica mai due club né ripete il nome di un altro club) | `AddClubAlias`, `RemoveClubAlias` |
+| Nuovo logo del club (file mai sovrascritto) | `ChangeClubLogo`, evento `club.logo_changed` |
 | Stadio | `Stadium` · `stadiums` |
 | Giornata | `Matchday` · `matchdays` (`stage`: regular / playoff / playout) |
 | Partita | `FixtureMatch`, perché `Match` è parola riservata di PHP · `matches` |
 | Import calendario | `CalendarImport` · `calendar_imports` |
-| Riferimento esterno | `ExternalReference` · `external_references` |
+| Riferimento esterno | `ExternalReference` · `external_references` (`platform`: `idoc` = `ExternalReference::PLATFORM_IDOC`, poi `accrediti`) |
 | Territorio | `Territory` · `territories` |
 | Tipo visibilità (Classica, Virtual) | `VisibilityType` · `visibility_types` |
 | Bacino (1ª fila, 2ª fila…) | `InventoryPool` · `inventory_pools` |

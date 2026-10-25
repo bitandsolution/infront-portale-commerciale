@@ -3,10 +3,12 @@
 namespace App\Domain\Audit\Data;
 
 use App\Enums\SettingKey;
+use App\Models\Club;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\Season;
 use App\Models\Setting;
+use App\Models\Stadium;
 use App\Models\User;
 
 /**
@@ -57,6 +59,19 @@ final readonly class AuditSubject
     public static function edition(CompetitionSeason $edition): self
     {
         return new self('competition_season', $edition->id, $edition->label());
+    }
+
+    /**
+     * A club (F1-02), e.g. "SS Lazio (LAZIO)": also the subject of its logo and alias events.
+     */
+    public static function club(Club $club): self
+    {
+        return new self('club', $club->id, $club->name.' ('.$club->code.')');
+    }
+
+    public static function stadium(Stadium $stadium): self
+    {
+        return new self('stadium', $stadium->id, $stadium->name.' ('.$stadium->city.')');
     }
 
     /**

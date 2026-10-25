@@ -36,6 +36,17 @@ final class SportsActionNotAllowed extends RuntimeException
         return new self(Text::get('sports.errors.edition_in_use', ['edition' => $label]));
     }
 
+    /** D-185: an alias never points to two clubs, nor repeats the name of another club. */
+    public static function aliasTaken(string $alias, string $club): self
+    {
+        return new self(Text::get('sports.errors.alias_taken', ['alias' => $alias, 'club' => $club]));
+    }
+
+    public static function aliasEmpty(): self
+    {
+        return new self(Text::get('sports.errors.alias_empty'));
+    }
+
     public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));

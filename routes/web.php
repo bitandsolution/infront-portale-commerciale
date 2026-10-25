@@ -8,10 +8,12 @@ use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Sports\ClubController;
 use App\Http\Controllers\Sports\CompetitionController;
 use App\Http\Controllers\Sports\CompetitionSeasonController;
 use App\Http\Controllers\Sports\SeasonController;
 use App\Http\Controllers\Sports\SeasonSelectionController;
+use App\Http\Controllers\Sports\StadiumController;
 use App\Http\Controllers\Users\ProfileController;
 use App\Http\Controllers\Users\UserAccessController;
 use App\Http\Controllers\Users\UserController;
@@ -134,6 +136,23 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('anagrafiche/competizioni', [CompetitionController::class, 'store'])->name('sports.competitions.store');
             Route::get('anagrafiche/competizioni/{competition}', [CompetitionController::class, 'edit'])->whereNumber('competition')->name('sports.competitions.edit');
             Route::put('anagrafiche/competizioni/{competition}', [CompetitionController::class, 'update'])->whereNumber('competition')->name('sports.competitions.update');
+
+            // Clubs with logo and aliases (F-05, F-11); never deleted (C4, RB-08).
+            Route::get('anagrafiche/club/nuovo', [ClubController::class, 'create'])->name('sports.clubs.create');
+            Route::post('anagrafiche/club', [ClubController::class, 'store'])->name('sports.clubs.store');
+            Route::get('anagrafiche/club/{club}', [ClubController::class, 'edit'])->whereNumber('club')->name('sports.clubs.edit');
+            Route::put('anagrafiche/club/{club}', [ClubController::class, 'update'])->whereNumber('club')->name('sports.clubs.update');
+            Route::post('anagrafiche/club/{club}/logo', [ClubController::class, 'logo'])->whereNumber('club')->name('sports.clubs.logo');
+            Route::post('anagrafiche/club/{club}/alias', [ClubController::class, 'storeAlias'])->whereNumber('club')->name('sports.clubs.aliases.store');
+            Route::delete('anagrafiche/alias/{clubAlias}', [ClubController::class, 'destroyAlias'])->whereNumber('clubAlias')->name('sports.clubs.aliases.destroy');
+        });
+
+        // Stadiums (F-07): admin and manager (D-137). The list is the "anagrafiche/stadi" page above.
+        Route::middleware('can:'.Ability::SportsCalendarsManage->value)->group(function (): void {
+            Route::get('anagrafiche/stadi/nuovo', [StadiumController::class, 'create'])->name('sports.stadiums.create');
+            Route::post('anagrafiche/stadi', [StadiumController::class, 'store'])->name('sports.stadiums.store');
+            Route::get('anagrafiche/stadi/{stadium}', [StadiumController::class, 'edit'])->whereNumber('stadium')->name('sports.stadiums.edit');
+            Route::put('anagrafiche/stadi/{stadium}', [StadiumController::class, 'update'])->whereNumber('stadium')->name('sports.stadiums.update');
         });
 
         // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.

@@ -1,9 +1,13 @@
 <?php
 
+use App\Enums\AliasSource;
 use App\Enums\FilePurpose;
+use App\Models\Club;
+use App\Models\ClubAlias;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\Season;
+use App\Models\Stadium;
 use App\Models\StoredFile;
 use App\Models\User;
 use Illuminate\Routing\Route as RouteDefinition;
@@ -54,6 +58,7 @@ function routeMatrix(): array
     $admin = ['login', 403, 403, 200, 'login', 'setup'];
     $signedInForm = ['login', 302, 302, 302, 'login', 'setup'];
     $adminForm = ['login', 403, 403, 302, 'login', 'setup'];
+    $backOfficeForm = ['login', 403, 302, 302, 'login', 'setup'];
     $adminAllowed = ['login', 403, 403, 'allowed', 'login', 'setup'];
 
     return [
@@ -141,6 +146,20 @@ function routeMatrix(): array
         'sports.competitions.store' => ['method' => 'POST', 'expected' => $adminForm],
         'sports.competitions.edit' => ['method' => 'GET', 'expected' => $admin],
         'sports.competitions.update' => ['method' => 'PUT', 'expected' => $adminForm],
+
+        // M02 — clubs with logo and aliases: admin only (D-137); stadiums: manager and admin (D-137).
+        // Forms and uploads are sent empty; the removal of an alias goes back with a toast
+        'sports.clubs.create' => ['method' => 'GET', 'expected' => $admin],
+        'sports.clubs.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'sports.clubs.edit' => ['method' => 'GET', 'expected' => $admin],
+        'sports.clubs.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'sports.clubs.logo' => ['method' => 'POST', 'expected' => $adminForm],
+        'sports.clubs.aliases.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'sports.clubs.aliases.destroy' => ['method' => 'DELETE', 'expected' => $adminForm],
+        'sports.stadiums.create' => ['method' => 'GET', 'expected' => $backOffice],
+        'sports.stadiums.store' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'sports.stadiums.edit' => ['method' => 'GET', 'expected' => $backOffice],
+        'sports.stadiums.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
 
         // Season of the top bar (D-317): every role; sent empty, back with the errors
         'season.select' => ['method' => 'POST', 'expected' => $signedInForm],
@@ -237,6 +256,15 @@ function matrixParameters(string $route): array
         ],
         in_array($route, ['sports.editions.update', 'sports.editions.destroy'], true) => [
             'competitionSeason' => CompetitionSeason::factory()->create()->id,
+        ],
+        in_array($route, ['sports.clubs.edit', 'sports.clubs.update', 'sports.clubs.logo', 'sports.clubs.aliases.store'], true) => [
+            'club' => Club::factory()->create()->id,
+        ],
+        $route === 'sports.clubs.aliases.destroy' => [
+            'clubAlias' => ClubAlias::query()->create(['club_id' => ($club = Club::factory()->create())->id, 'discipline_id' => $club->discipline_id, 'alias' => 'Alias matrice', 'source' => AliasSource::Manual])->id,
+        ],
+        in_array($route, ['sports.stadiums.edit', 'sports.stadiums.update'], true) => [
+            'stadium' => Stadium::factory()->create()->id,
         ],
         in_array($route, ['sports.competitions.edit', 'sports.competitions.update'], true) => [
             'competition' => Competition::factory()->create()->id,
