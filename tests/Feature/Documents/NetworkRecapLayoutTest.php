@@ -109,9 +109,10 @@ it('layout §4.8: writes "—" for a club without LED and leaves empty the LED c
 it('layout §4.8: places the rows from top 332 every 45 px and the totals right after them', function () {
     $view = recapLayoutView(NetworkRecapLayout::pages(SampleDeck::recap(2), '/sfondo.jpg')[0]->data);
 
-    expect(array_column($view['rows'], 'top'))->toBe([332, 377])
-        ->and($view['totals']['top'])->toBe(422)
-        ->and($view['vatNote']['top'])->toBe(422 + 90 + 12);
+    // Two clubs and the hospitality row of the second one.
+    expect(array_column($view['rows'], 'top'))->toBe([332, 377, 422])
+        ->and($view['totals']['top'])->toBe(467)
+        ->and($view['vatNote']['top'])->toBe(467 + 90 + 12);
 });
 
 it('layout §6.3: fits a long club name into its column', function () {

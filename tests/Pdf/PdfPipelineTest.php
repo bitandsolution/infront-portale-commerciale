@@ -82,7 +82,7 @@ it('D-312: Chromium never reaches the network, loopback included', function () {
     $folder = $this->pipelineFolder;
     $log = $folder.'/requests.log';
     $port = pdfPipelineFreePort();
-    file_put_contents($folder.'/router.php', '<?php file_put_contents('.var_export($log, true).', $_SERVER["REQUEST_URI"]."\n", FILE_APPEND); http_response_code(404);');
+    file_put_contents($folder.'/router.php', '<?php file_put_contents('.var_export($log, true).', $_SERVER["REQUEST_URI"]."\n", FILE_APPEND); http_response_code(200);');
 
     $server = new Process([PHP_BINARY, '-S', '127.0.0.1:'.$port, $folder.'/router.php']);
     $server->start();
