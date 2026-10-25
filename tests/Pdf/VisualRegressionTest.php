@@ -118,6 +118,7 @@ it('layout §6.5 (D-311): the rendering matches the approved reference', functio
 
     if (! is_file($reference)) {
         if (env('VISUAL_REFERENCES_WRITE_MISSING') === true || env('VISUAL_REFERENCES_WRITE_MISSING') === 'true') {
+            File::ensureDirectoryExists(dirname($reference));
             imagepng($actual, $reference, 9);
             fwrite(STDOUT, "\n      Riferimento creato: tests/Pdf/references/{$case}.png\n");
             expect(is_file($reference))->toBeTrue();

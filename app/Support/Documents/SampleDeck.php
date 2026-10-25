@@ -90,7 +90,7 @@ final class SampleDeck
             );
             $listCents += $priceCents;
 
-            if ($matches !== null && $seconds !== null && $spots !== null) {
+            if ($matches !== null && $spots !== null) {
                 $matchesTotal += $matches;
                 $secondsTotal += $seconds * $matches;
                 $spotsTotal += $spots * $matches;
@@ -314,7 +314,12 @@ final class SampleDeck
      */
     private static function color(GdImage $image, array $rgb): int
     {
-        return (int) imagecolorallocate($image, $rgb[0], $rgb[1], $rgb[2]);
+        return (int) imagecolorallocate(
+            $image,
+            max(0, min(255, $rgb[0])),
+            max(0, min(255, $rgb[1])),
+            max(0, min(255, $rgb[2])),
+        );
     }
 
     /**
