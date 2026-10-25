@@ -128,7 +128,7 @@ L'hosting (fornitore, macchina, amministrazione di sistema) è **definito e gest
 | R3 | **Isolamento**: utente e pool PHP-FPM dedicati al portale, file non condivisi con altri siti, `open_basedir` sulla cartella dell'applicazione | Precedente di compromissione: un sito vulnerabile non deve poter raggiungere il portale |
 | R4 | Risorse riservate: indicativamente 4 vCPU, 8 GB RAM, 100 GB disco (staging: 2 vCPU, 4 GB, 40 GB) | Chromium usa 1–2 GB per documento; archivio PDF in crescita |
 | R5 | Backup anche **fuori dall'host**, con un ripristino provato almeno una volta | RTO di 4 ore anche in caso di guasto hardware |
-| R6 | Accesso SSH per il deploy con utente dedicato, senza sudo | Pipeline di deploy (§5.2.6) |
+| R6 | Accesso SSH per il deploy con utente dedicato, senza sudo, salvo una sola regola sudoers per ricaricare PHP-FPM (`systemctl reload php8.4-fpm`, D-307) | Pipeline di deploy (§5.2.6) |
 | R7 | Utenti MariaDB distinti per il portale (D-283): migrazioni (DDL, solo per il deploy), applicativo (soli dati, senza DDL) e manutenzione (su `audit_events` solo cancellazione degli eventi scaduti e svuotamento dell'IP); script `database/sql/audit-users.sql` | Audit append-only (D-210, D-283) |
 
 Ambienti:
