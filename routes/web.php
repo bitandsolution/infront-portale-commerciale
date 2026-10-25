@@ -8,6 +8,10 @@ use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Sports\CompetitionController;
+use App\Http\Controllers\Sports\CompetitionSeasonController;
+use App\Http\Controllers\Sports\SeasonController;
+use App\Http\Controllers\Sports\SeasonSelectionController;
 use App\Http\Controllers\Users\ProfileController;
 use App\Http\Controllers\Users\UserAccessController;
 use App\Http\Controllers\Users\UserController;
@@ -103,6 +107,33 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('utenti/{user}/reset-password', [UserAccessController::class, 'resetPassword'])->whereNumber('user')->name('users.reset-password');
             Route::post('utenti/{user}/reset-verifica', [UserAccessController::class, 'resetTwoFactor'])->whereNumber('user')->name('users.reset-two-factor');
             Route::post('utenti/{user}/invia-link', [UserAccessController::class, 'resendLink'])->whereNumber('user')->name('users.resend-link');
+        });
+
+        // Season of the top bar (D-317, F1-01): every role, kept in the session.
+        Route::post('stagione', SeasonSelectionController::class)->name('season.select');
+
+        // Sports registry (M02; D-137): seasons, competitions and their editions, admin only.
+        // The lists are the "anagrafiche/stagioni" and "anagrafiche/competizioni" pages above.
+        Route::middleware('can:'.Ability::SportsStructureManage->value)->group(function (): void {
+            Route::get('anagrafiche/stagioni/nuova', [SeasonController::class, 'create'])->name('sports.seasons.create');
+            Route::post('anagrafiche/stagioni', [SeasonController::class, 'store'])->name('sports.seasons.store');
+            Route::get('anagrafiche/stagioni/{season}', [SeasonController::class, 'edit'])->whereNumber('season')->name('sports.seasons.edit');
+            Route::put('anagrafiche/stagioni/{season}', [SeasonController::class, 'update'])->whereNumber('season')->name('sports.seasons.update');
+
+            Route::post('anagrafiche/stagioni/{season}/competizioni', [CompetitionSeasonController::class, 'store'])
+                ->whereNumber('season')
+                ->name('sports.editions.store');
+            Route::put('anagrafiche/edizioni/{competitionSeason}', [CompetitionSeasonController::class, 'update'])
+                ->whereNumber('competitionSeason')
+                ->name('sports.editions.update');
+            Route::delete('anagrafiche/edizioni/{competitionSeason}', [CompetitionSeasonController::class, 'destroy'])
+                ->whereNumber('competitionSeason')
+                ->name('sports.editions.destroy');
+
+            Route::get('anagrafiche/competizioni/nuova', [CompetitionController::class, 'create'])->name('sports.competitions.create');
+            Route::post('anagrafiche/competizioni', [CompetitionController::class, 'store'])->name('sports.competitions.store');
+            Route::get('anagrafiche/competizioni/{competition}', [CompetitionController::class, 'edit'])->whereNumber('competition')->name('sports.competitions.edit');
+            Route::put('anagrafiche/competizioni/{competition}', [CompetitionController::class, 'update'])->whereNumber('competition')->name('sports.competitions.update');
         });
 
         // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.

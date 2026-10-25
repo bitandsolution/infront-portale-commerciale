@@ -6,13 +6,17 @@
 */
 
 return [
+    'after' => 'Il campo :attribute deve essere una data successiva a :date.',
     'between' => [
         'numeric' => 'Il campo :attribute deve essere compreso tra :min e :max.',
     ],
+    'boolean' => 'Il campo :attribute deve essere sì o no.',
     'confirmed' => 'Il campo :attribute non coincide con la conferma.',
     'current_password' => 'La password attuale non è corretta.',
+    'date_format' => 'Il campo :attribute deve essere una data nel formato :format.',
     'email' => 'Il campo :attribute deve essere un indirizzo e-mail valido.',
     'enum' => 'Il valore scelto per :attribute non è valido.',
+    'exists' => 'Il valore scelto per :attribute non esiste.',
     'integer' => 'Il campo :attribute deve essere un numero intero.',
     'max' => [
         'string' => 'Il campo :attribute non può superare :max caratteri.',
@@ -27,6 +31,7 @@ return [
         'symbols' => 'Il campo :attribute deve contenere almeno un simbolo.',
         'uncompromised' => 'Questa password compare in archivi di password violate: scegline un\'altra.',
     ],
+    'regex' => 'Il formato del campo :attribute non è valido.',
     'required' => 'Il campo :attribute è obbligatorio.',
     'string' => 'Il campo :attribute deve essere un testo.',
     'unique' => 'Il valore del campo :attribute è già in uso.',
@@ -34,6 +39,7 @@ return [
     'attributes' => [
         'first_name' => 'nome',
         'last_name' => 'cognome',
+        'date_format' => 'Il campo :attribute deve essere una data nel formato :format.',
         'email' => 'e-mail',
         'phone' => 'telefono',
         'role' => 'ruolo',

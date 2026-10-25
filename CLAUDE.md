@@ -118,6 +118,14 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Competizione (campionato, girone) | `Competition` · `competitions` |
 | Edizione (competizione × stagione) | `CompetitionSeason` · `competition_seasons` |
 | Numero standard di partite in casa | `standard_home_matches` |
+| Disciplina predefinita (1.0: solo calcio) | `Discipline::default()`, `Discipline::FOOTBALL` (`CALCIO`); nessuna pagina, dal seeder (D-321) |
+| Stato della stagione | `SeasonStatus`: `planned` (In preparazione), `open` (Aperta), `closed` (Chiusa, anagrafiche in sola lettura, D-317) |
+| Tipo di competizione | `CompetitionType`: `league` (Campionato), `cup` (Coppa) |
+| Stagioni non sovrapposte (M02 §8) | `SeasonOverlap` (`App\Domain\Sports\Services`) |
+| Stagione della barra superiore (in sessione) | `CurrentSeason` (`App\Domain\Sports\Services`, chiave di sessione `sports.season_id`, D-317), Action `SelectSeason`, rotta `season.select` |
+| Regola delle anagrafiche che rifiuta l'operazione | `SportsActionNotAllowed` (toast) |
+| Campi delle anagrafiche negli eventi di audit | `SportsAuditValues`; area di audit `sports` (D-321) |
+| Dati di sistema delle anagrafiche (calcio, Serie A, B, gironi C) | `SportsSystemDataSeeder`, chiamato da `SystemDataSeeder` |
 | Iscrizione stagionale | `ClubEnrollment` · `club_enrollments` |
 | Club / società sportiva | `Club` · `clubs` |
 | Club Infront / avversario | `is_infront` |

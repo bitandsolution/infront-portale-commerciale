@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Console\Development\DocumentsTryCommand;
 use App\Console\Development\FilesTryCommand;
 use App\Domain\Settings\Services\Settings;
+use App\Domain\Sports\Services\CurrentSeason;
 use App\Enums\Ability;
 use App\Models\User;
 use App\Support\SupportCode;
@@ -25,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
         // System settings read once per request or job (PR-07): a queue worker gets fresh values
         // at every job.
         $this->app->scoped(Settings::class);
+
+        // Season of the top bar (D-317, F1-01): resolved once per request.
+        $this->app->scoped(CurrentSeason::class);
     }
 
     /**

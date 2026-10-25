@@ -12,6 +12,7 @@ return [
         'access' => 'Accessi',
         'users' => 'Utenti',
         'settings' => 'Impostazioni',
+        'sports' => 'Anagrafiche sportive',
     ],
 
     'actions' => [
@@ -38,6 +39,13 @@ return [
         'user_two_factor_configured' => 'Verifica in due passaggi configurata',
         'user_activated' => 'Account attivato',
         'setting_updated' => 'Impostazione modificata',
+        'season_created' => 'Stagione creata',
+        'season_updated' => 'Stagione modificata',
+        'competition_created' => 'Competizione creata',
+        'competition_updated' => 'Competizione modificata',
+        'edition_created' => 'Competizione aggiunta alla stagione',
+        'edition_updated' => 'Numero standard di partite modificato',
+        'edition_removed' => 'Competizione tolta dalla stagione',
     ],
 
     'reasons' => [
