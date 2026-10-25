@@ -17,6 +17,17 @@ return [
         'cup' => 'Coppa',
     ],
 
+    'matchday_stages' => [
+        'regular' => 'Fase regolare',
+        'playoff' => 'Playoff',
+        'playout' => 'Playout',
+    ],
+
+    'match_statuses' => [
+        'scheduled' => 'In programma',
+        'cancelled' => 'Annullata',
+    ],
+
     'alias_sources' => [
         'manual' => 'Inserito a mano',
         'import' => 'Da import calendario',
@@ -49,6 +60,16 @@ return [
         'is_top_match_opponent' => 'avversario da top match',
         'logo' => 'logo',
         'alias' => 'alias',
+        'club_ids' => 'club',
+        'club_ids.*' => 'club',
+        'competition_season_id' => 'competizione',
+        'stage' => 'fase',
+        'matchday' => 'giornata',
+        'match_date' => 'data',
+        'kickoff_time' => 'ora',
+        'home_club_id' => 'squadra di casa',
+        'away_club_id' => 'squadra ospite',
+        'stadium_id' => 'stadio',
     ],
 
     'validation' => [
@@ -71,7 +92,18 @@ return [
         'club_logo_changed' => 'Logo di :club aggiornato',
         'alias_created' => 'Alias «:alias» aggiunto',
         'alias_removed' => 'Alias «:alias» tolto',
+        'clubs_enrolled' => 'Club iscritti a :edition: :count',
+        'enrollment_removed' => ':club tolto da :edition',
+        'match_created' => 'Partita :match inserita',
+        'match_updated' => 'Partita :match salvata',
+        'match_cancelled' => 'Partita :match annullata',
+        'match_restored' => 'Partita :match ripristinata',
+        'warning_suffix' => 'Attenzione: :warnings',
         'nothing_changed' => 'Nessuna modifica da salvare',
+    ],
+
+    'warnings' => [
+        'same_day' => ':club gioca già un\'altra partita il :date in questa competizione',
     ],
 
     'errors' => [
@@ -80,6 +112,12 @@ return [
         'edition_exists' => ':edition è già nella stagione',
         'alias_taken' => '«:alias» identifica già :club: lo stesso nome non può indicare due club',
         'alias_empty' => "L'alias deve contenere almeno una lettera o una cifra",
+        'club_in_another_league' => ':club è già iscritto a :competition in questa stagione: un club gioca un solo campionato per stagione',
+        'club_already_enrolled' => ':club è già iscritto a questa competizione',
+        'enrollment_has_matches' => ':club ha già partite in questa competizione: annullale o correggile prima di toglierlo',
+        'club_not_enrolled' => ':club non è iscritto a :edition: iscrivilo prima dalla pagina della stagione',
+        'date_outside_season' => 'La data è fuori dalla stagione :season',
+        'match_exists' => 'Esiste già una partita con la stessa giornata, squadra di casa e squadra ospite',
         'edition_in_use' => ':edition ha già club iscritti, partite o import: non si può togliere dalla stagione',
     ],
 ];

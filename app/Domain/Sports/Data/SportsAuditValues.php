@@ -5,6 +5,7 @@ namespace App\Domain\Sports\Data;
 use App\Models\Club;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
+use App\Models\FixtureMatch;
 use App\Models\Season;
 use App\Models\Stadium;
 
@@ -89,6 +90,25 @@ final class SportsAuditValues
             'is_infront' => $club->is_infront,
             'is_top_match_opponent' => $club->is_top_match_opponent,
             'is_active' => $club->is_active,
+        ];
+    }
+
+    /**
+     * Clubs by code and stadium by name: readable after renames.
+     *
+     * @return array<string, string|int|null>
+     */
+    public static function match(FixtureMatch $match): array
+    {
+        return [
+            'stage' => $match->matchday->stage->value,
+            'matchday' => $match->matchday->number,
+            'match_date' => $match->match_date->toDateString(),
+            'kickoff_time' => $match->kickoff(),
+            'home_club' => $match->homeClub->code,
+            'away_club' => $match->awayClub->code,
+            'stadium' => $match->stadium?->name,
+            'status' => $match->status->value,
         ];
     }
 }

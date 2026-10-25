@@ -6,6 +6,7 @@
 */
 
 return [
+    'array' => 'Il campo :attribute deve essere un elenco.',
     'after' => 'Il campo :attribute deve essere una data successiva a :date.',
     'between' => [
         'numeric' => 'Il campo :attribute deve essere compreso tra :min e :max.',
@@ -14,6 +15,8 @@ return [
     'confirmed' => 'Il campo :attribute non coincide con la conferma.',
     'current_password' => 'La password attuale non è corretta.',
     'date_format' => 'Il campo :attribute deve essere una data nel formato :format.',
+    'different' => 'I campi :attribute e :other devono essere diversi.',
+    'distinct' => 'Il campo :attribute contiene un valore ripetuto.',
     'email' => 'Il campo :attribute deve essere un indirizzo e-mail valido.',
     'file' => 'Il campo :attribute deve essere un file.',
     'enum' => 'Il valore scelto per :attribute non è valido.',
@@ -23,6 +26,7 @@ return [
         'string' => 'Il campo :attribute non può superare :max caratteri.',
     ],
     'min' => [
+        'array' => 'Scegli almeno :min :attribute.',
         'string' => 'Il campo :attribute deve contenere almeno :min caratteri.',
     ],
     'password' => [
@@ -40,7 +44,6 @@ return [
     'attributes' => [
         'first_name' => 'nome',
         'last_name' => 'cognome',
-        'date_format' => 'Il campo :attribute deve essere una data nel formato :format.',
         'email' => 'e-mail',
         'phone' => 'telefono',
         'role' => 'ruolo',

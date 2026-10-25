@@ -4,8 +4,10 @@ use App\Enums\AliasSource;
 use App\Enums\FilePurpose;
 use App\Models\Club;
 use App\Models\ClubAlias;
+use App\Models\ClubEnrollment;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
+use App\Models\FixtureMatch;
 use App\Models\Season;
 use App\Models\Stadium;
 use App\Models\StoredFile;
@@ -142,6 +144,9 @@ function routeMatrix(): array
         'sports.editions.store' => ['method' => 'POST', 'expected' => $adminForm],
         'sports.editions.update' => ['method' => 'PUT', 'expected' => $adminForm],
         'sports.editions.destroy' => ['method' => 'DELETE', 'expected' => $adminForm],
+        'sports.editions.show' => ['method' => 'GET', 'expected' => $admin],
+        'sports.enrollments.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'sports.enrollments.destroy' => ['method' => 'DELETE', 'expected' => $adminForm],
         'sports.competitions.create' => ['method' => 'GET', 'expected' => $admin],
         'sports.competitions.store' => ['method' => 'POST', 'expected' => $adminForm],
         'sports.competitions.edit' => ['method' => 'GET', 'expected' => $admin],
@@ -160,6 +165,15 @@ function routeMatrix(): array
         'sports.stadiums.store' => ['method' => 'POST', 'expected' => $backOfficeForm],
         'sports.stadiums.edit' => ['method' => 'GET', 'expected' => $backOffice],
         'sports.stadiums.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
+
+        // M02 — matches: manager and admin (D-137). Without a season the new-match page goes back to
+        // the list; forms are sent empty; cancel and restore go back with a toast
+        'sports.matches.create' => ['method' => 'GET', 'expected' => $backOfficeForm],
+        'sports.matches.store' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'sports.matches.edit' => ['method' => 'GET', 'expected' => $backOffice],
+        'sports.matches.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
+        'sports.matches.cancel' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'sports.matches.restore' => ['method' => 'POST', 'expected' => $backOfficeForm],
 
         // Season of the top bar (D-317): every role; sent empty, back with the errors
         'season.select' => ['method' => 'POST', 'expected' => $signedInForm],
@@ -254,7 +268,13 @@ function matrixParameters(string $route): array
         in_array($route, ['sports.seasons.edit', 'sports.seasons.update', 'sports.editions.store'], true) => [
             'season' => Season::factory()->create()->id,
         ],
-        in_array($route, ['sports.editions.update', 'sports.editions.destroy'], true) => [
+        $route === 'sports.enrollments.destroy' => [
+            'clubEnrollment' => ClubEnrollment::query()->create(['competition_season_id' => CompetitionSeason::factory()->create()->id, 'club_id' => Club::factory()->create()->id])->id,
+        ],
+        in_array($route, ['sports.matches.edit', 'sports.matches.update', 'sports.matches.cancel', 'sports.matches.restore'], true) => [
+            'fixtureMatch' => FixtureMatch::factory()->create()->id,
+        ],
+        in_array($route, ['sports.editions.update', 'sports.editions.destroy', 'sports.editions.show', 'sports.enrollments.store'], true) => [
             'competitionSeason' => CompetitionSeason::factory()->create()->id,
         ],
         in_array($route, ['sports.clubs.edit', 'sports.clubs.update', 'sports.clubs.logo', 'sports.clubs.aliases.store'], true) => [

@@ -82,4 +82,12 @@ final class Club extends Model
     {
         return $this->hasMany(ClubAlias::class);
     }
+
+    /**
+     * @return HasMany<ClubEnrollment, $this>
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(ClubEnrollment::class);
+    }
 }

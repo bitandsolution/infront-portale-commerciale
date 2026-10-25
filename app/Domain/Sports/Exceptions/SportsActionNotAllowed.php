@@ -47,6 +47,41 @@ final class SportsActionNotAllowed extends RuntimeException
         return new self(Text::get('sports.errors.alias_empty'));
     }
 
+    /** F-06, D-185: one league per club and season. */
+    public static function clubInAnotherLeague(string $club, string $competition): self
+    {
+        return new self(Text::get('sports.errors.club_in_another_league', ['club' => $club, 'competition' => $competition]));
+    }
+
+    public static function clubAlreadyEnrolled(string $club): self
+    {
+        return new self(Text::get('sports.errors.club_already_enrolled', ['club' => $club]));
+    }
+
+    /** An enrollment with matches of the club in that edition stays (the calendar needs it). */
+    public static function enrollmentHasMatches(string $club): self
+    {
+        return new self(Text::get('sports.errors.enrollment_has_matches', ['club' => $club]));
+    }
+
+    /** M02 §8: both teams enrolled in the competition in that season. */
+    public static function clubNotEnrolled(string $club, string $edition): self
+    {
+        return new self(Text::get('sports.errors.club_not_enrolled', ['club' => $club, 'edition' => $edition]));
+    }
+
+    /** M02 §8: the date falls within the season. */
+    public static function dateOutsideSeason(string $season): self
+    {
+        return new self(Text::get('sports.errors.date_outside_season', ['season' => $season]));
+    }
+
+    /** M02 §8, F-10: no two matches with the same matchday, home and away clubs. */
+    public static function matchExists(): self
+    {
+        return new self(Text::get('sports.errors.match_exists'));
+    }
+
     public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));

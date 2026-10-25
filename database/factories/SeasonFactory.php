@@ -9,13 +9,13 @@ use Illuminate\Support\Carbon;
 
 /**
  * Fictitious football seasons, from 1 July to 30 June. Each factory season gets a different year
- * far in the future (2051-52, 2052-53…), so seasons never overlap; forYear() sets a real one.
+ * far in the future (2101-02, 2102-03…), so seasons never overlap; forYear() sets a real one.
  *
  * @extends Factory<Season>
  */
 class SeasonFactory extends Factory
 {
-    private static int $nextYear = 2051;
+    private static int $nextYear = 2101;
 
     /**
      * @return array<string, mixed>

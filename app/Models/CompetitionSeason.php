@@ -6,6 +6,7 @@ use Database\Factories\CompetitionSeasonFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -63,5 +64,21 @@ final class CompetitionSeason extends Model
     public function season(): BelongsTo
     {
         return $this->belongsTo(Season::class);
+    }
+
+    /**
+     * @return HasMany<ClubEnrollment, $this>
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(ClubEnrollment::class);
+    }
+
+    /**
+     * @return HasMany<Matchday, $this>
+     */
+    public function matchdays(): HasMany
+    {
+        return $this->hasMany(Matchday::class);
     }
 }

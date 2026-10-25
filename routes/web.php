@@ -11,6 +11,8 @@ use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\ClubController;
 use App\Http\Controllers\Sports\CompetitionController;
 use App\Http\Controllers\Sports\CompetitionSeasonController;
+use App\Http\Controllers\Sports\EditionController;
+use App\Http\Controllers\Sports\MatchController;
 use App\Http\Controllers\Sports\SeasonController;
 use App\Http\Controllers\Sports\SeasonSelectionController;
 use App\Http\Controllers\Sports\StadiumController;
@@ -132,6 +134,17 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
                 ->whereNumber('competitionSeason')
                 ->name('sports.editions.destroy');
 
+            // Clubs enrolled in an edition (F-06), from the page of the season.
+            Route::get('anagrafiche/edizioni/{competitionSeason}', [EditionController::class, 'show'])
+                ->whereNumber('competitionSeason')
+                ->name('sports.editions.show');
+            Route::post('anagrafiche/edizioni/{competitionSeason}/iscrizioni', [EditionController::class, 'enroll'])
+                ->whereNumber('competitionSeason')
+                ->name('sports.enrollments.store');
+            Route::delete('anagrafiche/iscrizioni/{clubEnrollment}', [EditionController::class, 'destroy'])
+                ->whereNumber('clubEnrollment')
+                ->name('sports.enrollments.destroy');
+
             Route::get('anagrafiche/competizioni/nuova', [CompetitionController::class, 'create'])->name('sports.competitions.create');
             Route::post('anagrafiche/competizioni', [CompetitionController::class, 'store'])->name('sports.competitions.store');
             Route::get('anagrafiche/competizioni/{competition}', [CompetitionController::class, 'edit'])->whereNumber('competition')->name('sports.competitions.edit');
@@ -153,6 +166,14 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('anagrafiche/stadi', [StadiumController::class, 'store'])->name('sports.stadiums.store');
             Route::get('anagrafiche/stadi/{stadium}', [StadiumController::class, 'edit'])->whereNumber('stadium')->name('sports.stadiums.edit');
             Route::put('anagrafiche/stadi/{stadium}', [StadiumController::class, 'update'])->whereNumber('stadium')->name('sports.stadiums.update');
+
+            // Matches (F-08): manual entry and change, cancellation and restore (D-319), never deleted.
+            Route::get('anagrafiche/partite/nuova', [MatchController::class, 'create'])->name('sports.matches.create');
+            Route::post('anagrafiche/partite', [MatchController::class, 'store'])->name('sports.matches.store');
+            Route::get('anagrafiche/partite/{fixtureMatch}', [MatchController::class, 'edit'])->whereNumber('fixtureMatch')->name('sports.matches.edit');
+            Route::put('anagrafiche/partite/{fixtureMatch}', [MatchController::class, 'update'])->whereNumber('fixtureMatch')->name('sports.matches.update');
+            Route::post('anagrafiche/partite/{fixtureMatch}/annulla', [MatchController::class, 'cancel'])->whereNumber('fixtureMatch')->name('sports.matches.cancel');
+            Route::post('anagrafiche/partite/{fixtureMatch}/ripristina', [MatchController::class, 'restore'])->whereNumber('fixtureMatch')->name('sports.matches.restore');
         });
 
         // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.

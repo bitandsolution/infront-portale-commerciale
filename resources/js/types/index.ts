@@ -117,6 +117,8 @@ export interface EditionRow {
     competitionActive: boolean;
     standardHomeMatches: number;
     calendarLoadedAt: string | null;
+    enrollments: number;
+    showUrl: string;
     updateUrl: string;
     destroyUrl: string;
 }
@@ -172,6 +174,25 @@ export interface ClubAliasRow {
     source: string;
     sourceLabel: string;
     destroyUrl: string;
+}
+
+/** One match of the Matches page (SportsPresenter::matchRow). */
+export interface MatchRow {
+    id: number;
+    stage: string;
+    stageLabel: string;
+    matchday: number;
+    date: string;
+    kickoff: string | null;
+    homeClub: string;
+    awayClub: string;
+    stadium: string | null;
+    status: string;
+    statusLabel: string;
+    source: string;
+    editUrl: string;
+    cancelUrl: string;
+    restoreUrl: string;
 }
 
 export interface SharedProps {

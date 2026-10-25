@@ -136,8 +136,10 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Aggiunta di un alias (un alias non indica mai due club né ripete il nome di un altro club) | `AddClubAlias`, `RemoveClubAlias` |
 | Nuovo logo del club (file mai sovrascritto) | `ChangeClubLogo`, evento `club.logo_changed` |
 | Stadio | `Stadium` · `stadiums` |
-| Giornata | `Matchday` · `matchdays` (`stage`: regular / playoff / playout) |
-| Partita | `FixtureMatch`, perché `Match` è parola riservata di PHP · `matches` |
+| Giornata | `Matchday` · `matchdays` (`stage`: enum `MatchdayStage`, regular / playoff / playout) |
+| Partita | `FixtureMatch`, perché `Match` è parola riservata di PHP · `matches` (`status`: `MatchStatus` scheduled / cancelled; `source`: `MatchSource` manual / import) |
+| Iscrizione dei club / tolta di un club (un solo campionato per club e stagione) | `EnrollClubs`, `RemoveEnrollment` (`App\Domain\Sports\Actions`) |
+| Inserimento e modifica di una partita (stadio predefinito = abituale della squadra di casa; avvisi non bloccanti) | `SaveMatch` → `SavedMatch`; annullamento e ripristino `ChangeMatchStatus` (D-319) |
 | Import calendario | `CalendarImport` · `calendar_imports` |
 | Riferimento esterno | `ExternalReference` · `external_references` (`platform`: `idoc` = `ExternalReference::PLATFORM_IDOC`, poi `accrediti`) |
 | Territorio | `Territory` · `territories` |

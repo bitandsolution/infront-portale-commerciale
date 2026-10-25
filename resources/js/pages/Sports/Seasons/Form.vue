@@ -253,6 +253,12 @@ function confirmRemove(): void {
                                     {{ t('sports.editions.calendar') }}:
                                     {{ edition.calendarLoadedAt ? t('sports.editions.calendar_loaded', { date: edition.calendarLoadedAt }) : t('sports.editions.calendar_missing') }}
                                 </div>
+                                <Link
+                                    :href="edition.showUrl"
+                                    class="mt-1 inline-flex min-h-11 items-center text-sm font-medium text-accent underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent"
+                                >
+                                    {{ t('sports.editions.enrollments_link', { count: String(edition.enrollments) }) }}
+                                </Link>
                             </div>
                             <div class="w-full sm:w-44">
                                 <TextField
