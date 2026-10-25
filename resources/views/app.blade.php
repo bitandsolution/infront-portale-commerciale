@@ -4,6 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noindex, nofollow">
+        {{-- Nonce of the Content-Security-Policy (PR-09): read by Inertia for the styles it adds. --}}
+        <meta name="csp-nonce" content="{{ Vite::cspNonce() }}">
         <title inertia>{{ config('app.name') }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
         @inertiaHead

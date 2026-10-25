@@ -20,6 +20,10 @@ enum NotificationType: string
     case LoginLocked = 'login_locked';
     case LoginLockedAdmin = 'login_locked_admin';
 
+    // Operations alerts to the admins (progettazione-tecnica §5.2.7; D-298; PR-09)
+    case JobFailed = 'job_failed';
+    case QueueStalled = 'queue_stalled';
+
     public static function forAccessLink(AccessLinkType $type): self
     {
         return match ($type) {

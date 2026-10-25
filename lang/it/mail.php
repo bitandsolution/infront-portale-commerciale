@@ -65,6 +65,24 @@ return [
         'action' => "Apri la scheda dell'utente",
     ],
 
+    // Operations alerts to the admins (progettazione-tecnica §5.2.7, D-298; PR-09): sent at once,
+    // outside the queue, at most one an hour for the same kind of job or the same queue.
+    'job_failed' => [
+        'subject' => 'Lavoro non riuscito nella coda :queue',
+        'intro' => 'il :time un lavoro della coda ":queue" non è riuscito nemmeno all\'ultimo dei tentativi previsti.',
+        'job' => 'Lavoro',
+        'queue' => 'Coda',
+        'error' => 'Errore',
+        'note' => 'Nel pannello delle code trovi i dettagli e il pulsante per riprovare il lavoro. Per un\'ora non riceverai altri avvisi per lo stesso tipo di lavoro.',
+        'action' => 'Apri i lavori non riusciti',
+    ],
+    'queue_stalled' => [
+        'subject' => 'Coda :queue ferma da oltre 10 minuti',
+        'intro' => 'il :time il pannello delle code ha stimato un\'attesa di circa :minutes minuti sulla coda ":queue": i lavori in coda, come le e-mail e i documenti, arrivano in ritardo.',
+        'note' => 'Controlla nel pannello che i processi delle code siano attivi. Per un\'ora non riceverai altri avvisi per questa coda.',
+        'action' => 'Apri il pannello delle code',
+    ],
+
     // Register of the e-mails (notification_logs, D-209).
     'types' => [
         'activation' => 'Attivazione',
@@ -73,6 +91,8 @@ return [
         'password_forgotten' => 'Password dimenticata',
         'login_locked' => 'Accesso bloccato (utente)',
         'login_locked_admin' => 'Accesso bloccato (admin)',
+        'job_failed' => 'Lavoro non riuscito (admin)',
+        'queue_stalled' => 'Coda ferma (admin)',
     ],
     'statuses' => [
         'queued' => 'In coda',

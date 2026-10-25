@@ -6,7 +6,7 @@
         <meta name="robots" content="noindex, nofollow">
         <title>{{ __('ui.errors.page_title') }}</title>
         {{-- Self-contained on purpose: the asset build may be the cause of the error. --}}
-        <style>
+        <style nonce="{{ Vite::cspNonce() }}">
             body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f6f8; color: #15171c; font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif; }
             main { max-width: 32rem; margin: 1.5rem; padding: 2rem; background: #fff; border: 1px solid #e1e4e9; border-radius: 14px; }
             .brand { font-weight: 700; font-size: 22px; color: #c8102e; letter-spacing: -0.5px; }

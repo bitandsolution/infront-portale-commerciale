@@ -1,0 +1,10 @@
+{
+    "Unauthorized": "Accesso non autorizzato",
+    "Payment Required": "Pagamento richiesto",
+    "Forbidden": "Accesso negato",
+    "Not Found": "Pagina non trovata",
+    "Page Expired": "Pagina scaduta: ricaricala e riprova",
+    "Too Many Requests": "Troppe richieste: riprova tra qualche minuto",
+    "Server Error": "Errore del portale",
+    "Service Unavailable": "Portale in manutenzione: riprova tra qualche minuto"
+}

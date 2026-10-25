@@ -155,6 +155,10 @@ Comandi utili:
 | Vedere le ultime e-mail del registro (PR-08) | `sail artisan notifications:list` (filtri: `--status=failed`, `--user=<e-mail>`, `--limit=50`): tipo, destinatario, stato (In coda, Inviata, Non inviata), tentativi ed errore, mai il contenuto |
 | Pulire il registro delle e-mail (PR-08) | `sail artisan notifications:prune`: cancella le righe più vecchie di 12 mesi. In produzione gira ogni domenica alle 4:00 |
 | Provare "Password dimenticata?" (PR-08) | Dalla pagina di accesso, in una finestra anonima: il link arriva in Mailpit solo agli utenti attivi con verifica in due passaggi; il messaggio della pagina è sempre lo stesso. Al massimo 5 richieste ogni 15 minuti dallo stesso indirizzo IP e 3 link all'ora per indirizzo e-mail |
+| Salute del portale (PR-09) | **http://localhost:8080/health** risponde `{"status":"ok"}` (200) oppure `{"status":"fail"}` (503), senza dettagli. I dettagli di ogni controllo (database, Redis, Horizon, attesa nelle code, disco, scheduler) con `sail artisan health:check`, che esce con errore se un controllo non passa. Sulla VM servono il worker avviato e un segnale recente dello scheduler (riga seguente) |
+| Far girare lo scheduler (PR-09) | Nella VM lo scheduler non parte da solo. `sail artisan schedule:run` esegue una volta i lavori dovuti e scrive il segnale di vita, valido 10 minuti per `/health`; `sail artisan schedule:work` lo fa ogni minuto finché resta aperto (terzo terminale SSH, Ctrl+C per fermarlo) |
+| Log dell'applicazione (PR-09) | Un file al giorno in `storage/logs/laravel-AAAA-MM-GG.log`, conservati 30 giorni: `tail -f storage/logs/laravel-$(date +%F).log` |
+| Intestazioni di sicurezza (PR-09) | Chrome → F12 → *Network* → una pagina del portale → *Headers*: `Content-Security-Policy` con `'nonce-…'`, `X-Frame-Options: DENY`. Nella scheda *Console* non devono comparire errori `Refused to …` (CSP) |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".
@@ -181,10 +185,12 @@ Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale):
 | Il link dell'e-mail mostra "Link non valido" | Il link è scaduto (48 ore), è già stato usato, oppure ne è stato inviato uno più recente | Dalla scheda dell'utente: "Invia di nuovo il link" (utente da attivare) o di nuovo il reset |
 | Mailpit resta vuoto dopo un'operazione che invia un'e-mail (PR-08) | Il worker delle code non è avviato: le e-mail sono in coda su Redis | Avvia `sail artisan horizon` in un secondo terminale: le e-mail in attesa partono subito. `sail artisan notifications:list` le mostra "In coda" finché il worker non le invia |
 | Il worker non vede una modifica appena scaricata (PR-08) | Horizon carica il codice all'avvio | Ferma il worker con Ctrl+C e rilancia `sail artisan horizon` |
+| `/health` risponde `{"status":"fail"}` (503) sulla VM (PR-09) | Il worker delle code non è avviato, oppure lo scheduler non ha scritto il segnale negli ultimi 10 minuti (sulla VM non gira da solo) | `sail artisan health:check` dice quale controllo non passa: per "Code (Horizon): non avviato" avvia `sail artisan horizon`, per "Scheduler" lancia `sail artisan schedule:run` |
+| La pagina di errore con i dettagli di Laravel (sfondo scuro) appare sulla VM | `APP_DEBUG=true` nel `.env` della VM: mostra i dettagli dell'errore. Non ha la Content-Security-Policy, così resta leggibile | Normale in sviluppo; in produzione `APP_DEBUG=false` mostra la pagina del portale con il codice di supporto |
 | `Class OwnedRecord located in ./tests/Feature/Authorization/OwnerScopeTest.php …` durante `sail composer install` | Avviso dell'autoload su una classe di prova definita dentro un test | Nessuna: non ha effetti |
 
 ## 6. Più avanti
 
 - **Font Interstate** e **Chromium**: arrivano con la fetta S1. La PR di S1 aggiungerà il servizio Chromium a `compose.yaml` e la cartella dei font da indicare in `DOCUMENT_FONTS_PATH`, fuori dal repository. I file dei font non vanno mai nel repository.
 - **Demo a Infront (gennaio 2027)**: dal tuo PC, con `sail artisan migrate:fresh --seed` per partire da dati di prova puliti.
-- **Staging su server**: quando l'ambiente R1–R7 sarà pronto (entro il 26/2/2027 per la milestone B), si attiva il deploy automatico della PR-09 (`docs/dev/ci.md` §2).
+- **Staging su server**: quando l'ambiente R1–R7 sarà pronto (entro il 26/2/2027 per la milestone B), si attiva il deploy automatico della PR-09 con la variabile `DEPLOY_STAGING_ENABLED` (`docs/dev/ci.md` §2).

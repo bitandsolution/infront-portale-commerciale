@@ -21,6 +21,9 @@ use Throwable;
  * it "sent" with the provider's message id (App\Listeners\RecordNotificationDelivery), the failure of
  * the last try makes it "failed" with the error (PortalMail::failed()).
  *
+ * sendNow() is for the operations alerts only (PR-09): the e-mail leaves at once, without the queue,
+ * because the alert may be about the queue itself being stalled.
+ *
  * Nothing of the message body is stored: no link, no token.
  */
 final class Notifications
@@ -31,6 +34,33 @@ final class Notifications
     public const RETENTION_MONTHS = 12;
 
     public function send(User $user, PortalMail $mail): NotificationLog
+    {
+        $log = $this->register($user, $mail);
+
+        Mail::to($user->email)->queue($mail);
+
+        return $log;
+    }
+
+    /**
+     * Sends the e-mail at once, outside the queue (operations alerts, PR-09). The row follows the
+     * delivery like the queued e-mails; a refused message makes it "failed" and is not retried.
+     */
+    public function sendNow(User $user, PortalMail $mail): NotificationLog
+    {
+        $log = $this->register($user, $mail);
+
+        try {
+            Mail::to($user->email)->sendNow($mail);
+        } catch (Throwable $exception) {
+            $this->markFailed($log->id, $exception);
+            report($exception);
+        }
+
+        return $log->refresh();
+    }
+
+    private function register(User $user, PortalMail $mail): NotificationLog
     {
         $log = NotificationLog::query()->create([
             'user_id' => $user->id,
@@ -43,8 +73,6 @@ final class Notifications
         ]);
 
         $mail->notificationLogId = $log->id;
-
-        Mail::to($user->email)->queue($mail);
 
         return $log;
     }
