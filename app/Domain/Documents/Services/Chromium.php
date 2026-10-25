@@ -17,9 +17,14 @@ final class Chromium
 {
     public function __construct(private readonly Application $app) {}
 
-    public function browsershot(string $html): Browsershot
+    /**
+     * Browsershot for a page already written to a file. The pages are always files in the folder of
+     * the job, never HTML strings (D-312): their fonts and images are file:// resources next to
+     * them, which Browsershot::html() refuses on purpose.
+     */
+    public function browsershot(string $htmlFile): Browsershot
     {
-        $browsershot = Browsershot::html($html)
+        $browsershot = Browsershot::htmlFromFilePath($htmlFile)
             ->setNodeBinary($this->stringConfig('documents.chromium.node_binary', 'node'))
             ->setNpmBinary($this->stringConfig('documents.chromium.npm_binary', 'npm'))
             ->timeout($this->timeout());

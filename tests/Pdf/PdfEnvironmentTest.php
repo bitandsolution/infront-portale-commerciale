@@ -66,10 +66,12 @@ function pdfEnvironmentRun(array $command): string
  */
 function pdfEnvironmentRender(string $folder): string
 {
+    $page = $folder.'/environment.html';
     $pdf = $folder.'/environment.pdf';
+    file_put_contents($page, pdfEnvironmentHtml());
 
     app(Chromium::class)
-        ->browsershot(pdfEnvironmentHtml())
+        ->browsershot($page)
         ->paperSize(1920, 1080, 'px')
         ->margins(0, 0, 0, 0)
         ->showBackground()

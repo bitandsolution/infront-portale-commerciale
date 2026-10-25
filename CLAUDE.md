@@ -217,7 +217,7 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Dati inviati a Sentry senza informazioni personali | `SentryScrubber` (`before_send` di `config/sentry.php`) |
 | Intestazioni di sicurezza e CSP con nonce | middleware `AddSecurityHeaders`; il nonce arriva a Vite, alle pagine di errore e a Inertia (meta `csp-nonce`) |
 | Font dei documenti (Interstate o sostitutivo DejaVu) / pesi | `DocumentFonts` (`App\Domain\Documents\Services`, famiglia CSS `DocumentFont`, `@font-face` con sorgente `file://`) / `DocumentFontWeight` (400, 700, 900) |
-| Chromium headless configurato per la macchina (Node, sandbox, timeout) | `Chromium` (`App\Domain\Documents\Services`), che restituisce un `Browsershot`; sandbox spegnibile solo in `local` e `testing` |
+| Chromium headless configurato per la macchina (Node, sandbox, timeout) | `Chromium` (`App\Domain\Documents\Services`), che restituisce un `Browsershot` per una pagina già scritta su file (mai HTML in stringa, D-312); sandbox spegnibile solo in `local` e `testing` |
 | Strumento della pipeline mancante o non configurato (font, sandbox) | `DocumentToolUnavailable` (messaggi in `lang/it/documents.php`) |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
