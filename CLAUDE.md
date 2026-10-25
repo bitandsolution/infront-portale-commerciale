@@ -216,6 +216,9 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Avvisi delle code agli admin (lavoro non riuscito, coda ferma) | `OperationsAlerts`, listener `SendJobFailedAlert` e `SendQueueStalledAlert`; e-mail `JobFailedMail` e `QueueStalledMail` inviate subito con `Notifications::sendNow()` |
 | Dati inviati a Sentry senza informazioni personali | `SentryScrubber` (`before_send` di `config/sentry.php`) |
 | Intestazioni di sicurezza e CSP con nonce | middleware `AddSecurityHeaders`; il nonce arriva a Vite, alle pagine di errore e a Inertia (meta `csp-nonce`) |
+| Font dei documenti (Interstate o sostitutivo DejaVu) / pesi | `DocumentFonts` (`App\Domain\Documents\Services`, famiglia CSS `DocumentFont`, `@font-face` con sorgente `file://`) / `DocumentFontWeight` (400, 700, 900) |
+| Chromium headless configurato per la macchina (Node, sandbox, timeout) | `Chromium` (`App\Domain\Documents\Services`), che restituisce un `Browsershot`; sandbox spegnibile solo in `local` e `testing` |
+| Strumento della pipeline mancante o non configurato (font, sandbox) | `DocumentToolUnavailable` (messaggi in `lang/it/documents.php`) |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 
@@ -251,11 +254,13 @@ Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 
 ```bash
-./vendor/bin/sail up -d                 # ambiente locale (app, mariadb, redis, mailpit, chromium)
+./vendor/bin/sail up -d                 # ambiente locale (app con qpdf e poppler-utils, mariadb, redis, mailpit; D-308)
 ./vendor/bin/sail artisan migrate --seed
 ./vendor/bin/sail artisan users:create-admin   # primo admin (interattivo)
 ./vendor/bin/sail artisan db:seed --class=SystemDataSeeder  # dati di sistema mancanti (PR-07; anche con migrate --seed)
 ./vendor/bin/sail artisan test          # Pest
+./vendor/bin/sail artisan test --group=pdf  # test della pipeline PDF: Chromium, qpdf, pdffonts (S1-01; in CI job `pdf`)
+./vendor/bin/sail npm ci                # dipendenze npm e chrome-headless-shell in .cache/puppeteer (D-308)
 ./vendor/bin/sail composer analyse      # Larastan
 ./vendor/bin/sail composer format       # Pint
 ./vendor/bin/sail npm run dev           # Vite

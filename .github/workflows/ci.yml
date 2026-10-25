@@ -58,19 +58,7 @@ jobs:
                   tools: composer:v2
 
             - name: Install Composer dependencies
-              run: |
-                  if [ -f composer.lock ]; then
-                      missing=$(php .github/scripts/missing-locked-packages.php)
-                      if [ -n "$missing" ]; then
-                          echo "::warning::composer.lock without $missing: resolving only these packages"
-                          .github/scripts/run.sh "composer update" composer update $missing --with-dependencies --no-interaction --no-progress --prefer-dist
-                      else
-                          .github/scripts/run.sh "composer install" composer install --no-interaction --no-progress --prefer-dist
-                      fi
-                  else
-                      echo "::warning::composer.lock missing: resolving dependencies with composer update"
-                      .github/scripts/run.sh "composer update" composer update --no-interaction --no-progress --prefer-dist
-                  fi
+              run: .github/scripts/composer-install.sh
 
             - name: Commit composer.lock if it was missing or incomplete (pull requests only)
               if: github.event_name == 'pull_request'
@@ -99,8 +87,61 @@ jobs:
                   npm ci --no-audit --no-fund
                   npm run build
 
+            # The tests of the document pipeline (group "pdf") run in the "pdf" job, with Chromium.
             - name: Pest
-              run: .github/scripts/run.sh "Pest" php artisan test
+              run: .github/scripts/run.sh "Pest" php artisan test --exclude-group=pdf
+
+    pdf:
+        name: PDF (Chromium, qpdf)
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.head_ref || github.ref }}
+
+            # D-308, D-311: qpdf, poppler-utils (pdffonts, pdfinfo) and the DejaVu substitute font.
+            # Ubuntu 24.04 restricts unprivileged user namespaces with AppArmor, which Chromium needs
+            # for its sandbox: the restriction is lifted on the runner so the sandbox stays on (R1).
+            - name: Install the PDF tools
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y --no-install-recommends qpdf poppler-utils fonts-dejavu-core
+                  sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+            - name: Set up PHP 8.4
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: mbstring, intl, bcmath, pdo_mysql, redis, gd, zip, pcntl
+                  coverage: none
+                  tools: composer:v2
+
+            - name: Install Composer dependencies
+              run: .github/scripts/composer-install.sh
+
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: '22'
+                  cache: npm
+
+            # npm ci downloads chrome-headless-shell of Chrome for Testing into .cache/puppeteer
+            # (.puppeteerrc.cjs): the same browser of the Sail container and of production.
+            - name: Install npm dependencies and Chrome for Testing
+              run: npm ci --no-audit --no-fund
+
+            - name: Versions of the PDF tools
+              run: |
+                  find .cache/puppeteer -type f -name chrome-headless-shell -exec {} --version \;
+                  qpdf --version | head -n 1
+                  pdffonts -v 2>&1 | head -n 1
+
+            - name: Prepare environment
+              run: |
+                  cp .env.example .env
+                  php artisan key:generate --ansi
+
+            - name: Pest (group pdf)
+              run: .github/scripts/run.sh "Pest (pdf)" php artisan test --group=pdf
 
     frontend:
         name: Frontend (vue-tsc, ESLint, build)

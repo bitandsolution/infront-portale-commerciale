@@ -17,6 +17,9 @@
         <testsuite name="Database">
             <directory>tests/Database</directory>
         </testsuite>
+        <testsuite name="Pdf">
+            <directory>tests/Pdf</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
@@ -35,6 +38,8 @@
         <env name="DB_CONNECTION" value="mariadb"/>
         <env name="DB_DATABASE" value="testing"/>
         <env name="DB_URL" value=""/>
+        <!-- Document fonts in tests: the free DejaVu substitute, even where Interstate is configured (D-311). -->
+        <env name="DOCUMENT_FONTS_PATH" value=""/>
         <!-- Development access (D-268): enabled in tests so the route matrix covers it. -->
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

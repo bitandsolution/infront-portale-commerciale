@@ -37,6 +37,16 @@ pest()->extend(TestCase::class)
     ->in('Concurrency', 'Database');
 
 /*
+| Tests of the document pipeline (fetta S1, D-308): they run Chromium, qpdf and poppler-utils, so
+| they form the group "pdf", run by the CI job "pdf" and excluded from the backend job. They need no
+| database.
+*/
+
+pest()->extend(TestCase::class)
+    ->group('pdf')
+    ->in('Pdf');
+
+/*
 | Helpers of the login tests (PR-03).
 */
 
