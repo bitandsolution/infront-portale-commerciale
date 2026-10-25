@@ -9,6 +9,7 @@ use App\Models\Competition;
 use App\Models\Season;
 use App\Models\User;
 use App\Support\Navigation\PortalPages;
+use Database\Factories\DisciplineFactory;
 use Database\Seeders\SystemDataSeeder;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -17,6 +18,9 @@ use Inertia\Testing\AssertableInertia as Assert;
 | Seasons page (M02 F-03, §8; D-137: admin only; D-317). Permissions of every route are in the
 | route × role matrix (RouteMatrixTest).
 */
+
+// The discipline of the system data (CALCIO), always present in every environment (D-321).
+beforeEach(fn () => DisciplineFactory::football());
 
 /**
  * @param  array<string, mixed>  $overrides
