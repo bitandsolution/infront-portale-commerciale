@@ -18,6 +18,9 @@ import '@fontsource/ibm-plex-mono/latin-ext-500.css';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Portale Commerciale Infront';
 
+// Nonce of the Content-Security-Policy (PR-09, app.blade.php): Inertia puts it on the styles it adds.
+const nonce = document.querySelector<HTMLMetaElement>('meta[name="csp-nonce"]')?.content || undefined;
+
 createInertiaApp({
     title: (title) => (title ? `${title} · ${appName}` : appName),
     resolve: (name) => {
@@ -36,4 +39,5 @@ createInertiaApp({
     progress: {
         color: '#C8102E',
     },
+    nonce,
 });

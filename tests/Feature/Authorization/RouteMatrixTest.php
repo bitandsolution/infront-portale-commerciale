@@ -25,16 +25,18 @@ use Illuminate\Support\Facades\Storage;
 |   'dashboard'   redirect to the dashboard
 |   'setup'       redirect to the mandatory setup of the second factor (D-136, M01-CA1)
 |   'allowed'     neither a redirect nor 401/403: the permission lets the request through (Horizon's
-|                 API calls with an unknown id or an empty body, whose own answer is not the point)
+|                 API calls with an unknown id or an empty body, whose own answer is not the point;
+|                 /health, whose 200 or 503 depends on the state of the services)
 */
 
 const MATRIX_ACTORS = ['guest', 'agent', 'manager', 'admin', 'inactive', 'no_2fa'];
 
 /**
- * Framework routes outside the matrix: they are not part of the portal pages. The private disk is
- * never published at storage/{path} (PR-06, D-218): that route must not exist at all.
+ * Framework routes outside the matrix: none. Laravel's /up was replaced by /health (PR-09), which is
+ * in the matrix. The private disk is never published at storage/{path} (PR-06, D-218): that route
+ * must not exist at all.
  */
-const MATRIX_IGNORED_URIS = ['up'];
+const MATRIX_IGNORED_URIS = [];
 
 /**
  * @return array<string, array{method: string, expected: array{int|string, int|string, int|string, int|string, int|string, int|string}}>
@@ -52,6 +54,10 @@ function routeMatrix(): array
     $adminAllowed = ['login', 403, 403, 'allowed', 'login', 'setup'];
 
     return [
+        // Internal health (PR-09, D-179): public for the uptime service, same answer for everybody
+        // (200 or 503 depending on the state, never a redirect; HealthCheckTest)
+        'health' => ['method' => 'GET', 'expected' => ['allowed', 'allowed', 'allowed', 'allowed', 'allowed', 'allowed']],
+
         'home' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'setup']],
 
         // Login (D-214): guests only; signed-in users go to their dashboard

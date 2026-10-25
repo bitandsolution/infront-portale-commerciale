@@ -1,0 +1,131 @@
+name: Deploy
+
+# Deploy on staging and production (docs/dev/ci.md §2; D-178; PR-09).
+#
+# Ready but NOT active (D-261): every job runs only when its repository variable is "true"
+# (Settings → Secrets and variables → Actions → Variables):
+#   DEPLOY_STAGING_ENABLED     staging, after a green CI on main
+#   DEPLOY_PRODUCTION_ENABLED  production, on a tag vX.Y.Z of a commit of main with a green CI,
+#                              after the approval of Antonio (protected environment "production")
+# Until then the jobs show as skipped.
+#
+# Secrets of each environment (staging, production): DEPLOY_SSH_KEY (private key of the deploy
+# user, R6), DEPLOY_KNOWN_HOSTS (line of the server for ~/.ssh/known_hosts), DEPLOY_HOST,
+# DEPLOY_USER, DEPLOY_PATH. Variables of each environment: DEPLOY_HEALTH_URL (address of /health),
+# optional DEPLOY_PHP_BIN and DEPLOY_FPM_RELOAD_COMMAND; production only: DEPLOY_BACKUP_COMMAND.
+
+on:
+    workflow_run:
+        workflows: [CI]
+        types: [completed]
+        branches: [main]
+    push:
+        tags: ['v*.*.*']
+
+permissions:
+    contents: read
+
+concurrency:
+    group: deploy-${{ github.event_name == 'push' && 'production' || 'staging' }}
+    cancel-in-progress: false
+
+jobs:
+    staging:
+        name: Staging
+        if: >-
+            github.event_name == 'workflow_run'
+            && github.event.workflow_run.event == 'push'
+            && github.event.workflow_run.conclusion == 'success'
+            && vars.DEPLOY_STAGING_ENABLED == 'true'
+        runs-on: ubuntu-24.04
+        environment: staging
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha }}
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: mbstring, intl, bcmath, pdo_mysql, redis, gd, zip, pcntl
+                  coverage: none
+                  tools: composer:v2
+
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: '22'
+                  cache: npm
+
+            - name: Build the release
+              run: .github/scripts/build-release.sh
+
+            - name: Deploy
+              env:
+                  DEPLOY_ENV: staging
+                  DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+                  DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+                  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+                  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+                  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+                  HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL }}
+                  PHP_BIN: ${{ vars.DEPLOY_PHP_BIN }}
+                  FPM_RELOAD_COMMAND: ${{ vars.DEPLOY_FPM_RELOAD_COMMAND }}
+              run: .github/scripts/deploy-release.sh
+
+    production:
+        name: Production
+        if: github.event_name == 'push' && vars.DEPLOY_PRODUCTION_ENABLED == 'true'
+        runs-on: ubuntu-24.04
+        environment: production
+        permissions:
+            contents: read
+            checks: read
+        steps:
+            - uses: actions/checkout@v7
+
+            - name: The tag points to a commit of main with a green CI
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  status=$(gh api "repos/${GITHUB_REPOSITORY}/compare/main...${GITHUB_SHA}" --jq .status)
+                  if [ "$status" != "identical" ] && [ "$status" != "behind" ]; then
+                      echo "::error::The tag ${GITHUB_REF_NAME} is not on main (compare: $status)"
+                      exit 1
+                  fi
+                  failed=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs?per_page=100" \
+                      --jq '[.check_runs[] | select(.name != "Staging" and .name != "Production") | select(.conclusion != "success" and .conclusion != "skipped")] | length')
+                  ci=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs?per_page=100" \
+                      --jq '[.check_runs[] | select(.name | startswith("Backend")) | select(.conclusion == "success")] | length')
+                  if [ "$failed" != "0" ] || [ "$ci" = "0" ]; then
+                      echo "::error::The CI of ${GITHUB_SHA} is not green"
+                      exit 1
+                  fi
+
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: mbstring, intl, bcmath, pdo_mysql, redis, gd, zip, pcntl
+                  coverage: none
+                  tools: composer:v2
+
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: '22'
+                  cache: npm
+
+            - name: Build the release
+              run: .github/scripts/build-release.sh
+
+            - name: Deploy
+              env:
+                  DEPLOY_ENV: production
+                  DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+                  DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+                  DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+                  DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+                  DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+                  HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL }}
+                  PHP_BIN: ${{ vars.DEPLOY_PHP_BIN }}
+                  FPM_RELOAD_COMMAND: ${{ vars.DEPLOY_FPM_RELOAD_COMMAND }}
+                  BACKUP_COMMAND: ${{ vars.DEPLOY_BACKUP_COMMAND }}
+              run: .github/scripts/deploy-release.sh

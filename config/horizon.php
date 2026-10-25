@@ -96,12 +96,14 @@ return [
         'can:'.Ability::QueuesMonitor->value,
     ],
 
-    // Seconds of wait after which a queue counts as "long wait" in the panel. Documents: 10 minutes,
-    // the threshold of progettazione-tecnica §5.2.7 (the alert itself arrives with PR-09).
+    // Seconds of estimated wait after which a queue counts as "long wait": 10 minutes for every queue,
+    // the threshold of progettazione-tecnica §5.2.7. Horizon then raises LongWaitDetected and the
+    // active admins receive an e-mail, at most one an hour per queue (App\Listeners\SendQueueStalledAlert,
+    // PR-09, D-298).
     'waits' => [
         'redis:documents' => 600,
-        'redis:mail' => 300,
-        'redis:default' => 300,
+        'redis:mail' => 600,
+        'redis:default' => 600,
     ],
 
     // Minutes the panel keeps the jobs. Failed jobs: 7 days, like Horizon's default.

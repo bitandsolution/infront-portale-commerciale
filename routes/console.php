@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Operations\Services\SchedulerHeartbeat;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -37,3 +38,10 @@ Schedule::command('notifications:prune')
 
 // Charts of the Horizon panel (PR-08): a snapshot of the queue metrics every 5 minutes.
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
+
+// Heartbeat of the scheduler for /health (PR-09): older than 10 minutes means that cron is not running.
+Schedule::call(function (): void {
+    app(SchedulerHeartbeat::class)->beat();
+})
+    ->name('operations:scheduler-heartbeat')
+    ->everyMinute();

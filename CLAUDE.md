@@ -58,7 +58,7 @@ lang/it/                   tutti i testi dell'interfaccia
 docs/                      specifiche e decisioni (vedi §2)
 ```
 
-Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più le aree trasversali `Files` (archiviazione dei file, C10), `Settings` (impostazioni di sistema, PR-07) e `Notifications` (invio e registro delle e-mail, PR-08).
+Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più le aree trasversali `Files` (archiviazione dei file, C10), `Settings` (impostazioni di sistema, PR-07), `Notifications` (invio e registro delle e-mail, PR-08) e `Operations` (salute, avvisi delle code, Sentry: PR-09).
 
 Regole:
 - **La logica di dominio sta nelle Action e nei Service**, mai nei controller, nei modelli o nei componenti Vue. Calcoli di prezzo, partite, residui e composizione dei documenti hanno **una sola implementazione**, lato server, usata anche dal simulatore e dai riepiloghi.
@@ -177,7 +177,7 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Modello di pagine | `page_model` |
 | Evento di audit | `AuditEvent` · `audit_events` |
 | Registro e-mail | `NotificationLog` · `notification_logs` (`status`: queued / sent / failed; mai contenuto, link o token) |
-| Tipo di e-mail | `NotificationType` (`activation`, `two_factor_reset`, `password_reset`, `password_forgotten`, `login_locked`, `login_locked_admin`; F5 aggiunge le proposte) |
+| Tipo di e-mail | `NotificationType` (`activation`, `two_factor_reset`, `password_reset`, `password_forgotten`, `login_locked`, `login_locked_admin`, `job_failed`, `queue_stalled`; F5 aggiunge le proposte) |
 | Invio delle e-mail e registro | `Notifications` (`App\Domain\Notifications\Services`): `send($user, $mail)`; le e-mail sono `PortalMail` (coda `mail`, cifrate, dopo il commit), testi in `lang/it/mail.php` |
 | Conservazione del registro e-mail (12 mesi) / consultazione da server | comandi `notifications:prune` (settimanale) / `notifications:list` |
 | Code di lavoro | `documents` (2 processi), `mail` (2), `default` (1) con Horizon (`config/horizon.php`); pannello `/horizon` solo admin (`Ability::QueuesMonitor`) |
@@ -211,6 +211,11 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | File rifiutato (messaggio in italiano) | `InvalidFile`; regola di validazione dei campi `AcceptableFile` |
 | Disco privato dei file | disco `files` (`FILES_ROOT`, predefinito `storage/app/private/files`); download solo dalla rotta `files.download` |
 | Pulizia dei file orfani | comando `files:prune-orphans` (notturno) |
+| Salute interna (database, Redis, Horizon, code, disco, scheduler) | `HealthCheck` (`App\Domain\Operations\Services`), rotta pubblica `/health` (200 `ok` / 503 `fail`, senza dettagli), comando `health:check` con i dettagli; soglie in `config/health.php` |
+| Segnale di vita dello scheduler | `SchedulerHeartbeat`, scritto ogni minuto (`routes/console.php`) |
+| Avvisi delle code agli admin (lavoro non riuscito, coda ferma) | `OperationsAlerts`, listener `SendJobFailedAlert` e `SendQueueStalledAlert`; e-mail `JobFailedMail` e `QueueStalledMail` inviate subito con `Notifications::sendNow()` |
+| Dati inviati a Sentry senza informazioni personali | `SentryScrubber` (`before_send` di `config/sentry.php`) |
+| Intestazioni di sicurezza e CSP con nonce | middleware `AddSecurityHeaders`; il nonce arriva a Vite, alle pagine di errore e a Inertia (meta `csp-nonce`) |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 
@@ -263,6 +268,8 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan audit:prune   # conservazione dell'audit (notturna in produzione)
 ./vendor/bin/sail artisan files:prune-orphans  # file del disco privato senza riga (notturno in produzione, PR-06)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
+./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)
+./vendor/bin/sail artisan schedule:run  # lavori pianificati dovuti e segnale dello scheduler (sulla VM non gira da solo)
 ```
 
 ## 13. Definizione di "fatto"
