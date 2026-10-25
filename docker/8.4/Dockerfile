@@ -81,8 +81,9 @@ RUN apt-get update && apt-get upgrade -y \
 # Portale Infront (D-308, D-311): qpdf optimises and checks the generated PDFs; poppler-utils gives
 # pdffonts and pdftoppm for the document checks; DejaVu is the free substitute font of tests and of
 # the VM without the Interstate files. The system libraries of Chromium already come from
-# `playwright install-deps` above; chrome-headless-shell (Chrome for Testing) is downloaded by
-# `npm ci` through puppeteer (.puppeteerrc.cjs), never the Ubuntu chromium snap.
+# `playwright install-deps` above; chrome-headless-shell (Chrome for Testing) is installed into the
+# project by `npx puppeteer browsers install chrome-headless-shell` (.puppeteerrc.cjs), never the
+# Ubuntu chromium snap.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends qpdf poppler-utils fonts-dejavu-core \
     && apt-get -y autoremove \

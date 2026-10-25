@@ -4,9 +4,9 @@
 | Generation of the PDF documents (M09; progettazione-tecnica §5.5; fetta S1, D-308…D-313).
 |
 | HTML 1920×1080 → Chromium headless (Browsershot, chrome-headless-shell of Chrome for Testing
-| installed by `npm ci`) → qpdf. The fonts are read only from files (D-249), never installed in the
-| system: Interstate Regular, Bold and Black from DOCUMENT_FONTS_PATH, with the license of Infront
-| (D-256), never in the repository.
+| installed by `npx puppeteer browsers install chrome-headless-shell`) → qpdf. The fonts are read
+| only from files (D-249), never installed in the system: Interstate Regular, Bold and Black from
+| DOCUMENT_FONTS_PATH, with the license of Infront (D-256), never in the repository.
 */
 
 return [
@@ -32,10 +32,9 @@ return [
     ],
 
     'chromium' => [
-        // Node.js and npm used by Browsershot; under PHP-FPM the PATH may not contain them, so on
-        // the server the absolute paths go here (R1, D-223).
+        // Node.js used by Browsershot, with puppeteer from the node_modules of the project; when the
+        // worker does not have it in its PATH, the absolute path goes here (R1, D-223).
         'node_binary' => env('DOCUMENT_NODE_BINARY', 'node'),
-        'npm_binary' => env('DOCUMENT_NPM_BINARY', 'npm'),
 
         // Chromium's sandbox is required (R1). Docker's default seccomp profile does not let
         // Chromium create its sandbox, so in the Sail container (VM) it can be turned off; the

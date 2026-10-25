@@ -124,10 +124,13 @@ jobs:
                   node-version: '22'
                   cache: npm
 
-            # npm ci downloads chrome-headless-shell of Chrome for Testing into .cache/puppeteer
-            # (.puppeteerrc.cjs): the same browser of the Sail container and of production.
+            # chrome-headless-shell of Chrome for Testing into .cache/puppeteer (.puppeteerrc.cjs): the
+            # same browser of the Sail container and of production. .npmrc has ignore-scripts=true, so
+            # npm ci does not download it: the install is explicit.
             - name: Install npm dependencies and Chrome for Testing
-              run: npm ci --no-audit --no-fund
+              run: |
+                  npm ci --no-audit --no-fund
+                  npx puppeteer browsers install chrome-headless-shell
 
             # Informational only: an unexpected exit code of a --version must not stop the job.
             - name: Versions of the PDF tools

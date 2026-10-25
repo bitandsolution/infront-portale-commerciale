@@ -167,7 +167,7 @@ Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale):
 
 ### Strumenti dei documenti PDF (dalla fetta S1)
 
-Dalla PR **S1-01** il container dell'applicazione non viene più da Sail così com'è: il suo Dockerfile sta nel repository (`docker/8.4/`) e aggiunge `qpdf`, `poppler-utils` (`pdffonts`, `pdfinfo`) e il font libero DejaVu (D-308, D-311). Chromium è il **chrome-headless-shell di Chrome for Testing**, che `sail npm ci` scarica in `.cache/puppeteer` dentro il progetto (non va mai nel repository). Nel container la sandbox di Chromium è spenta da `compose.yaml` (`DOCUMENT_CHROMIUM_NO_SANDBOX`), perché Docker non la consente; fuori dagli ambienti `local` e `testing` il portale si rifiuta di spegnerla.
+Dalla PR **S1-01** il container dell'applicazione non viene più da Sail così com'è: il suo Dockerfile sta nel repository (`docker/8.4/`) e aggiunge `qpdf`, `poppler-utils` (`pdffonts`, `pdfinfo`) e il font libero DejaVu (D-308, D-311). Chromium è il **chrome-headless-shell di Chrome for Testing**, che `sail npx puppeteer browsers install chrome-headless-shell` scarica in `.cache/puppeteer` dentro il progetto (non va mai nel repository; `npm ci` non lo scarica, perché il `.npmrc` del repository blocca gli script di installazione). Nel container la sandbox di Chromium è spenta da `compose.yaml` (`DOCUMENT_CHROMIUM_NO_SANDBOX`), perché Docker non la consente; fuori dagli ambienti `local` e `testing` il portale si rifiuta di spegnerla.
 
 **Una volta sola**, dopo il `git checkout` del branch della PR S1-01 (o il `git pull` dopo il merge), nel terminale della VM:
 
@@ -177,8 +177,9 @@ sail down                              # ferma i container con la vecchia immagi
 sail build --no-cache                  # nuova immagine: 5-15 minuti la prima volta
 sail up -d
 sail composer install                  # installa spatie/browsershot
-sail npm ci                            # scarica anche chrome-headless-shell (circa 100 MB)
+sail npm ci
 sail npm run build
+sail npx puppeteer browsers install chrome-headless-shell   # circa 100 MB, una volta per versione
 ```
 
 **Font Interstate sulla VM** (facoltativi: senza, i documenti di prova usano DejaVu). I file non vanno mai nel repository. Dal **PowerShell di Windows**, nella cartella `Interstate Fonts` (sostituisci i nomi dei file sorgente con quelli dei tuoi file Regular, Bold e Black; il file `Interstate-black-euro.ttf` non è un font valido e non si usa):
@@ -217,7 +218,7 @@ Poi nel `.env` della VM: `DOCUMENT_FONTS_PATH=/var/www/html/storage/app/document
 | Il worker non vede una modifica appena scaricata (PR-08) | Horizon carica il codice all'avvio | Ferma il worker con Ctrl+C e rilancia `sail artisan horizon` |
 | `/health` risponde `{"status":"fail"}` (503) sulla VM (PR-09) | Il worker delle code non è avviato, oppure lo scheduler non ha scritto il segnale negli ultimi 10 minuti (sulla VM non gira da solo) | `sail artisan health:check` dice quale controllo non passa: per "Code (Horizon): non avviato" avvia `sail artisan horizon`, per "Scheduler" lancia `sail artisan schedule:run` |
 | La pagina di errore con i dettagli di Laravel (sfondo scuro) appare sulla VM | `APP_DEBUG=true` nel `.env` della VM: mostra i dettagli dell'errore. Non ha la Content-Security-Policy, così resta leggibile | Normale in sviluppo; in produzione `APP_DEBUG=false` mostra la pagina del portale con il codice di supporto |
-| `Could not find chrome-headless-shell (ver. …)` nei test PDF (S1-01) | Chrome for Testing non è stato scaricato: `sail npm ci` è stato eseguito prima della S1-01, oppure con `PUPPETEER_SKIP_DOWNLOAD` | `sail npm ci` (lo scarica in `.cache/puppeteer`) |
+| `Could not find chrome-headless-shell (ver. …)` nei test PDF (S1-01) | Chrome for Testing non è installato, oppure un aggiornamento di puppeteer chiede una versione nuova | `sail npx puppeteer browsers install chrome-headless-shell` (lo scarica in `.cache/puppeteer`) |
 | `No usable sandbox!` o `Running as root without --no-sandbox` nei test PDF (S1-01) | Il container è ancora quello vecchio, senza `DOCUMENT_CHROMIUM_NO_SANDBOX` | `sail down`, `sail build --no-cache`, `sail up -d` (§4, "Strumenti dei documenti PDF") |
 | `qpdf: command not found` o `pdffonts: command not found` (S1-01) | Immagine del container non ricostruita | Come sopra: `sail build --no-cache` |
 | `Class OwnedRecord located in ./tests/Feature/Authorization/OwnerScopeTest.php …` durante `sail composer install` | Avviso dell'autoload su una classe di prova definita dentro un test | Nessuna: non ha effetti |

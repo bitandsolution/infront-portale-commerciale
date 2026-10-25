@@ -260,7 +260,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan db:seed --class=SystemDataSeeder  # dati di sistema mancanti (PR-07; anche con migrate --seed)
 ./vendor/bin/sail artisan test          # Pest
 ./vendor/bin/sail artisan test --group=pdf  # test della pipeline PDF: Chromium, qpdf, pdffonts (S1-01; in CI job `pdf`)
-./vendor/bin/sail npm ci                # dipendenze npm e chrome-headless-shell in .cache/puppeteer (D-308)
+./vendor/bin/sail npx puppeteer browsers install chrome-headless-shell  # Chrome for Testing in .cache/puppeteer (D-308; npm ci non lo scarica: .npmrc ignore-scripts)
 ./vendor/bin/sail composer analyse      # Larastan
 ./vendor/bin/sail composer format       # Pint
 ./vendor/bin/sail npm run dev           # Vite
