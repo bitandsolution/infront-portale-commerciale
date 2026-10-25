@@ -500,10 +500,14 @@ it('the import page lists the imports of the season of the top bar', function ()
 
 it('D-321: the calendar file is downloaded by admin and manager, not by the agent', function () {
     [$edition] = importsEdition();
-    $import = importUpload($edition, [importRow(1, '03/09/2051', 'Prova 01', 'Prova 02')]);
+    $manager = User::factory()->manager()->create();
+    $import = importUpload($edition, [importRow(1, '03/09/2051', 'Prova 01', 'Prova 02')], $manager);
 
-    $this->actingAs(User::factory()->manager()->create())->get(route('files.download', $import->file_id))->assertOk();
+    // A new session for every user, as after a login.
+    $this->actingAs($manager)->get(route('files.download', $import->file_id))->assertOk();
+    $this->flushSession();
     $this->actingAs(User::factory()->admin()->create())->get(route('files.download', $import->file_id))->assertOk();
+    $this->flushSession();
     $this->actingAs(User::factory()->agent()->create())->get(route('files.download', $import->file_id))->assertForbidden();
 });
 
