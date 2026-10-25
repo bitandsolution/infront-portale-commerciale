@@ -219,6 +219,16 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Font dei documenti (Interstate o sostitutivo DejaVu) / pesi | `DocumentFonts` (`App\Domain\Documents\Services`, famiglia CSS `DocumentFont`, `@font-face` con sorgente `file://`) / `DocumentFontWeight` (400, 700, 900) |
 | Chromium headless configurato per la macchina (Node, sandbox, timeout) | `Chromium` (`App\Domain\Documents\Services`), che restituisce un `Browsershot` per una pagina già scritta su file (mai HTML in stringa, D-312); sandbox spegnibile solo in `local` e `testing` |
 | Strumento della pipeline mancante o non configurato (font, sandbox) | `DocumentToolUnavailable` (messaggi in `lang/it/documents.php`) |
+| Pagina di un documento: slide statica / pagina di layout (sfondo + dati) | `DocumentPage`: `StaticSlidePage` / `LayoutPage` (`App\Domain\Documents\Data`) |
+| Pipeline del PDF (cartella del lavoro, JPEG q85, HTML, Chromium, qpdf, controlli) / esito | `PdfPipeline` (`render()`, `screenshot()`) / `PdfReport` (pagine, peso, tempi, font, avvisi) |
+| Strumenti sul PDF (ottimizzazione e metadati con qpdf, pagine, font) | `PdfTools`; metadati `PdfMetadata` (titolo, autore "Infront Italy", stagione) |
+| Conversione delle slide in JPEG q85 | `SlideImages` (D-310) |
+| Riduzione del corpo fino al 70% e taglio con "…" | `TextFitter` → `FittedText` (layout-dinamici §6.3) |
+| Misure e impaginazione di un layout | `<Layout>Layout` in `App\Domain\Documents\Layouts` (S1: `NetworkRecapLayout`, 10 righe per slide) |
+| Recap economico: righe, totali | `NetworkRecap`, `RecapRow` (club o riga hospitality), `RecapTotals` |
+| Numeri dei documenti (importi, minuti LED) | `DocumentNumbers` (`App\Support\Documents`) |
+| PDF che non supera i controlli (pagine, linearizzazione, font) | `DocumentCheckFailed` |
+| Materiale fittizio della prova PDF (sfondi, slide, loghi, recap) | `SampleDeck` (`App\Support\Documents`, D-309) |
 
 Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 
@@ -273,6 +283,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan audit:prune   # conservazione dell'audit (notturna in produzione)
 ./vendor/bin/sail artisan files:prune-orphans  # file del disco privato senza riga (notturno in produzione, PR-06)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
+./vendor/bin/sail artisan documents:try # prova della pipeline PDF: deck di 40 slide, tempi, peso, PDF scaricabile da admin (solo sviluppo, S1-02; --samples con DOCUMENT_SAMPLES_PATH)
 ./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)
 ./vendor/bin/sail artisan schedule:run  # lavori pianificati dovuti e segnale dello scheduler (sulla VM non gira da solo)
 ```

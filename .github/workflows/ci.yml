@@ -76,6 +76,10 @@ jobs:
                   cp .env.example .env
                   php artisan key:generate --ansi
 
+            # DejaVu: substitute font measured by the layout tests of the documents (D-311).
+            - name: Install the substitute font
+              run: sudo apt-get install -y --no-install-recommends fonts-dejavu-core
+
             - name: Pint
               run: .github/scripts/run.sh "Pint" composer format:test
 
@@ -94,6 +98,29 @@ jobs:
     pdf:
         name: PDF (Chromium, qpdf)
         runs-on: ubuntu-24.04
+        permissions:
+            contents: write # only used to commit missing visual references to the PR branch (D-311)
+        services:
+            mariadb:
+                image: mariadb:11.8
+                env:
+                    MARIADB_ROOT_PASSWORD: password
+                    MARIADB_DATABASE: testing
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="healthcheck.sh --connect --innodb_initialized"
+                    --health-interval=5s --health-timeout=5s --health-retries=20
+        env:
+            DB_CONNECTION: mariadb
+            DB_HOST: 127.0.0.1
+            DB_PORT: 3306
+            DB_DATABASE: testing
+            DB_USERNAME: root
+            DB_PASSWORD: password
+            # D-311: a missing reference of the visual regression is written on pull requests and
+            # committed below, so Antonio approves it by looking at the image in the pull request.
+            VISUAL_REFERENCES_WRITE_MISSING: ${{ github.event_name == 'pull_request' }}
         steps:
             - uses: actions/checkout@v7
               with:
@@ -146,6 +173,27 @@ jobs:
 
             - name: Pest (group pdf)
               run: .github/scripts/run.sh "Pest (pdf)" php artisan test --group=pdf
+
+            - name: Commit new visual references (pull requests only)
+              if: github.event_name == 'pull_request'
+              run: |
+                  git add tests/Pdf/references
+                  if ! git diff --cached --quiet; then
+                      git config user.name "github-actions[bot]"
+                      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                      git commit -m "test: visual references created by CI (D-311)"
+                      git pull --rebase origin ${{ github.head_ref }}
+                      git push origin HEAD:${{ github.head_ref }}
+                  fi
+
+            # On a difference the test writes the actual image and the map of the different pixels.
+            - name: Images of the visual differences
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: visual-differences
+                  path: storage/framework/testing/visual/*.png
+                  if-no-files-found: ignore
 
     frontend:
         name: Frontend (vue-tsc, ESLint, build)
