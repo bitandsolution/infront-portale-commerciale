@@ -92,7 +92,8 @@ it('M02 §8: refuses a date outside the season, a club not enrolled and a duplic
     $this->actingAs($manager)->post(route('sports.matches.store'), matchesForm($edition, $home, $stranger))
         ->assertSessionHas('toast.message', fn (string $message): bool => str_starts_with($message, $stranger->name.' non è iscritto a'));
 
-    $this->actingAs($manager)->post(route('sports.matches.store'), matchesForm($edition, $home, $away));
+    $this->actingAs($manager)->post(route('sports.matches.store'), matchesForm($edition, $home, $away))
+        ->assertSessionHas('toast.type', 'success');
     $this->actingAs($manager)->post(route('sports.matches.store'), matchesForm($edition, $home, $away, ['match_date' => '2051-10-19']))
         ->assertSessionHas('toast.message', 'Esiste già una partita con la stessa giornata, squadra di casa e squadra ospite');
 
@@ -113,7 +114,8 @@ it('M02 §8: home and away must be different clubs, the matchday a whole number 
 it('M02 §8: a club with another match on the same day is a warning, not a block', function () {
     [$edition, $home, $away, $third] = matchesEdition();
     $manager = User::factory()->manager()->create();
-    $this->actingAs($manager)->post(route('sports.matches.store'), matchesForm($edition, $home, $away));
+    $this->actingAs($manager)->post(route('sports.matches.store'), matchesForm($edition, $home, $away))
+        ->assertSessionHas('toast.type', 'success');
 
     $this->actingAs($manager)
         ->post(route('sports.matches.store'), matchesForm($edition, $third, $home, ['matchday' => 8]))

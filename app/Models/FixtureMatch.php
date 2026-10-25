@@ -42,6 +42,16 @@ final class FixtureMatch extends Model
     protected $guarded = ['id'];
 
     /**
+     * Same defaults as the columns, so a new match has a status before it is saved (audit values).
+     *
+     * @var array<string, string>
+     */
+    protected $attributes = [
+        'status' => 'scheduled',
+        'source' => 'manual',
+    ];
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
