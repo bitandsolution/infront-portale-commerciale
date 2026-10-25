@@ -7,7 +7,9 @@ use Illuminate\Support\Str;
 /*
 | Queues and workers (progettazione-tecnica §5.5.1; D-220, D-222; PR-08).
 |
-| Three queues on Redis, one supervisor each, with a fixed number of processes ("balance" off):
+| Three queues on Redis, one supervisor each, with a fixed number of processes: "balance" off and
+| minProcesses = maxProcesses (with "balance" off Horizon still scales between the two by the size
+| of the queue, so an idle queue would keep only minProcesses workers):
 |
 |   queue       processes  tries  waits between tries      timeout
 |   documents   2 (D-222)  3      1, 5, 15 minutes         300 s
@@ -31,6 +33,7 @@ $supervisors = [
         'connection' => 'redis',
         'queue' => ['documents'],
         'balance' => 'off',
+        'minProcesses' => 2,
         'maxProcesses' => 2,
         'maxTime' => 0,
         'maxJobs' => 0,
@@ -43,6 +46,7 @@ $supervisors = [
         'connection' => 'redis',
         'queue' => ['mail'],
         'balance' => 'off',
+        'minProcesses' => 2,
         'maxProcesses' => 2,
         'maxTime' => 0,
         'maxJobs' => 0,
@@ -55,6 +59,7 @@ $supervisors = [
         'connection' => 'redis',
         'queue' => ['default'],
         'balance' => 'off',
+        'minProcesses' => 1,
         'maxProcesses' => 1,
         'maxTime' => 0,
         'maxJobs' => 0,

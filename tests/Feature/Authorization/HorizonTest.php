@@ -34,13 +34,14 @@ it('D-220: three queues with the workers, tries and timeouts of progettazione-te
     expect(collect($supervisors)->map(fn (array $supervisor): array => [
         $supervisor['queue'],
         $supervisor['balance'],
+        $supervisor['minProcesses'],
         $supervisor['maxProcesses'],
         $supervisor['tries'],
         $supervisor['timeout'],
     ])->all())->toBe([
-        'supervisor-documents' => [['documents'], 'off', 2, 3, 300],
-        'supervisor-mail' => [['mail'], 'off', 2, 5, 60],
-        'supervisor-default' => [['default'], 'off', 1, 3, 120],
+        'supervisor-documents' => [['documents'], 'off', 2, 2, 3, 300],
+        'supervisor-mail' => [['mail'], 'off', 2, 2, 5, 60],
+        'supervisor-default' => [['default'], 'off', 1, 1, 3, 120],
     ]);
 
     // The same supervisors on the VM and on staging.
@@ -48,8 +49,9 @@ it('D-220: three queues with the workers, tries and timeouts of progettazione-te
         ->and(config('horizon.environments.staging'))->toBe($supervisors);
 });
 
-it('D-222: at most 2 documents in parallel', function () {
+it('D-222: at most 2 documents in parallel, 2 workers always ready', function () {
     expect(config('horizon.environments.production.supervisor-documents.maxProcesses'))->toBe(2)
+        ->and(config('horizon.environments.production.supervisor-documents.minProcesses'))->toBe(2)
         ->and(config('horizon.environments.production.supervisor-documents.balance'))->toBe('off');
 });
 
