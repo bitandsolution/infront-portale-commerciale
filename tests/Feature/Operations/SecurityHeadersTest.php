@@ -144,7 +144,6 @@ it('D-176: JSON answers and downloads keep their own policy or none', function (
 it('D-176, D-180: HSTS only on HTTPS, one year, without subdomains and preload', function () {
     expect($this->get(route('login'))->headers->has('Strict-Transport-Security'))->toBeFalse();
 
-    $this->withServerVariables(['HTTPS' => 'on'])
-        ->get(route('login'))
+    $this->get(str_replace('http://', 'https://', route('login')))
         ->assertHeader('Strict-Transport-Security', 'max-age=31536000');
 });

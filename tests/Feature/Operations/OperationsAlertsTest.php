@@ -26,6 +26,8 @@ function alertsJobFailed(string $connection = 'redis', string $name = 'App\Jobs\
     $job = Mockery::mock(Job::class);
     $job->shouldReceive('resolveName')->andReturn($name);
     $job->shouldReceive('getQueue')->andReturn($queue);
+    // Read by Horizon's own listener of the same event.
+    $job->shouldReceive('getJobId')->andReturn('alerts-test-job');
 
     event(new JobFailed($connection, $job, new RuntimeException('Chromium | timeout after 300 s for mario.rossi@example.test, see https://x.test/?token=abc')));
 }
