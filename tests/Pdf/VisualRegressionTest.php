@@ -9,8 +9,10 @@ use Illuminate\Support\Facades\File;
 
 /*
 | Visual regression of the layouts (layout-dinamici §6.5, D-311): each case is rendered by the same
-| pipeline as the PDF, reduced to 960×540 and compared with the reference image in
-| tests/Pdf/references. Cases: 2 clubs, discount with hospitality, 12 clubs on two slides, long
+| pipeline as the PDF and compared with the reference image in tests/Pdf/references, both reduced
+| to 960×540 (tolerant of anti-aliasing). The references of the layouts are kept at full size
+| (1920×1080), so the thin borders of the grids are visible when Antonio approves them; the static
+| slide is kept reduced, since a full-size photo-like PNG would weigh megabytes. Cases: 2 clubs, discount with hospitality, 12 clubs on two slides, long
 | names, static slide. DejaVu substitute font, so CI and the VM draw the same pictures.
 |
 | A missing reference is written by the CI job "pdf" (VISUAL_REFERENCES_WRITE_MISSING=true) and
@@ -55,11 +57,16 @@ function visualCasePage(string $case, string $folder): DocumentPage
 }
 
 /**
- * The PNG reduced to 960×540, the size of the references.
+ * The PNG reduced to 960×540, the size of the comparison (an image already 960×540 is kept as is).
  */
 function visualReduced(string $png): GdImage
 {
     $image = imagecreatefrompng($png);
+
+    if ($image !== false && imagesx($image) === VISUAL_WIDTH && imagesy($image) === VISUAL_HEIGHT) {
+        return $image;
+    }
+
     $reduced = $image === false ? false : imagescale($image, VISUAL_WIDTH, VISUAL_HEIGHT, IMG_BICUBIC);
 
     if ($reduced === false) {
@@ -119,7 +126,13 @@ it('layout §6.5 (D-311): the rendering matches the approved reference', functio
     if (! is_file($reference)) {
         if (env('VISUAL_REFERENCES_WRITE_MISSING') === true || env('VISUAL_REFERENCES_WRITE_MISSING') === 'true') {
             File::ensureDirectoryExists(dirname($reference));
-            imagepng($actual, $reference, 9);
+
+            if ($case === 'static_slide') {
+                imagepng($actual, $reference, 9);
+            } else {
+                copy($actualPng, $reference);
+            }
+
             fwrite(STDOUT, "\n      Riferimento creato: tests/Pdf/references/{$case}.png\n");
             expect(is_file($reference))->toBeTrue();
 
@@ -130,13 +143,7 @@ it('layout §6.5 (D-311): the rendering matches the approved reference', functio
         $this->fail("Missing reference tests/Pdf/references/{$case}.png: the CI job \"pdf\" creates it on a pull request. Actual image: {$folder}/{$case}-actual.png");
     }
 
-    $approved = imagecreatefrompng($reference);
-
-    if ($approved === false || imagesx($approved) !== VISUAL_WIDTH || imagesy($approved) !== VISUAL_HEIGHT) {
-        $this->fail("The reference tests/Pdf/references/{$case}.png is not a 960×540 PNG.");
-    }
-
-    [$share, $map] = visualDifference($actual, $approved);
+    [$share, $map] = visualDifference($actual, visualReduced($reference));
 
     if ($share > VISUAL_MAX_DIFFERENT) {
         imagepng($actual, "{$folder}/{$case}-actual.png");
