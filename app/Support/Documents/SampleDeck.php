@@ -44,7 +44,8 @@ final class SampleDeck
         ['Calcio Pianalto', 'CP', [30, 30, 30]],
         ['Dinamo Portosole', 'DP', [230, 90, 20]],
         ['Audace Valtorre', 'AV', [120, 120, 120]],
-        ['Juventina Castelnuovo', 'JC', [10, 90, 70]],
+        // Accented name: lets Antonio check à, è, ò with Interstate (D-311).
+        ['Società Sportiva Città di Castellò', 'SC', [10, 90, 70]],
         ['Fortitudo Mareluce', 'FM', [180, 20, 90]],
         ['Robur Serravecchia', 'RS', [60, 100, 160]],
     ];
