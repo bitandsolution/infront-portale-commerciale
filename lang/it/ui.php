@@ -264,6 +264,16 @@ return [
     ],
 
     // Pages of the access links sent by e-mail (D-277…D-280).
+    // Settings page (PR-07; D-191, D-286): admin only. Labels and descriptions of the single
+    // settings come from the server (lang/it/settings.php).
+    'settings' => [
+        'intro' => "Valori di sistema usati da configuratore, magazzino e audit. Le modifiche valgono da subito e restano registrate nell'audit.",
+        'fixed' => 'Fisso',
+        'default_value' => 'Valore predefinito',
+        'range' => 'Valori ammessi: da :min a :max :unit.',
+        'save' => 'Salva le impostazioni',
+    ],
+
     'access' => [
         'activate_title' => 'Attiva il tuo account',
         'renewal_title' => 'Configura di nuovo il tuo accesso',

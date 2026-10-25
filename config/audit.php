@@ -10,9 +10,11 @@
 return [
 
     /*
-    | Days after which the IP address of an access event is cleared, the event staying (D-211).
-    | Default 5 years (1826 days), as the events. From PR-07 the value moves to the settings table
-    | (settings.audit_ip_retention_days) and this one remains the default.
+    | Default of the days after which the IP address of an access event is cleared, the event
+    | staying (D-211): 5 years (1826 days), as the events. From PR-07 the value in force is the
+    | setting "audit_ip_retention_days" (Settings page, D-286); this one is used only while the row
+    | is missing, and the system data seeder copies it into the row the first time it runs. After
+    | that, changing AUDIT_IP_RETENTION_DAYS has no effect: the value changes from the Settings page.
     */
     'ip_retention_days' => (int) env('AUDIT_IP_RETENTION_DAYS', 1826),
 

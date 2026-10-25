@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\PlaceholderPageController;
+use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Users\ProfileController;
 use App\Http\Controllers\Users\UserAccessController;
 use App\Http\Controllers\Users\UserController;
@@ -95,5 +96,10 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('utenti/{user}/reset-verifica', [UserAccessController::class, 'resetTwoFactor'])->whereNumber('user')->name('users.reset-two-factor');
             Route::post('utenti/{user}/invia-link', [UserAccessController::class, 'resendLink'])->whereNumber('user')->name('users.resend-link');
         });
+
+        // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.
+        Route::put('impostazioni', [SettingsController::class, 'update'])
+            ->middleware('can:'.Ability::SettingsManage->value)
+            ->name('settings.update');
     });
 });

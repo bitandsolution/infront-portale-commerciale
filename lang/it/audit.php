@@ -11,6 +11,7 @@ return [
     'areas' => [
         'access' => 'Accessi',
         'users' => 'Utenti',
+        'settings' => 'Impostazioni',
     ],
 
     'actions' => [
@@ -35,6 +36,7 @@ return [
         'user_two_factor_reset' => 'Verifica in due passaggi azzerata',
         'user_two_factor_configured' => 'Verifica in due passaggi configurata',
         'user_activated' => 'Account attivato',
+        'setting_updated' => 'Impostazione modificata',
     ],
 
     'reasons' => [
@@ -49,7 +51,7 @@ return [
 
     'list' => [
         'empty' => 'Nessun evento di audit con questi filtri.',
-        'unknown_area' => 'Area sconosciuta: :area. Valori ammessi: access, users.',
+        'unknown_area' => 'Area sconosciuta: :area. Valori ammessi: :areas.',
         'unknown_action' => 'Azione sconosciuta: :action.',
         'columns' => [
             'occurred_at' => 'Data e ora',

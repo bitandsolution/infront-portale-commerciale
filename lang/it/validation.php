@@ -6,10 +6,14 @@
 */
 
 return [
+    'between' => [
+        'numeric' => 'Il campo :attribute deve essere compreso tra :min e :max.',
+    ],
     'confirmed' => 'Il campo :attribute non coincide con la conferma.',
     'current_password' => 'La password attuale non è corretta.',
     'email' => 'Il campo :attribute deve essere un indirizzo e-mail valido.',
     'enum' => 'Il valore scelto per :attribute non è valido.',
+    'integer' => 'Il campo :attribute deve essere un numero intero.',
     'max' => [
         'string' => 'Il campo :attribute non può superare :max caratteri.',
     ],

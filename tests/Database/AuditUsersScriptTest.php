@@ -90,20 +90,34 @@ function scriptAuditRow(string $occurredAt, ?string $ip = '192.0.2.10'): array
     ];
 }
 
+/*
+| Without an administrator even "DROP USER IF EXISTS" is denied: the clean-up in the catch block and
+| after a skipped test must not fail, otherwise the tests fail on the VM instead of being skipped
+| (PR-07, VM collaudo).
+*/
 beforeEach(function () {
+    $this->scriptUsersCreated = false;
+
     try {
         dropScriptUsers();
         foreach (auditUsersScript() as $statement) {
             DB::statement($statement);
         }
+        $this->scriptUsersCreated = true;
     } catch (QueryException $e) {
-        dropScriptUsers();
+        try {
+            dropScriptUsers();
+        } catch (QueryException) {
+            // No privilege to drop users either: nothing was created.
+        }
         $this->markTestSkipped('Creating MariaDB users needs an administrator (root in CI): '.$e->getMessage());
     }
 });
 
 afterEach(function () {
-    dropScriptUsers();
+    if ($this->scriptUsersCreated) {
+        dropScriptUsers();
+    }
 });
 
 it('R7: the script creates the three users and runs again without errors', function () {

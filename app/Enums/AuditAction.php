@@ -35,9 +35,16 @@ enum AuditAction: string
     case UserTwoFactorConfigured = 'user.two_factor_configured';
     case UserActivated = 'user.activated';
 
+    // Settings (PR-07): one event per changed key, with the value before and after.
+    case SettingUpdated = 'setting.updated';
+
     public function area(): AuditArea
     {
-        return str_starts_with($this->value, 'access.') ? AuditArea::Access : AuditArea::Users;
+        return match (true) {
+            str_starts_with($this->value, 'access.') => AuditArea::Access,
+            str_starts_with($this->value, 'setting.') => AuditArea::Settings,
+            default => AuditArea::Users,
+        };
     }
 
     /**
