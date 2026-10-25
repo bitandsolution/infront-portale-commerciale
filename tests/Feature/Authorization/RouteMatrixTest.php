@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Storage;
 |                 closed (RB-05), and every logout
 |   'dashboard'   redirect to the dashboard
 |   'setup'       redirect to the mandatory setup of the second factor (D-136, M01-CA1)
+|   'allowed'     neither a redirect nor 401/403: the permission lets the request through (Horizon's
+|                 API calls with an unknown id or an empty body, whose own answer is not the point)
 */
 
 const MATRIX_ACTORS = ['guest', 'agent', 'manager', 'admin', 'inactive', 'no_2fa'];
@@ -47,6 +49,7 @@ function routeMatrix(): array
     $admin = ['login', 403, 403, 200, 'login', 'setup'];
     $signedInForm = ['login', 302, 302, 302, 'login', 'setup'];
     $adminForm = ['login', 403, 403, 302, 'login', 'setup'];
+    $adminAllowed = ['login', 403, 403, 'allowed', 'login', 'setup'];
 
     return [
         'home' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 'setup']],
@@ -65,6 +68,11 @@ function routeMatrix(): array
         'access.activation.store' => ['method' => 'POST', 'expected' => [302, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
         'access.reset' => ['method' => 'GET', 'expected' => [200, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
         'access.reset.store' => ['method' => 'POST', 'expected' => [302, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+
+        // Self-service reset of the password (D-279; PR-08): guests only, like the login. An empty
+        // form goes back with the errors.
+        'password.request' => ['method' => 'GET', 'expected' => [200, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
+        'password.email' => ['method' => 'POST', 'expected' => [302, 'dashboard', 'dashboard', 'dashboard', 'login', 'dashboard']],
 
         // Mandatory setup of the second factor (D-136): only who has not configured it yet
         'two-factor.setup' => ['method' => 'GET', 'expected' => ['login', 'dashboard', 'dashboard', 'dashboard', 'login', 200]],
@@ -145,6 +153,32 @@ function routeMatrix(): array
         // Stored files (D-218): until the slices that use them, only the admin (StoredFilePolicy).
         // Target: a client logo stored by the system
         'files.download' => ['method' => 'GET', 'expected' => $admin],
+
+        // Queues panel (Horizon, progettazione-tecnica §5.2.7; PR-08): admin only, with the rules of
+        // the portal pages (config/horizon.php). The page and the API calls without parameters
+        // answer 200; the calls with an id or a body only need to be let through.
+        'horizon.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.stats.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.workload.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.masters.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.monitoring.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.monitoring.store' => ['method' => 'POST', 'expected' => $adminAllowed],
+        'horizon.monitoring-tag.paginate' => ['method' => 'GET', 'expected' => $adminAllowed],
+        'horizon.monitoring-tag.destroy' => ['method' => 'DELETE', 'expected' => $adminAllowed],
+        'horizon.jobs-metrics.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.jobs-metrics.show' => ['method' => 'GET', 'expected' => $adminAllowed],
+        'horizon.queues-metrics.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.queues-metrics.show' => ['method' => 'GET', 'expected' => $adminAllowed],
+        'horizon.jobs-batches.index' => ['method' => 'GET', 'expected' => $adminAllowed],
+        'horizon.jobs-batches.show' => ['method' => 'GET', 'expected' => $adminAllowed],
+        'horizon.jobs-batches.retry' => ['method' => 'POST', 'expected' => $adminAllowed],
+        'horizon.pending-jobs.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.completed-jobs.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.silenced-jobs.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.failed-jobs.index' => ['method' => 'GET', 'expected' => $admin],
+        'horizon.failed-jobs.show' => ['method' => 'GET', 'expected' => $adminAllowed],
+        'horizon.retry-jobs.show' => ['method' => 'POST', 'expected' => $adminAllowed],
+        'horizon.jobs.show' => ['method' => 'GET', 'expected' => $adminAllowed],
     ];
 }
 
@@ -173,6 +207,9 @@ function matrixParameters(string $route): array
             ],
         str_starts_with($route, 'access.') => ['token' => str_repeat('x', 64)],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
+        str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],
+        str_starts_with($route, 'horizon.') && str_ends_with($route, '.show'),
+        $route === 'horizon.jobs-batches.retry' => ['id' => 'matrice'],
         default => [],
     };
 }
@@ -199,6 +236,8 @@ it('D-215: answers each route as the M01 §4 matrix expects', function (string $
         'login' => $response->assertRedirect(route('login')),
         'dashboard' => $response->assertRedirect(route('pages.dashboard')),
         'setup' => $response->assertRedirect(route('two-factor.setup')),
+        'allowed' => expect($response->isRedirect() || in_array($response->getStatusCode(), [401, 403], true))
+            ->toBeFalse("{$route} × {$actor}: answered {$response->getStatusCode()}"),
         default => $response->assertStatus($expected),
     };
 })->with('route matrix');

@@ -2,6 +2,7 @@
 
 use App\Enums\Ability;
 use App\Http\Controllers\Auth\AccessLinkController;
+use App\Http\Controllers\Auth\PasswordForgottenController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
@@ -41,6 +42,13 @@ Route::middleware('guest')->group(function (): void {
     Route::post('nuova-password/{token}', [AccessLinkController::class, 'storeReset'])
         ->middleware('throttle:10,1')
         ->name('access.reset.store');
+
+    // Self-service reset of the password (D-279; PR-08): same answer for every address; at most
+    // 5 requests in 15 minutes from the same IP address, 3 links per address in an hour (Action).
+    Route::get('password-dimenticata', [PasswordForgottenController::class, 'create'])->name('password.request');
+    Route::post('password-dimenticata', [PasswordForgottenController::class, 'store'])
+        ->middleware('throttle:5,15')
+        ->name('password.email');
 });
 
 // Signed-in users. A password change closes the other sessions of the user (auth.session, D-214).

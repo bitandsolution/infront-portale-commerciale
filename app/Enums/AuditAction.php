@@ -19,6 +19,9 @@ enum AuditAction: string
     case RecoveryCodeUsed = 'access.recovery_code_used';
     case SessionExpired = 'access.session_expired';
     case SessionClosed = 'access.session_closed';
+    // Self-service reset from the login page (PR-08): every request, with the reason when no link
+    // was sent (unknown address, deactivated, not activated, no second factor, too many requests).
+    case PasswordResetRequested = 'access.password_reset_requested';
 
     // Users (M01 §5): the names announced in the comments of App\Domain\Users\Actions.
     case UserCreated = 'user.created';

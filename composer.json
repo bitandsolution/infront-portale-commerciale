@@ -14,6 +14,7 @@
         "inertiajs/inertia-laravel": "^3.5",
         "laravel/fortify": "^1.41",
         "laravel/framework": "^13.23",
+        "laravel/horizon": "^5.0",
         "laravel/tinker": "^3.0"
     },
     "require-dev": {

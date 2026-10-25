@@ -56,6 +56,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::loginView(fn (Request $request): Response => Inertia::render('Auth/Login', [
             'loginUrl' => route('login.store'),
+            'forgotUrl' => route('password.request'),
             'lockedSeconds' => $this->lockedSeconds($request),
         ]));
 

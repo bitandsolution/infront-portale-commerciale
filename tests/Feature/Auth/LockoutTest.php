@@ -10,7 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 /*
 | Lockout after 5 failed attempts for 15 minutes (M01-CA2, D-214), per e-mail and IP address.
 | The lock dispatches LoginLockedOut once: the audit records it (tests/Feature/Audit/AccessAuditTest,
-| "l'evento è in audit"), the e-mails to the user and the admin arrive with PR-08.
+| "l'evento è in audit") and the e-mails to the user and the admins (LockoutMailTest, PR-08).
 */
 
 const LOCKOUT_PASSWORD = 'Una-password-di-prova-2027';

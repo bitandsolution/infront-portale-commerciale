@@ -193,7 +193,7 @@ it('D-277: an unknown token or the link of a deactivated user is not valid, with
 it('D-277: the e-mail tells the user what to do and how long the link lasts', function () {
     [$user, $url] = pendingUser();
 
-    Mail::assertSent(AccessLinkMail::class, function (AccessLinkMail $mail) use ($user, $url): bool {
+    Mail::assertQueued(AccessLinkMail::class, function (AccessLinkMail $mail) use ($user, $url): bool {
         $mail->assertHasSubject('Attiva il tuo account del Portale Commerciale Infront');
         $mail->assertSeeInHtml('Ciao Nuovo,');
         $mail->assertSeeInHtml('48 ore');

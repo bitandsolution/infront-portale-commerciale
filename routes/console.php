@@ -27,3 +27,13 @@ Schedule::command('files:prune-orphans')
     ->timezone('Europe/Rome')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Register of the e-mails (D-209): rows older than 12 months, every Sunday.
+Schedule::command('notifications:prune')
+    ->weeklyOn(0, '04:00')
+    ->timezone('Europe/Rome')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+// Charts of the Horizon panel (PR-08): a snapshot of the queue metrics every 5 minutes.
+Schedule::command('horizon:snapshot')->everyFiveMinutes();

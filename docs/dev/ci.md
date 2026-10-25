@@ -40,6 +40,7 @@ Passi del deploy, con utente SSH dedicato senza sudo (R6):
 - Collaudo durante lo sviluppo su VM locale (`docs/dev/ambiente-locale.md`, D-261). Staging su server conforme a R1–R7 quando disponibile, al più tardi entro il 26/2/2027 (milestone B); produzione entro il 15/1/2027 (D-243).
 - Utente di deploy e chiave SSH dedicata, da salvare nel GitHub Environment.
 - `DOCUMENT_FONTS_PATH` sul server con i file Interstate autorizzati.
+- PHP da riga di comando con le estensioni `pcntl` e `posix`, richieste da Horizon (PR-08), e un processo sempre attivo per `php artisan horizon` (supervisor o servizio di sistema), riavviato dal deploy con `horizon:terminate` (passo 7).
 - I tre utenti MariaDB di `database/sql/audit-users.sql` (migrazioni, applicativo, manutenzione dell'audit), da creare come in `docs/dev/database-utenti.md` (R7, D-283).
 
 ## 4. Note di esercizio (PR-00, 2026-10-21)

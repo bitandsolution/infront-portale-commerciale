@@ -63,13 +63,14 @@ function fakePasswordArchive(): void
 }
 
 /**
- * URL of the last access link e-mailed to an address (Mail::fake() must be active).
+ * URL of the last access link e-mailed to an address (Mail::fake() must be active; since PR-08 the
+ * e-mails are queued).
  */
 function sentAccessLink(string $email, ?AccessLinkType $type = null): string
 {
     $url = '';
 
-    Mail::assertSent(AccessLinkMail::class, function (AccessLinkMail $mail) use ($email, $type, &$url): bool {
+    Mail::assertQueued(AccessLinkMail::class, function (AccessLinkMail $mail) use ($email, $type, &$url): bool {
         if (! $mail->hasTo($email) || ($type !== null && $mail->type !== $type)) {
             return false;
         }

@@ -89,7 +89,20 @@ return [
             'submit' => 'Accedi',
             'submitting' => 'Accesso in corso…',
             'locked' => 'Accesso bloccato per troppi tentativi. Potrai riprovare tra :time.',
-            'help' => "Password dimenticata o smartphone perso? Rivolgiti all'amministratore del portale.",
+            'forgot' => 'Password dimenticata?',
+            'help' => "Smartphone perso o codici di recupero finiti? Rivolgiti all'amministratore del portale.",
+        ],
+
+        // Self-service reset of the password (D-279; PR-08): same answer for every address.
+        'forgot' => [
+            'title' => 'Password dimenticata',
+            'intro' => "Scrivi l'e-mail del tuo account: ti invieremo un link per scegliere una nuova password, che confermerai con il codice dell'app di autenticazione.",
+            'email' => 'E-mail',
+            'submit' => 'Invia il link',
+            'submitting' => 'Invio in corso…',
+            'sent' => "Se l'indirizzo corrisponde a un account attivo, riceverai un'e-mail entro pochi minuti. Il link vale 48 ore. Se non arriva, controlla la posta indesiderata o contatta l'amministratore del portale.",
+            'note' => 'La password attuale continua a funzionare finché non ne scegli una nuova.',
+            'back' => "Torna all'accesso",
         ],
 
         'challenge' => [
@@ -317,5 +330,6 @@ return [
         'back_home' => 'Torna alla pagina iniziale',
         'forbidden_title' => 'Accesso non consentito',
         'forbidden' => 'Non hai i permessi per questa funzione',
+        'too_many_requests' => 'Troppe richieste in poco tempo: attendi qualche minuto e riprova',
     ],
 ];

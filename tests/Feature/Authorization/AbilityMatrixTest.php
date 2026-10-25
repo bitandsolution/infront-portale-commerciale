@@ -60,6 +60,9 @@ function expectedAbilities(): array
         // M01
         'users.manage' => [false, false, true],                // D-139
         'settings.manage' => [false, false, true],
+
+        // Queues panel (Horizon, progettazione-tecnica §5.2.7; PR-08)
+        'queues.monitor' => [false, false, true],
     ];
 }
 

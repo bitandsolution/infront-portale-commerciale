@@ -49,7 +49,7 @@ it('M01-CA3: refuses the Users page and every user function to the manager', fun
 
     expect(User::query()->count())->toBe(2)
         ->and($agent->fresh()?->is_active)->toBeTrue();
-    Mail::assertNothingSent();
+    Mail::assertNothingOutgoing();
 });
 
 it('M01 §5: lists every user with role, status, second factor and last login', function () {
@@ -94,10 +94,10 @@ it('M01 §5: creates the user without password and e-mails him the activation li
         ->and($user->activated_at)->toBeNull()
         ->and($user->two_factor_confirmed_at)->toBeNull();
 
-    Mail::assertSent(AccessLinkMail::class, fn (AccessLinkMail $mail): bool => $mail->hasTo('giulia.neri@example.test')
+    Mail::assertQueued(AccessLinkMail::class, fn (AccessLinkMail $mail): bool => $mail->hasTo('giulia.neri@example.test')
         && $mail->type === AccessLinkType::Activation
         && str_starts_with($mail->url, url('attivazione').'/'));
-    Mail::assertSentCount(1);
+    Mail::assertQueuedCount(1);
 });
 
 it('D-277: never shows the activation link to the admin', function () {
@@ -123,7 +123,7 @@ it('M01 §9: refuses an e-mail already used, whatever the case, and an unknown r
         ->assertSessionHasErrors(['email', 'role', 'first_name']);
 
     expect(User::query()->count())->toBe(2);
-    Mail::assertNothingSent();
+    Mail::assertNothingOutgoing();
 });
 
 it('M01 §5: shows one user with the actions allowed now', function () {
@@ -186,7 +186,7 @@ it('M01 §5: the admin changes data and role of a user', function () {
     expect($agent->last_name)->toBe('Rossi Bruni')
         ->and($agent->phone)->toBe('02 1234567')
         ->and($agent->role)->toBe(Role::Manager);
-    Mail::assertNothingSent();
+    Mail::assertNothingOutgoing();
 });
 
 it('D-281: the admin cannot change his own role', function () {

@@ -9,13 +9,16 @@ namespace App\Enums;
  * - two_factor_reset: the admin reset the second factor, the user sets password and second
  *   factor again on the same page as the activation (D-280);
  * - password_reset: the admin reset the password, the user sets a new one and confirms it with
- *   the code of his authenticator app (D-279).
+ *   the code of his authenticator app (D-279);
+ * - password_forgotten: the user asked for it from the login page (PR-08); same page as
+ *   password_reset, but the current password keeps working until the new one is set.
  */
 enum AccessLinkType: string
 {
     case Activation = 'activation';
     case TwoFactorReset = 'two_factor_reset';
     case PasswordReset = 'password_reset';
+    case PasswordForgotten = 'password_forgotten';
 
     /**
      * Page of the link: password and second factor, or new password only.
@@ -24,7 +27,7 @@ enum AccessLinkType: string
     {
         return match ($this) {
             self::Activation, self::TwoFactorReset => 'access.activation',
-            self::PasswordReset => 'access.reset',
+            self::PasswordReset, self::PasswordForgotten => 'access.reset',
         };
     }
 }
