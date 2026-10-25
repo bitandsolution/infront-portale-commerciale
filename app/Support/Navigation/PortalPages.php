@@ -4,8 +4,10 @@ namespace App\Support\Navigation;
 
 use App\Enums\Ability;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Sports\CalendarController;
 use App\Http\Controllers\Sports\ClubController;
 use App\Http\Controllers\Sports\CompetitionController;
+use App\Http\Controllers\Sports\MatchController;
 use App\Http\Controllers\Sports\SeasonController;
 use App\Http\Controllers\Sports\StadiumController;
 use App\Http\Controllers\Users\ProfileController;
@@ -83,6 +85,8 @@ final class PortalPages
         'sports_competitions' => [CompetitionController::class, 'index'],
         'sports_clubs' => [ClubController::class, 'index'],
         'sports_stadiums' => [StadiumController::class, 'index'],
+        'sports_calendars' => [CalendarController::class, 'index'],
+        'sports_matches' => [MatchController::class, 'index'],
     ];
 
     /**

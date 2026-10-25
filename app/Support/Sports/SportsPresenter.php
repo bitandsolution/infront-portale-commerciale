@@ -8,6 +8,7 @@ use App\Models\Club;
 use App\Models\ClubAlias;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
+use App\Models\FixtureMatch;
 use App\Models\Season;
 use App\Models\Stadium;
 use Illuminate\Support\Carbon;
@@ -58,7 +59,7 @@ final class SportsPresenter
     }
 
     /**
-     * @return array{id: int, competitionCode: string, competitionName: string, competitionActive: bool, standardHomeMatches: int, calendarLoadedAt: string|null, updateUrl: string, destroyUrl: string}
+     * @return array{id: int, competitionCode: string, competitionName: string, competitionActive: bool, standardHomeMatches: int, calendarLoadedAt: string|null, enrollments: int, showUrl: string, updateUrl: string, destroyUrl: string}
      */
     public static function editionRow(CompetitionSeason $edition): array
     {
@@ -68,7 +69,9 @@ final class SportsPresenter
             'competitionName' => $edition->competition->name,
             'competitionActive' => $edition->competition->is_active,
             'standardHomeMatches' => $edition->standard_home_matches,
-            'calendarLoadedAt' => $edition->calendar_loaded_at?->copy()->setTimezone('Europe/Rome')->format('d/m/Y H:i'),
+            'calendarLoadedAt' => self::dateTime($edition->calendar_loaded_at),
+            'enrollments' => $edition->enrollments()->count(),
+            'showUrl' => route('sports.editions.show', $edition),
             'updateUrl' => route('sports.editions.update', $edition),
             'destroyUrl' => route('sports.editions.destroy', $edition),
         ];
@@ -163,8 +166,57 @@ final class SportsPresenter
             ->all());
     }
 
+    /**
+     * @return array{id: int, stage: string, stageLabel: string, matchday: int, date: string, kickoff: string|null, homeClub: string, awayClub: string, stadium: string|null, status: string, statusLabel: string, source: string, editUrl: string, cancelUrl: string, restoreUrl: string}
+     */
+    public static function matchRow(FixtureMatch $match): array
+    {
+        return [
+            'id' => $match->id,
+            'stage' => $match->matchday->stage->value,
+            'stageLabel' => $match->matchday->stage->label(),
+            'matchday' => $match->matchday->number,
+            'date' => self::date($match->match_date),
+            'kickoff' => $match->kickoff(),
+            'homeClub' => $match->homeClub->short_name,
+            'awayClub' => $match->awayClub->short_name,
+            'stadium' => $match->stadium?->name,
+            'status' => $match->status->value,
+            'statusLabel' => $match->status->label(),
+            'source' => $match->source->value,
+            'editUrl' => route('sports.matches.edit', $match),
+            'cancelUrl' => route('sports.matches.cancel', $match),
+            'restoreUrl' => route('sports.matches.restore', $match),
+        ];
+    }
+
+    /**
+     * Editions of a season for a select, in the order of the competitions.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public static function editionOptions(Season $season): array
+    {
+        return array_values(CompetitionSeason::query()
+            ->where('season_id', $season->id)
+            ->with('competition')
+            ->get()
+            ->sortBy(fn (CompetitionSeason $edition): array => [$edition->competition->sort_order, $edition->competition->name])
+            ->map(fn (CompetitionSeason $edition): array => ['value' => (string) $edition->id, 'label' => $edition->competition->name])
+            ->values()
+            ->all());
+    }
+
     public static function date(Carbon $date): string
     {
         return $date->format('d/m/Y');
+    }
+
+    /**
+     * System timestamp (UTC) shown in Europe/Rome (C7).
+     */
+    public static function dateTime(?Carbon $moment): ?string
+    {
+        return $moment?->copy()->setTimezone('Europe/Rome')->format('d/m/Y H:i');
     }
 }

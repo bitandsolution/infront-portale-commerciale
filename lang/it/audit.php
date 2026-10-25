@@ -53,6 +53,12 @@ return [
         'club_logo_changed' => 'Logo del club cambiato',
         'club_alias_created' => 'Alias del club aggiunto',
         'club_alias_removed' => 'Alias del club tolto',
+        'enrollment_created' => 'Club iscritto alla competizione',
+        'enrollment_removed' => 'Club tolto dalla competizione',
+        'match_created' => 'Partita inserita',
+        'match_updated' => 'Partita modificata',
+        'match_cancelled' => 'Partita annullata',
+        'match_restored' => 'Partita ripristinata',
     ],
 
     'reasons' => [

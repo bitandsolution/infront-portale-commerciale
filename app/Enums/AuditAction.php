@@ -57,13 +57,20 @@ enum AuditAction: string
     case ClubLogoChanged = 'club.logo_changed';
     case ClubAliasCreated = 'club_alias.created';
     case ClubAliasRemoved = 'club_alias.removed';
+    // F1-03: enrollments and matches.
+    case EnrollmentCreated = 'enrollment.created';
+    case EnrollmentRemoved = 'enrollment.removed';
+    case MatchCreated = 'match.created';
+    case MatchUpdated = 'match.updated';
+    case MatchCancelled = 'match.cancelled';
+    case MatchRestored = 'match.restored';
 
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
             'access' => AuditArea::Access,
             'setting' => AuditArea::Settings,
-            'season', 'competition', 'edition', 'stadium', 'club', 'club_alias' => AuditArea::Sports,
+            'season', 'competition', 'edition', 'stadium', 'club', 'club_alias', 'enrollment', 'match' => AuditArea::Sports,
             default => AuditArea::Users,
         };
     }

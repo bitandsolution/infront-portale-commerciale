@@ -6,6 +6,7 @@ use App\Enums\SettingKey;
 use App\Models\Club;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
+use App\Models\FixtureMatch;
 use App\Models\Season;
 use App\Models\Setting;
 use App\Models\Stadium;
@@ -67,6 +68,14 @@ final readonly class AuditSubject
     public static function club(Club $club): self
     {
         return new self('club', $club->id, $club->name.' ('.$club->code.')');
+    }
+
+    /**
+     * A match (F1-03), e.g. "Alfa – Beta, 7ª giornata, 18/10/2027".
+     */
+    public static function match(FixtureMatch $match): self
+    {
+        return new self('match', $match->id, $match->label());
     }
 
     public static function stadium(Stadium $stadium): self
