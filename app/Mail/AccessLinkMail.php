@@ -4,19 +4,17 @@ namespace App\Mail;
 
 use App\Domain\Users\Services\AccessLinks;
 use App\Enums\AccessLinkType;
+use App\Enums\NotificationType;
 use App\Support\Text;
-use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 
 /**
- * E-mail with an access link (activation, reset of the second factor, reset of the password).
+ * E-mail with an access link (M01 §5, §7; D-277…D-280): activation, setup again after the reset of
+ * the second factor, new password after a reset by the admin or asked from the login page (PR-08).
  *
- * ⚠️ Temporary version of PR-04 (D-277): sent right away, with Laravel's plain template.
- * PR-08 replaces it with the queued e-mail, the Infront template with logo and notification_logs
- * (D-209, D-220), without changing the Actions, which only call SendAccessLink.
+ * Queued and encrypted like every PortalMail: the link carries the token in clear.
  */
-final class AccessLinkMail extends Mailable
+final class AccessLinkMail extends PortalMail
 {
     public function __construct(
         public readonly string $firstName,
@@ -24,9 +22,14 @@ final class AccessLinkMail extends Mailable
         public readonly string $url,
     ) {}
 
-    public function envelope(): Envelope
+    public function notificationType(): NotificationType
     {
-        return new Envelope(subject: $this->typeText('subject'));
+        return NotificationType::forAccessLink($this->type);
+    }
+
+    public function subjectText(): string
+    {
+        return $this->typeText('subject');
     }
 
     public function content(): Content
@@ -34,11 +37,11 @@ final class AccessLinkMail extends Mailable
         return new Content(
             markdown: 'mail.access-link',
             with: [
-                'greeting' => Text::get('users.mail.greeting', ['name' => $this->firstName]),
+                'greeting' => Text::get('mail.greeting', ['name' => $this->firstName]),
                 'intro' => $this->typeText('intro'),
                 'action' => $this->typeText('action'),
-                'expiry' => Text::get('users.mail.expiry', ['hours' => (string) AccessLinks::LIFETIME_HOURS]),
-                'ignore' => Text::get('users.mail.ignore'),
+                'expiry' => Text::get('mail.access_link.expiry', ['hours' => (string) AccessLinks::LIFETIME_HOURS]),
+                'ignore' => $this->typeText('ignore'),
                 'url' => $this->url,
             ],
         );
@@ -46,6 +49,6 @@ final class AccessLinkMail extends Mailable
 
     private function typeText(string $key): string
     {
-        return Text::get('users.mail.'.$this->type->value.'.'.$key);
+        return Text::get('mail.access_link.'.$this->type->value.'.'.$key);
     }
 }

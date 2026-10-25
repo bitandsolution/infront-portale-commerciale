@@ -23,6 +23,7 @@ return [
         'access_recovery_code_used' => 'Accesso con codice di recupero',
         'access_session_expired' => 'Sessione scaduta',
         'access_session_closed' => 'Sessione chiusa dal portale',
+        'access_password_reset_requested' => 'Password dimenticata: richiesta del link',
         'user_created' => 'Utente creato',
         'user_updated' => 'Utente modificato',
         'user_role_changed' => 'Ruolo modificato',
@@ -47,6 +48,8 @@ return [
         'locked' => 'Account bloccato',
         'idle' => 'Inattività',
         'two_factor_reset' => 'Verifica in due passaggi azzerata',
+        'two_factor_not_configured' => 'Verifica in due passaggi non configurata',
+        'throttled' => 'Troppe richieste',
     ],
 
     'list' => [

@@ -112,7 +112,7 @@ it('D-279: the password reset is only for a user with the second factor', functi
     adminRuns($this, 'users.reset-password', $pending,
         "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso.");
 
-    Mail::assertNothingSent();
+    Mail::assertNothingOutgoing();
 });
 
 it('D-280: the reset of the second factor clears secret, codes and password and closes the sessions', function () {
@@ -186,7 +186,7 @@ it('D-281: the admin does not reset his own access from the Users page', functio
     $this->post(route('users.resend-link', $admin))->assertForbidden();
 
     expect($admin->fresh()?->two_factor_confirmed_at)->not->toBeNull();
-    Mail::assertNothingSent();
+    Mail::assertNothingOutgoing();
 });
 
 it('D-277: a new link only for a user who has still to set password and second factor', function () {
@@ -195,5 +195,5 @@ it('D-277: a new link only for a user who has still to set password and second f
     adminRuns($this, 'users.resend-link', $agent,
         "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi.");
 
-    Mail::assertNothingSent();
+    Mail::assertNothingOutgoing();
 });

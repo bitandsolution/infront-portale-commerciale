@@ -58,7 +58,7 @@ lang/it/                   tutti i testi dell'interfaccia
 docs/                      specifiche e decisioni (vedi §2)
 ```
 
-Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più le aree trasversali `Files` (archiviazione dei file, C10) e `Settings` (impostazioni di sistema, PR-07).
+Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più le aree trasversali `Files` (archiviazione dei file, C10), `Settings` (impostazioni di sistema, PR-07) e `Notifications` (invio e registro delle e-mail, PR-08).
 
 Regole:
 - **La logica di dominio sta nelle Action e nei Service**, mai nei controller, nei modelli o nei componenti Vue. Calcoli di prezzo, partite, residui e composizione dei documenti hanno **una sola implementazione**, lato server, usata anche dal simulatore e dai riepiloghi.
@@ -176,7 +176,13 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Documento (club / network) | `Document` · `documents` (`document_type`: club / network) |
 | Modello di pagine | `page_model` |
 | Evento di audit | `AuditEvent` · `audit_events` |
-| Registro e-mail | `NotificationLog` · `notification_logs` |
+| Registro e-mail | `NotificationLog` · `notification_logs` (`status`: queued / sent / failed; mai contenuto, link o token) |
+| Tipo di e-mail | `NotificationType` (`activation`, `two_factor_reset`, `password_reset`, `password_forgotten`, `login_locked`, `login_locked_admin`; F5 aggiunge le proposte) |
+| Invio delle e-mail e registro | `Notifications` (`App\Domain\Notifications\Services`): `send($user, $mail)`; le e-mail sono `PortalMail` (coda `mail`, cifrate, dopo il commit), testi in `lang/it/mail.php` |
+| Conservazione del registro e-mail (12 mesi) / consultazione da server | comandi `notifications:prune` (settimanale) / `notifications:list` |
+| Code di lavoro | `documents` (2 processi), `mail` (2), `default` (1) con Horizon (`config/horizon.php`); pannello `/horizon` solo admin (`Ability::QueuesMonitor`) |
+| Password dimenticata (reset self-service) | `RequestPasswordReset` (`App\Domain\Users\Actions`), rotte `password.request` / `password.email`, link `AccessLinkType::PasswordForgotten` |
+| E-mail di blocco all'utente e agli admin | listener `SendLockoutNotifications` su `LoginLockedOut` |
 | Piattaforma che legge l'API | `ApiClient` · `api_clients` |
 | Ruoli | `Role`: `admin`, `manager` (Gestore), `agent` (Agente) |
 | Permesso d'area (riga della matrice M01 §4) | `Ability` (enum; ogni caso è un Gate) |
@@ -250,7 +256,9 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail npm run dev           # Vite
 ./vendor/bin/sail npm run typecheck     # vue-tsc
 ./vendor/bin/sail npm run lint          # ESLint
-./vendor/bin/sail artisan horizon       # worker delle code
+./vendor/bin/sail artisan horizon       # worker delle code documents, mail, default (pannello /horizon, solo admin; PR-08)
+./vendor/bin/sail artisan notifications:list   # ultime e-mail del registro (sola lettura, PR-08)
+./vendor/bin/sail artisan notifications:prune  # conservazione del registro e-mail, 12 mesi (settimanale in produzione)
 ./vendor/bin/sail artisan audit:list    # ultimi eventi di audit (sola lettura, PR-05)
 ./vendor/bin/sail artisan audit:prune   # conservazione dell'audit (notturna in produzione)
 ./vendor/bin/sail artisan files:prune-orphans  # file del disco privato senza riga (notturno in produzione, PR-06)

@@ -142,7 +142,7 @@ Comandi utili:
 | Creare il primo admin | `sail artisan users:create-admin` (si rifiuta se un admin esiste già) |
 | Sbloccare subito un accesso bloccato (5 tentativi) | `sail artisan cache:clear` (altrimenti si attendono 15 minuti) |
 | Azzerare la verifica in due passaggi di un utente, anche dell'unico admin (PR-04) | `sail artisan users:reset-two-factor <e-mail>` (chiede conferma; l'utente la riconfigura al login successivo) |
-| Leggere le e-mail con i link di attivazione e di reset (PR-04) | Mailpit: **http://localhost:8025** |
+| Leggere le e-mail con i link di attivazione e di reset (PR-04) | Mailpit: **http://localhost:8025**. Dalla PR-08 le e-mail passano dalla coda `mail`: arrivano solo con il worker avviato (riga "Avviare il worker delle code") |
 | Vedere gli ultimi eventi di audit (PR-05) | `sail artisan audit:list` (filtri: `--area=access`, `--action=access.login_failed`, `--user=<e-mail>`, `--limit=50`) |
 | Eseguire la conservazione dell'audit (PR-05) | `sail artisan audit:prune`: nella VM lo scheduler non gira, il comando si lancia a mano; `sail artisan schedule:list` mostra la pianificazione notturna |
 | Aprire il database come amministratore (PR-05) | `sail exec mariadb mariadb -uroot -ppassword infront_portale` (la password di root è `DB_PASSWORD` del `.env`; per uscire `exit`) |
@@ -150,6 +150,11 @@ Comandi utili:
 | Scaricare un file salvato (PR-06) | **http://localhost:8080/file/&lt;id&gt;**, collegato come admin (fino alle fette che usano i file gli altri ruoli ricevono 403). I file stanno in `storage/app/private/files`, mai serviti direttamente |
 | Pulire i file senza riga in `stored_files` (PR-06) | `sail artisan files:prune-orphans` (con `--dry-run` li elenca soltanto); cancella solo quelli più vecchi di 24 ore. In produzione gira ogni notte alle 3:45 |
 | Scrivere le impostazioni di sistema mancanti (PR-07) | `sail artisan db:seed --class=SystemDataSeeder`: aggiunge solo le chiavi che non ci sono e non cambia i valori già salvati; lo esegue anche `migrate:fresh --seed`. Le impostazioni si vedono e si modificano da admin su **http://localhost:8080/impostazioni** |
+| Avviare il worker delle code (PR-08) | In un **secondo terminale SSH** collegato alla VM: `cd ~/infront-portale-commerciale` e `sail artisan horizon`. Mostra `Horizon started successfully.` e resta in primo piano senza stampare i singoli lavori (si vedono nel pannello, sotto *Completed Jobs*); si ferma con **Ctrl+C**. Senza worker le e-mail restano in coda e non arrivano in Mailpit. Dopo un `git checkout` o un `git pull` fermalo e riavvialo, perché non legge il codice nuovo |
+| Pannello delle code, Horizon (PR-08) | **http://localhost:8080/horizon**, collegato come admin (gestore e agente: 403; nessuna voce nel menu). Mostra le code `documents`, `mail` e `default`, i lavori recenti e quelli falliti |
+| Vedere le ultime e-mail del registro (PR-08) | `sail artisan notifications:list` (filtri: `--status=failed`, `--user=<e-mail>`, `--limit=50`): tipo, destinatario, stato (In coda, Inviata, Non inviata), tentativi ed errore, mai il contenuto |
+| Pulire il registro delle e-mail (PR-08) | `sail artisan notifications:prune`: cancella le righe più vecchie di 12 mesi. In produzione gira ogni domenica alle 4:00 |
+| Provare "Password dimenticata?" (PR-08) | Dalla pagina di accesso, in una finestra anonima: il link arriva in Mailpit solo agli utenti attivi con verifica in due passaggi; il messaggio della pagina è sempre lo stesso. Al massimo 5 richieste ogni 15 minuti dallo stesso indirizzo IP e 3 link all'ora per indirizzo e-mail |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".
@@ -174,6 +179,8 @@ Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale):
 | Codici di recupero dell'admin persi o smartphone cambiato | I codici si vedono una sola volta, dopo la configurazione della verifica | `sail artisan users:reset-two-factor <e-mail-dell-admin>` e conferma con `yes`; poi elimina la voce dall'app e riconfigura la verifica al login successivo (PR-04, D-276) |
 | Il link dell'e-mail (attivazione o nuova password) porta alla dashboard invece che alla pagina del link | Nel browser sei già collegato con un altro utente: le pagine dei link sono solo per chi non è collegato | Apri il link in una **finestra anonima** (Ctrl+Maiusc+N) oppure esci prima dal portale |
 | Il link dell'e-mail mostra "Link non valido" | Il link è scaduto (48 ore), è già stato usato, oppure ne è stato inviato uno più recente | Dalla scheda dell'utente: "Invia di nuovo il link" (utente da attivare) o di nuovo il reset |
+| Mailpit resta vuoto dopo un'operazione che invia un'e-mail (PR-08) | Il worker delle code non è avviato: le e-mail sono in coda su Redis | Avvia `sail artisan horizon` in un secondo terminale: le e-mail in attesa partono subito. `sail artisan notifications:list` le mostra "In coda" finché il worker non le invia |
+| Il worker non vede una modifica appena scaricata (PR-08) | Horizon carica il codice all'avvio | Ferma il worker con Ctrl+C e rilancia `sail artisan horizon` |
 | `Class OwnedRecord located in ./tests/Feature/Authorization/OwnerScopeTest.php …` durante `sail composer install` | Avviso dell'autoload su una classe di prova definita dentro un test | Nessuna: non ha effetti |
 
 ## 6. Più avanti

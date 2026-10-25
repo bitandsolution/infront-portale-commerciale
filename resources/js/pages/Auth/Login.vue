@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3';
+import { Link, useForm } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import TextField from '@/components/forms/TextField.vue';
 import { useTrans } from '@/composables/useTrans';
@@ -12,6 +12,8 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
  */
 const props = defineProps<{
     loginUrl: string;
+    /** "Password dimenticata?" (D-279; PR-08). */
+    forgotUrl: string;
     /** Seconds left of a lockout just reported by the server (0 when there is none). */
     lockedSeconds: number;
 }>();
@@ -102,6 +104,15 @@ function submit(): void {
                 {{ form.processing ? t('auth.login.submitting') : t('auth.login.submit') }}
             </button>
         </form>
+
+        <p class="mt-4 text-center text-sm">
+            <Link
+                :href="forgotUrl"
+                class="font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+                {{ t('auth.login.forgot') }}
+            </Link>
+        </p>
 
         <p class="mt-6 text-[13px] leading-relaxed text-muted">
             {{ t('auth.login.help') }}

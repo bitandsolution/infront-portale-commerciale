@@ -61,6 +61,9 @@ enum Ability: string
     // Settings (ux-architettura, "Navigazione per ruolo": admin only)
     case SettingsManage = 'settings.manage';
 
+    // Queues panel (Horizon, progettazione-tecnica §5.2.7; PR-08): admin only, no menu entry
+    case QueuesMonitor = 'queues.monitor';
+
     /**
      * Roles allowed by the M01 §4 matrix.
      *
@@ -98,7 +101,8 @@ enum Ability: string
             self::DocumentsRegenerate,
             self::AuditView,
             self::UsersManage,
-            self::SettingsManage => [Role::Admin],
+            self::SettingsManage,
+            self::QueuesMonitor => [Role::Admin],
         };
     }
 

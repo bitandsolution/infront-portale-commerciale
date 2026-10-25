@@ -3,7 +3,8 @@
 namespace App\Enums;
 
 /**
- * Reason of a failed login or of a session closed by the portal, stored in audit_events.reason for
+ * Reason of a failed login, of a session closed by the portal or of a self-service reset that sent
+ * no link (PR-08), stored in audit_events.reason for
  * the access events (D-128, D-283). Stable codes, translated when shown (lang/it/audit.php).
  */
 enum AccessReason: string
@@ -22,6 +23,12 @@ enum AccessReason: string
 
     /** Attempt made while the e-mail and IP pair is locked (D-274). */
     case Locked = 'locked';
+
+    /** Self-service reset asked by an active user who has no second factor yet (PR-08): no link. */
+    case TwoFactorNotConfigured = 'two_factor_not_configured';
+
+    /** Self-service reset asked more than 3 times in an hour for the same address (PR-08): no link. */
+    case Throttled = 'throttled';
 
     /** Session expired after the inactivity limit of the role (D-214). */
     case Idle = 'idle';

@@ -115,4 +115,18 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    | Markdown e-mails (PR-08): Laravel's components with the portal overrides in
+    | resources/views/vendor/mail (Infront header and footer) and the "infront" theme
+    | (resources/views/vendor/mail/html/themes/infront.css).
+    */
+
+    'markdown' => [
+        'theme' => env('MAIL_MARKDOWN_THEME', 'infront'),
+
+        'paths' => [
+            resource_path('views/vendor/mail'),
+        ],
+    ],
+
 ];

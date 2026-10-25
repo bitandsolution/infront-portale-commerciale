@@ -61,7 +61,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // During an Inertia visit, back to the previous page with a toast (ux-architettura §4.5):
         // - 500, system error, with the support code (D-265);
-        // - 403, forbidden action (RB-02).
+        // - 403, forbidden action (RB-02);
+        // - 429, too many requests (PR-08).
         // Full page loads keep the error pages (resources/views/errors/500.blade.php, 403.blade.php).
         $exceptions->respond(function (Response $response, Throwable $e, Request $request): Response {
             if (! $request->header('X-Inertia')) {
@@ -79,6 +80,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     'type' => 'error',
                     'message' => __('ui.errors.system'),
                     'code' => app(SupportCode::class)->value(),
+                ]),
+                // 429, too many requests from the same address (e.g. "Password dimenticata?", PR-08)
+                429 => back()->with('toast', [
+                    'id' => (string) Str::uuid(),
+                    'type' => 'error',
+                    'message' => __('ui.errors.too_many_requests'),
                 ]),
                 default => $response,
             };
