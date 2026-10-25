@@ -383,7 +383,7 @@ erDiagram
 | `partnership_capacities` | `season_id`, `club_id`, `partnership_tier_id`, `is_enabled`, `quantity` | UQ (stagione, club, livello) | D-048, D-052 |
 | `hospitality_capacities` | `season_id`, `club_id`, `hospitality_variant_id`, `is_enabled`, `seats` | UQ (stagione, club, variante) | D-053 |
 | `inventory_commitments` (impegni) | `season_id`, `club_id`, `proposal_id`, `proposal_version_id`, `proposal_version_club_id` (riga club della versione, vedi G3), `resource_type` (pool / partnership / hospitality), `inventory_pool_id` · `partnership_tier_id` · `hospitality_variant_id` (uno solo valorizzato), `quantity` (secondi, contratti o posti), **`starts_on`, `ends_on`**, `is_forced`, `forced_reason`, `created_by`, `created_at`, `released_at`, `released_by`, `release_reason` (superseded / cancelled) | CHECK: una sola risorsa coerente con `resource_type`; `quantity > 0`; `ends_on ≥ starts_on`. IDX (`season_id`, `club_id`, `released_at`) | D-062, D-064, D-072 |
-| `settings` | `key`, `value` (JSON), `updated_by` | `availability_method` (seasonal / per_match), `led_step_seconds` (30), `hospitality_max_seats` (6), `forced_reason_min_length` (10) | F-11 M04, D-063, D-147 |
+| `settings` | `key`, `value` (JSON scalare), `updated_by` | UQ `key`; `availability_method` (seasonal / per_match, sola lettura), `led_step_seconds` (30, fisso), `hospitality_max_seats` (6, 1–6), `forced_reason_min_length` (10, 1–200), `audit_ip_retention_days` (1826, 1–1826); limiti nell'enum `SettingKey`, valore predefinito se la riga manca | F-11 M04, D-063, D-147, D-292, D-293 |
 
 - **Residuo** = capacità − somma degli impegni con `released_at` nullo (stesso club, stagione, risorsa). Gli impegni in attesa non esistono: le proposte in approvazione si leggono dalle proposte (G3).
 - **Impegni mai modificati**: a ogni nuova versione di un'approvata il sistema rilascia gli impegni della versione precedente (`superseded`) e inserisce quelli nuovi; all'annullamento li rilascia (`cancelled`). La verifica "solo sulla differenza" (M04 FL-04) è un calcolo, non una modifica di righe. Lo storico degli impegni resta completo.
@@ -570,7 +570,7 @@ erDiagram
   - due trigger rifiutano `UPDATE` e `DELETE` a qualunque utente, con due sole eccezioni: svuotare solo `ip_address` e cancellare eventi oltre 5 anni;
   - l'utente applicativo non ha permessi DDL, quindi non può togliere i trigger; le migrazioni girano con un utente dedicato;
   - la conservazione (RB-A2) la esegue il job notturno `audit:prune` con l'utente di manutenzione (D-286). Dettagli in `docs/dev/database-utenti.md`.
-- ✅ **Conservazione dell'IP separata** (D-211, D-286): `settings.audit_ip_retention_days` dalla PR-07, fino ad allora `AUDIT_IP_RETENTION_DAYS` (default 5 anni, come D-128). Se il DPO di Infront chiede un periodo più breve (D-180), il job svuota solo l'IP e l'evento resta.
+- ✅ **Conservazione dell'IP separata** (D-211, D-286, D-296): `settings.audit_ip_retention_days`, modificabile dalla pagina Impostazioni; `AUDIT_IP_RETENTION_DAYS` (default 5 anni, come D-128) vale solo finché la riga manca. Se il DPO di Infront chiede un periodo più breve (D-180), il job svuota solo l'IP e l'evento resta.
 - `user_name` e `user_role` sono copiati nell'evento: restano leggibili anche dopo cambi di ruolo o disattivazioni (M10 §8).
 - Volumi attesi: decine di migliaia di eventi l'anno. Non serve partizionare la tabella.
 - Scrittura con il servizio `AuditLog`, chiamato dalle Action nella loro transazione (D-284), e per gli accessi dagli eventi di autenticazione (D-285), senza pacchetti esterni.
