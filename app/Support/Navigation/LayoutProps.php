@@ -47,7 +47,7 @@ final class LayoutProps
             ->all());
 
         return [
-            'label' => $current?->code ?? self::text('ui.season.none'),
+            'label' => $current !== null ? $current->code : self::text('ui.season.none'),
             'enabled' => $current !== null,
             'current' => $current?->id,
             'options' => $options,
