@@ -9,6 +9,8 @@ use App\Models\Season;
 /**
  * Fields of the sports registry recorded in the audit events (D-127, D-284): plain values, dates
  * as Y-m-d, enums as their stored value. AuditLog::changes() keeps only the changed ones.
+ * The codes are recorded as season_code / competition_code: AuditLog never records a field named
+ * "code" (the code of the second factor).
  */
 final class SportsAuditValues
 {
@@ -18,7 +20,7 @@ final class SportsAuditValues
     public static function season(Season $season): array
     {
         return [
-            'code' => $season->code,
+            'season_code' => $season->code,
             'name' => $season->name,
             'starts_on' => $season->starts_on->toDateString(),
             'ends_on' => $season->ends_on->toDateString(),
@@ -32,7 +34,7 @@ final class SportsAuditValues
     public static function competition(Competition $competition): array
     {
         return [
-            'code' => $competition->code,
+            'competition_code' => $competition->code,
             'name' => $competition->name,
             'short_name' => $competition->short_name,
             'type' => $competition->type->value,

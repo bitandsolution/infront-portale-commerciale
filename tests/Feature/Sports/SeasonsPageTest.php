@@ -81,7 +81,7 @@ it('F-03, D-127: creates a season with an audit event carrying every field', fun
         ->and($event->user_id)->toBe($admin->id)
         ->and($event->old_values)->toBeNull()
         ->and($event->new_values)->toBe([
-            'code' => '2027-28', 'name' => 'Stagione 2027-28', 'starts_on' => '2027-07-01',
+            'season_code' => '2027-28', 'name' => 'Stagione 2027-28', 'starts_on' => '2027-07-01',
             'ends_on' => '2028-06-30', 'status' => 'planned',
         ]);
 });

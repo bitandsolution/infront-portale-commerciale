@@ -68,7 +68,7 @@ it('F-02, D-127: creates a competition, the code in capital letters, with an aud
     $event = soleAuditEvent(AuditAction::CompetitionCreated);
     expect($event->area)->toBe('sports')
         ->and($event->object_label)->toBe('Serie C – Girone D (SERIE_C_GD)')
-        ->and($event->new_values)->toMatchArray(['code' => 'SERIE_C_GD', 'tier' => 3, 'is_active' => true]);
+        ->and($event->new_values)->toMatchArray(['competition_code' => 'SERIE_C_GD', 'tier' => 3, 'is_active' => true]);
 });
 
 it('F-02: validates the fields of a competition', function (array $values, string $field, string $message) {
