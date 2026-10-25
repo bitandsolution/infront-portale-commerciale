@@ -42,7 +42,7 @@ final class CalendarFileReader
 
                 foreach ($sheet->getRowIterator() as $row) {
                     $line++;
-                    $cells = array_values($row->toArray());
+                    $cells = $row->toArray();
 
                     if (self::isEmpty($cells)) {
                         continue;

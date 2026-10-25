@@ -82,15 +82,7 @@ final class CalendarImport extends Model
      */
     public function mapping(): array
     {
-        $mapping = [];
-
-        foreach ($this->column_mapping ?? [] as $field => $index) {
-            if (is_string($field) && is_int($index)) {
-                $mapping[$field] = $index;
-            }
-        }
-
-        return $mapping;
+        return $this->column_mapping ?? [];
     }
 
     /**

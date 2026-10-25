@@ -200,14 +200,13 @@ class CalendarImportController extends Controller
      */
     private function clubOptions(int $disciplineId): array
     {
-        return Club::query()
+        return array_values(Club::query()
             ->where('discipline_id', $disciplineId)
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (Club $club): array => ['value' => (string) $club->id, 'label' => $club->name])
-            ->values()
-            ->all();
+            ->all());
     }
 
     private function actor(Request $request): User
