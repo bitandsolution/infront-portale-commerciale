@@ -11,7 +11,7 @@ Riferimenti: D-170, D-176, D-177, D-178, progettazione-tecnica §5.2.6.
 | `tests` | MariaDB 11.8 e Redis come servizi; `php artisan test --parallel`; report di copertura come artefatto | Sì |
 | `frontend` | `npm ci`; `vue-tsc`; ESLint; `vite build` | Sì |
 | `audit` | `composer audit` e `npm audit --audit-level=high` | Sì, sulle vulnerabilità alte e critiche |
-| `pdf` (dalla fetta S1) | Chromium + qpdf nel runner; generazione dei casi di prova dei layout e confronto con le immagini di riferimento | Sì |
+| `pdf` (dalla fetta S1) | `qpdf`, `poppler-utils` e DejaVu da apt; `npm ci` e poi `npx puppeteer browsers install chrome-headless-shell` (Chrome for Testing, D-308; il `.npmrc` blocca gli script di installazione, quindi lo scaricamento è esplicito); restrizione AppArmor sui namespace utente tolta dal runner, così la sandbox di Chromium resta attiva (R1); `php artisan test --group=pdf`. Dalla S1-02 anche i casi di prova dei layout confrontati con le immagini di riferimento (D-311). Il job `backend` esclude il gruppo `pdf` | Sì |
 
 - Regole di protezione su `main`: PR obbligatoria, CI verde, approvazione di Antonio, nessun push diretto né force push.
 - Dependabot settimanale per Composer, npm e GitHub Actions.
@@ -34,6 +34,7 @@ La pipeline costruisce il rilascio (`.github/scripts/build-release.sh`: dipenden
 
 Passi di `deploy/deploy.sh`, con utente SSH dedicato senza sudo (R6):
 1. Collegamento di `.env` e `storage/` condivisi al rilascio già scompattato in `releases/<rilascio>`.
+   Poi `.cache/puppeteer` del rilascio collegato a `shared/puppeteer` e `npx puppeteer browsers install chrome-headless-shell`, che scarica Chrome for Testing solo se la versione richiesta da puppeteer non c'è ancora (D-308). Il rilascio contiene le dipendenze npm di produzione (`npm prune --omit=dev`), necessarie a Browsershot (R1, D-223), ma non il browser.
 2. Solo produzione: backup del database con `BACKUP_COMMAND` (D-177).
 3. `php artisan migrate --database=migrator --force` (migrazioni compatibili all'indietro), con l'utente MariaDB delle migrazioni: l'utente applicativo non ha permessi DDL (R7, D-283; `docs/dev/database-utenti.md`).
 4. `php artisan db:seed --class=SystemDataSeeder --force` (dati di sistema, PR-07): inserisce solo ciò che manca e non cambia mai una riga, quindi i valori modificati dall'admin restano; basta l'utente applicativo (solo `INSERT`). Al primo deploy crea le impostazioni con i valori iniziali.
@@ -58,7 +59,8 @@ Passi di `deploy/deploy.sh`, con utente SSH dedicato senza sudo (R6):
 - Cron ogni minuto per `php artisan schedule:run` (R2): `/health` fallisce se lo scheduler tace da oltre 10 minuti.
 - Progetto Sentry in un'organizzazione con dati nella regione UE (DSN in `SENTRY_LARAVEL_DSN` del `.env` del server) e servizio di uptime esterno su `/health`.
 - Sul server `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, `LOG_LEVEL=info` e `expose_php = Off` nel `php.ini`.
-- `DOCUMENT_FONTS_PATH` sul server con i file Interstate autorizzati.
+- `DOCUMENT_FONTS_PATH` sul server con i tre file Interstate autorizzati, rinominati `interstate-regular.ttf`, `interstate-bold.ttf`, `interstate-black.ttf` (D-249); senza, la generazione si ferma con un errore (il font sostitutivo vale solo in sviluppo e nei test, D-311).
+- Generazione dei PDF (R1, D-308): `qpdf` e `poppler-utils`; chrome-headless-shell di Chrome for Testing installato da `npx puppeteer browsers install chrome-headless-shell` (non il pacchetto snap `chromium`), con le librerie di sistema di Chromium (`npx playwright install-deps chromium` le elenca e le installa su Ubuntu); il deploy lo installa una volta in `shared/puppeteer` (§2, passo 1), quindi il server deve raggiungere `storage.googleapis.com`; sandbox di Chromium attiva (`DOCUMENT_CHROMIUM_NO_SANDBOX` è rifiutato fuori da `local` e `testing`); `DOCUMENT_NODE_BINARY` con il percorso assoluto se il worker non ha Node.js nel PATH.
 - PHP da riga di comando con le estensioni `pcntl` e `posix`, richieste da Horizon (PR-08), e un processo sempre attivo per `php artisan horizon` (supervisor o servizio di sistema), riavviato dal deploy con `horizon:terminate` (passo 7).
 - I tre utenti MariaDB di `database/sql/audit-users.sql` (migrazioni, applicativo, manutenzione dell'audit), da creare come in `docs/dev/database-utenti.md` (R7, D-283).
 
@@ -68,3 +70,5 @@ Passi di `deploy/deploy.sh`, con utente SSH dedicato senza sudo (R6):
 - Pacchetto nuovo (PR-03): la PR lo aggiunge al `composer.json` e la CI risolve **solo quel pacchetto** e le sue dipendenze (`composer update <pacchetti> --with-dependencies`, elenco da `.github/scripts/missing-locked-packages.php`), poi committa il `composer.lock` aggiornato sul branch. ⚠️ Il commit del bot non fa ripartire la CI (limite del `GITHUB_TOKEN`): serve un altro push sul branch, che conferma il lock con `composer install`.
 - ⚠️ Nelle sessioni cloud di Claude **packagist.org non è raggiungibile** e PHP è alla 8.3: la parte PHP si verifica solo in CI; la parte frontend anche in locale. Per lavorare più velocemente serve abilitare packagist.org nella rete delle sessioni, oppure sviluppare in locale con Sail.
 - Suite di test (PR-05): `Unit`, `Feature` (in transazione), `Concurrency` e `Database` (con troncamento delle tabelle). La suite `Database` crea utenti MariaDB e richiede un amministratore: in CI la connessione è root, sulla VM i suoi test risultano saltati.
+- Suite `Pdf` (S1-01): test del gruppo `pdf`, che eseguono davvero Chromium, `qpdf` e `pdffonts`; nessun database. Girano nel job `pdf` e sulla VM; il job `backend` li esclude (`--exclude-group=pdf`). Font sostitutivo DejaVu anche dove Interstate è configurato (`phpunit.xml`, D-311).
+- Installazione delle dipendenze Composer in `.github/scripts/composer-install.sh`, usata dai job `backend` e `pdf`; solo `backend` committa il lock completato.

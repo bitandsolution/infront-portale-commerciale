@@ -11,6 +11,8 @@
 #   $DEPLOY_PATH/releases/<release>   one folder per release, the last 5 are kept
 #   $DEPLOY_PATH/shared/.env          configuration of the environment (never in the repository)
 #   $DEPLOY_PATH/shared/storage       files, logs, cache of the views (private disk: D-287)
+#   $DEPLOY_PATH/shared/puppeteer     chrome-headless-shell of Chrome for Testing (D-308), linked as
+#                                     .cache/puppeteer of each release (.puppeteerrc.cjs)
 #   $DEPLOY_PATH/current              link to the running release (document root: current/public)
 #
 # Variables:
@@ -22,6 +24,7 @@
 #                        the deploy user by one sudoers rule, R6 as precised by PR-09)
 #   BACKUP_COMMAND       backup of the database before the deploy, required in production (D-177)
 #   KEEP_RELEASES        releases kept (default: 5)
+#   NPX_BIN              npx of Node.js (default: npx), to install Chrome for Testing (D-308)
 #
 # If /health does not answer "ok" within a minute the link goes back to the previous release.
 # Migrations are backward compatible with the previous version (D-178), so the previous code runs on
@@ -36,6 +39,7 @@ release="${1:?usage: deploy.sh <release>}"
 php="${PHP_BIN:-php}"
 fpm_reload="${FPM_RELOAD_COMMAND:-sudo -n systemctl reload php8.4-fpm}"
 keep="${KEEP_RELEASES:-5}"
+npx="${NPX_BIN:-npx}"
 
 releases="$DEPLOY_PATH/releases"
 shared="$DEPLOY_PATH/shared"
@@ -54,6 +58,13 @@ cd "$target"
 ln -sfn "$shared/.env" "$target/.env"
 rm -rf "$target/storage"
 ln -sfn "$shared/storage" "$target/storage"
+
+# 1b. Chrome for Testing shared by the releases (D-308): installed only when puppeteer of this release
+#     asks for a version that is not there yet (the download is skipped otherwise).
+mkdir -p "$shared/puppeteer" "$target/.cache"
+ln -sfn "$shared/puppeteer" "$target/.cache/puppeteer"
+log "chrome-headless-shell"
+"$npx" --no-install puppeteer browsers install chrome-headless-shell
 
 # 2. Backup of the database before a production release (D-177).
 if [ "$DEPLOY_ENV" = "production" ]; then

@@ -5,7 +5,7 @@ import vueParser from 'vue-eslint-parser';
 
 export default tseslint.config(
     {
-        ignores: ['vendor/**', 'node_modules/**', 'public/**', 'bootstrap/ssr/**', 'storage/**'],
+        ignores: ['vendor/**', 'node_modules/**', 'public/**', 'bootstrap/ssr/**', 'storage/**', '.cache/**', '.puppeteerrc.cjs'],
     },
     ...tseslint.configs.recommended,
     ...pluginVue.configs['flat/recommended'],

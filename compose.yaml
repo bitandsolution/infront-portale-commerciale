@@ -3,11 +3,15 @@
 services:
     laravel.test:
         build:
-            context: './vendor/laravel/sail/runtimes/8.4'
+            # Sail runtime published in the repository, with qpdf, poppler-utils and DejaVu (D-308).
+            context: './docker/8.4'
             dockerfile: Dockerfile
             args:
                 WWWGROUP: '${WWWGROUP}'
-        image: 'sail-8.4/app'
+        image: 'infront-sail-8.4/app'
+        # Chromium keeps its renderer memory in /dev/shm: Docker's 64 MB are too few for a deck of
+        # 40 slides at 1920×1080 (progettazione-tecnica §5.5.1).
+        shm_size: '1gb'
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -19,6 +23,9 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            # Docker's seccomp profile does not let Chromium create its sandbox: turned off only in this
+            # local container, refused in staging and production (R1, D-308).
+            DOCUMENT_CHROMIUM_NO_SANDBOX: 'true'
         volumes:
             - '.:/var/www/html'
         networks:

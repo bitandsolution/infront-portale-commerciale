@@ -159,9 +159,39 @@ Comandi utili:
 | Far girare lo scheduler (PR-09) | Nella VM lo scheduler non parte da solo. `sail artisan schedule:run` esegue una volta i lavori dovuti e scrive il segnale di vita, valido 10 minuti per `/health`; `sail artisan schedule:work` lo fa ogni minuto finché resta aperto (terzo terminale SSH, Ctrl+C per fermarlo) |
 | Log dell'applicazione (PR-09) | Un file al giorno in `storage/logs/laravel-AAAA-MM-GG.log`, conservati 30 giorni: `tail -f storage/logs/laravel-$(date +%F).log` |
 | Intestazioni di sicurezza (PR-09) | Chrome → F12 → *Network* → una pagina del portale → *Headers*: `Content-Security-Policy` con `'nonce-…'`, `X-Frame-Options: DENY`. Nella scheda *Console* non devono comparire errori `Refused to …` (CSP) |
+| Provare gli strumenti dei documenti PDF (S1-01) | `sail artisan test --group=pdf`: Chromium genera una pagina 1920×1080, `pdffonts` verifica i font incorporati in sottoinsieme, `qpdf` controlla e linearizza il PDF. Fanno parte anche di `sail artisan test` |
+| Versioni degli strumenti PDF (S1-01) | `sail npx puppeteer browsers list` (deve elencare `chrome-headless-shell@…`) e `sail exec laravel.test qpdf --version` |
 | Spegnere la VM | `sudo poweroff` (oppure "Salva lo stato" da VirtualBox) |
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".
+
+### Strumenti dei documenti PDF (dalla fetta S1)
+
+Dalla PR **S1-01** il container dell'applicazione non viene più da Sail così com'è: il suo Dockerfile sta nel repository (`docker/8.4/`) e aggiunge `qpdf`, `poppler-utils` (`pdffonts`, `pdfinfo`) e il font libero DejaVu (D-308, D-311). Chromium è il **chrome-headless-shell di Chrome for Testing**, che `sail npx puppeteer browsers install chrome-headless-shell` scarica in `.cache/puppeteer` dentro il progetto (non va mai nel repository; `npm ci` non lo scarica, perché il `.npmrc` del repository blocca gli script di installazione). Nel container la sandbox di Chromium è spenta da `compose.yaml` (`DOCUMENT_CHROMIUM_NO_SANDBOX`), perché Docker non la consente; fuori dagli ambienti `local` e `testing` il portale si rifiuta di spegnerla.
+
+**Una volta sola**, dopo il `git checkout` del branch della PR S1-01 (o il `git pull` dopo il merge), nel terminale della VM:
+
+```bash
+cd ~/infront-portale-commerciale
+sail down                              # ferma i container con la vecchia immagine
+sail build --no-cache                  # nuova immagine: 5-15 minuti la prima volta
+sail up -d
+sail composer install                  # installa spatie/browsershot
+sail npm ci
+sail npm run build
+sail npx puppeteer browsers install chrome-headless-shell   # circa 100 MB, una volta per versione
+```
+
+**Font Interstate sulla VM** (facoltativi: senza, i documenti di prova usano DejaVu). I file non vanno mai nel repository. Dal **PowerShell di Windows**, nella cartella `Interstate Fonts` (sostituisci i nomi dei file sorgente con quelli dei tuoi file Regular, Bold e Black; il file `Interstate-black-euro.ttf` non è un font valido e non si usa):
+
+```powershell
+ssh -p 2222 antonio@127.0.0.1 "mkdir -p ~/infront-portale-commerciale/storage/app/document-fonts"
+scp -P 2222 ".\<file Regular>.ttf" antonio@127.0.0.1:~/infront-portale-commerciale/storage/app/document-fonts/interstate-regular.ttf
+scp -P 2222 ".\<file Bold>.ttf"    antonio@127.0.0.1:~/infront-portale-commerciale/storage/app/document-fonts/interstate-bold.ttf
+scp -P 2222 ".\<file Black>.ttf"   antonio@127.0.0.1:~/infront-portale-commerciale/storage/app/document-fonts/interstate-black.ttf
+```
+
+Poi nel `.env` della VM: `DOCUMENT_FONTS_PATH=/var/www/html/storage/app/document-fonts` (è il percorso **dentro** il container). La cartella `storage/app/document-fonts` è già esclusa da git. I test usano comunque DejaVu (`phpunit.xml`), anche con Interstate configurato.
 
 💡 Prima di provare una PR che cambia molto, fai un'**istantanea** della VM da VirtualBox (*Macchina* → *Istantanea*): se qualcosa va storto torni indietro in un clic.
 
@@ -188,10 +218,13 @@ Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale):
 | Il worker non vede una modifica appena scaricata (PR-08) | Horizon carica il codice all'avvio | Ferma il worker con Ctrl+C e rilancia `sail artisan horizon` |
 | `/health` risponde `{"status":"fail"}` (503) sulla VM (PR-09) | Il worker delle code non è avviato, oppure lo scheduler non ha scritto il segnale negli ultimi 10 minuti (sulla VM non gira da solo) | `sail artisan health:check` dice quale controllo non passa: per "Code (Horizon): non avviato" avvia `sail artisan horizon`, per "Scheduler" lancia `sail artisan schedule:run` |
 | La pagina di errore con i dettagli di Laravel (sfondo scuro) appare sulla VM | `APP_DEBUG=true` nel `.env` della VM: mostra i dettagli dell'errore. Non ha la Content-Security-Policy, così resta leggibile | Normale in sviluppo; in produzione `APP_DEBUG=false` mostra la pagina del portale con il codice di supporto |
+| `Could not find chrome-headless-shell (ver. …)` nei test PDF (S1-01) | Chrome for Testing non è installato, oppure un aggiornamento di puppeteer chiede una versione nuova | `sail npx puppeteer browsers install chrome-headless-shell` (lo scarica in `.cache/puppeteer`) |
+| `No usable sandbox!` o `Running as root without --no-sandbox` nei test PDF (S1-01) | Il container è ancora quello vecchio, senza `DOCUMENT_CHROMIUM_NO_SANDBOX` | `sail down`, `sail build --no-cache`, `sail up -d` (§4, "Strumenti dei documenti PDF") |
+| `qpdf: command not found` o `pdffonts: command not found` (S1-01) | Immagine del container non ricostruita | Come sopra: `sail build --no-cache` |
 | `Class OwnedRecord located in ./tests/Feature/Authorization/OwnerScopeTest.php …` durante `sail composer install` | Avviso dell'autoload su una classe di prova definita dentro un test | Nessuna: non ha effetti |
 
 ## 6. Più avanti
 
-- **Font Interstate** e **Chromium**: arrivano con la fetta S1. La PR di S1 aggiungerà il servizio Chromium a `compose.yaml` e la cartella dei font da indicare in `DOCUMENT_FONTS_PATH`, fuori dal repository. I file dei font non vanno mai nel repository.
+- **Prova della pipeline PDF** (PR S1-02): comando `documents:try` con la slide statica, il recap economico network e il deck di 40 pagine; tempo, peso, PDF e PNG da guardare con Interstate (D-309, D-311).
 - **Demo a Infront (gennaio 2027)**: dal tuo PC, con `sail artisan migrate:fresh --seed` per partire da dati di prova puliti.
 - **Staging su server**: quando l'ambiente R1–R7 sarà pronto (entro il 26/2/2027 per la milestone B), si attiva il deploy automatico della PR-09 con la variabile `DEPLOY_STAGING_ENABLED` (`docs/dev/ci.md` §2).
