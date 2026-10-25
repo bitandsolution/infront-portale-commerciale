@@ -13,9 +13,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\DatabaseTruncation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
@@ -135,4 +138,31 @@ function storeTestFile(
         $author,
         $name,
     ));
+}
+
+/*
+| Helpers of the calendar import tests (F1-04): real .xlsx files written with OpenSpout (D-316).
+*/
+
+/**
+ * An .xlsx file with one sheet: the given rows, the first one being the header. Cells are strings,
+ * numbers (Excel dates and times as numbers) or null.
+ *
+ * @param  list<list<string|int|float|null>>  $rows
+ */
+function calendarFile(array $rows, string $name = 'calendario-prova.xlsx'): UploadedFile
+{
+    $path = tempnam(sys_get_temp_dir(), 'cal').'.xlsx';
+    $writer = new Writer;
+    $writer->openToFile($path);
+
+    foreach ($rows as $row) {
+        $writer->addRow(Row::fromValues($row));
+    }
+
+    $writer->close();
+    $contents = (string) file_get_contents($path);
+    unlink($path);
+
+    return UploadedFile::fake()->createWithContent($name, $contents);
 }

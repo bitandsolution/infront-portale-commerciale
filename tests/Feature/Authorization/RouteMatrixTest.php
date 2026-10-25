@@ -2,6 +2,7 @@
 
 use App\Enums\AliasSource;
 use App\Enums\FilePurpose;
+use App\Models\CalendarImport;
 use App\Models\Club;
 use App\Models\ClubAlias;
 use App\Models\ClubEnrollment;
@@ -174,6 +175,15 @@ function routeMatrix(): array
         'sports.matches.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
         'sports.matches.cancel' => ['method' => 'POST', 'expected' => $backOfficeForm],
         'sports.matches.restore' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        // M02 — calendar import (F-09, FL-02; D-137, M02-CA8): admin and manager. Target: an import in
+        // preview of an empty workbook; forms are sent empty, actions go back with a toast
+        'sports.imports.store' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'sports.imports.show' => ['method' => 'GET', 'expected' => $backOffice],
+        'sports.imports.columns' => ['method' => 'PUT', 'expected' => $backOfficeForm],
+        'sports.imports.resolve' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'sports.imports.refresh' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'sports.imports.confirm' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'sports.imports.discard' => ['method' => 'POST', 'expected' => $backOfficeForm],
 
         // Season of the top bar (D-317): every role; sent empty, back with the errors
         'season.select' => ['method' => 'POST', 'expected' => $signedInForm],
@@ -270,6 +280,9 @@ function matrixParameters(string $route): array
         ],
         $route === 'sports.enrollments.destroy' => [
             'clubEnrollment' => ClubEnrollment::query()->create(['competition_season_id' => CompetitionSeason::factory()->create()->id, 'club_id' => Club::factory()->create()->id])->id,
+        ],
+        str_starts_with($route, 'sports.imports.') && $route !== 'sports.imports.store' => [
+            'calendarImport' => CalendarImport::factory()->create()->id,
         ],
         in_array($route, ['sports.matches.edit', 'sports.matches.update', 'sports.matches.cancel', 'sports.matches.restore'], true) => [
             'fixtureMatch' => FixtureMatch::factory()->create()->id,

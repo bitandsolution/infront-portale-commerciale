@@ -17,3 +17,4 @@ Note:
 - Il collaudo di ogni PR si fa sulla VM locale di Antonio (`docs/dev/ambiente-locale.md`). Ogni PR che cambia l'avvio in locale aggiorna la guida.
 - Il calendario Excel reale di Infront è atteso entro il 30/11/2026: fino ad allora il collaudo dell'import usa file fittizi nel tracciato D-017.
 - M02-CA7 si completa in F4/F5, quando esistono le righe delle proposte (D-322).
+- F1-04: pagina **Import** (`anagrafiche/import`) con il caricamento per competizione e gli import della stagione; pagina dell'import con anteprima, colonne, squadre da associare, ricalcolo, conferma e scarto (D-325). Le anteprime non confermate da 7 giorni si scartano di notte (`calendar-imports:prune`); il file resta in archivio.

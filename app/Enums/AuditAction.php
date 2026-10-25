@@ -65,12 +65,15 @@ enum AuditAction: string
     case MatchCancelled = 'match.cancelled';
     case MatchRestored = 'match.restored';
 
+    // F1-04: one event for the whole calendar import (D-321).
+    case CalendarImportConfirmed = 'calendar_import.confirmed';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
             'access' => AuditArea::Access,
             'setting' => AuditArea::Settings,
-            'season', 'competition', 'edition', 'stadium', 'club', 'club_alias', 'enrollment', 'match' => AuditArea::Sports,
+            'season', 'competition', 'edition', 'stadium', 'club', 'club_alias', 'enrollment', 'match', 'calendar_import' => AuditArea::Sports,
             default => AuditArea::Users,
         };
     }

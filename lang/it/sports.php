@@ -36,6 +36,60 @@ return [
 
     // Names of the fields in the validation messages (the generic ones of lang/it/validation.php
     // would call "code" the code of the second factor).
+    'import_statuses' => [
+        'preview' => 'In anteprima',
+        'confirmed' => 'Importato',
+        'discarded' => 'Scartato',
+    ],
+
+    // Fields of the import layout (M02 §6, D-017).
+    'import_columns' => [
+        'season' => 'Stagione',
+        'competition' => 'Competizione',
+        'matchday' => 'Giornata',
+        'date' => 'Data',
+        'time' => 'Ora',
+        'home' => 'Squadra casa',
+        'away' => 'Squadra ospite',
+        'stadium' => 'Stadio',
+    ],
+
+    'import' => [
+        'matchday_label' => ':numberª giornata',
+        'column_option' => 'Colonna :letter · :header',
+    ],
+
+    // Reasons why a row of the file is discarded (M02 §8, FL-02 step 2).
+    'import_errors' => [
+        'other_season' => 'Stagione «:season» diversa da quella scelta',
+        'other_competition' => 'Competizione «:competition» diversa da quella scelta',
+        'matchday' => 'Giornata mancante o non valida: serve un numero intero da 1 a 99',
+        'date_missing' => 'Data mancante',
+        'date_invalid' => 'Data non valida',
+        'time_invalid' => 'Ora non valida: si scrive come 20:45',
+        'club_missing' => 'Squadra mancante',
+        'club_unknown' => 'Squadra «:club» da associare a un club',
+        'same_club' => 'La squadra di casa e la squadra ospite coincidono',
+        'duplicate' => 'Stessa partita della riga :line',
+    ],
+
+    // Rows imported anyway, with a note (D-319, D-325, M02 §8).
+    'import_warnings' => [
+        'unknown_stadium' => 'Stadio «:stadium» sconosciuto: si usa lo stadio abituale della squadra di casa',
+        'cancelled' => 'Partita annullata: resta annullata',
+    ],
+
+    'import_changes' => [
+        'date' => 'data :from → :to',
+        'time' => 'ora :from → :to',
+        'stadium' => 'stadio diverso',
+        'none' => 'non indicata',
+    ],
+
+    'console' => [
+        'imports_pruned' => 'Import in anteprima scartati perché fermi da oltre 7 giorni: :count.',
+    ],
+
     'attributes' => [
         'code' => 'codice',
         'name' => 'nome',
@@ -70,6 +124,10 @@ return [
         'home_club_id' => 'squadra di casa',
         'away_club_id' => 'squadra ospite',
         'stadium_id' => 'stadio',
+        'file' => 'file del calendario',
+        'name' => 'nome',
+        'club_id' => 'club',
+        'columns' => 'colonne',
     ],
 
     'validation' => [
@@ -100,6 +158,11 @@ return [
         'match_restored' => 'Partita :match ripristinata',
         'warning_suffix' => 'Attenzione: :warnings',
         'nothing_changed' => 'Nessuna modifica da salvare',
+        'import_columns_saved' => 'Colonne salvate: l\'anteprima è aggiornata',
+        'import_name_resolved' => '«:name» associato a :club: dal prossimo import sarà riconosciuto in automatico',
+        'import_refreshed' => 'Anteprima ricalcolata',
+        'import_confirmed' => 'Calendario importato: :inserted partite inserite, :updated aggiornate, :discarded righe scartate',
+        'import_discarded' => 'Import scartato: il calendario non è cambiato',
     ],
 
     'warnings' => [
@@ -118,6 +181,13 @@ return [
         'club_not_enrolled' => ':club non è iscritto a :edition: iscrivilo prima dalla pagina della stagione',
         'date_outside_season' => 'La data è fuori dalla stagione :season',
         'match_exists' => 'Esiste già una partita con la stessa giornata, squadra di casa e squadra ospite',
+        'calendar_unreadable' => 'Le celle del file non si leggono: aprilo in Excel, salvalo di nuovo come .xlsx e riprova',
+        'calendar_empty' => 'Il primo foglio del file non ha partite: servono una riga di intestazione e una riga per ogni partita',
+        'calendar_too_many_rows' => 'Il file ha più di :max righe: non sembra il calendario di una competizione',
+        'import_closed' => 'Questo import è già concluso: carica di nuovo il file per un nuovo import',
+        'import_nothing_to_confirm' => 'Non ci sono partite da importare: correggi le righe in errore o scegli le colonne',
+        'import_columns_invalid' => 'Scegli una colonna diversa per ogni campo obbligatorio: giornata, data, squadra casa e squadra ospite',
+        'import_name_not_unknown' => '«:name» non è tra le squadre da associare di questo import',
         'edition_in_use' => ':edition ha già club iscritti, partite o import: non si può togliere dalla stagione',
     ],
 ];

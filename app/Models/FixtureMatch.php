@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $kickoff_time
  * @property MatchStatus $status
  * @property MatchSource $source
+ * @property int|null $last_import_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read Matchday $matchday

@@ -20,7 +20,8 @@ use Inertia\Response;
 /**
  * Calendars page (M02 F-08; D-137: admin and manager): overview of the editions of the season of
  * the top bar (D-317) with enrolled clubs, matches, state of the calendar and standard number of
- * home matches used until the calendar is loaded (D-034).
+ * home matches used until the calendar is loaded (D-034), with the links to its matches and to the
+ * calendar import (F1-04).
  */
 class CalendarController extends Controller
 {
@@ -55,6 +56,7 @@ class CalendarController extends Controller
                         'standardHomeMatches' => $edition->standard_home_matches,
                         'calendarLoadedAt' => SportsPresenter::dateTime($edition->calendar_loaded_at),
                         'matchesUrl' => PortalPages::url('sports_matches').'?edizione='.$edition->id,
+                        'importUrl' => PortalPages::url('sports_import').'?edizione='.$edition->id,
                         'enrollmentsUrl' => Ability::SportsStructureManage->allows($user->role) ? route('sports.editions.show', $edition) : null,
                     ];
                 })

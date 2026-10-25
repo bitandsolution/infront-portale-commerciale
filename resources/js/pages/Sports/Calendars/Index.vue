@@ -20,6 +20,7 @@ interface CalendarRow {
     standardHomeMatches: number;
     calendarLoadedAt: string | null;
     matchesUrl: string;
+    importUrl: string;
     enrollmentsUrl: string | null;
 }
 
@@ -140,6 +141,13 @@ const { t } = useTrans();
                                 class="inline-flex min-h-11 items-center text-sm font-semibold text-accent underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent"
                             >
                                 {{ t('sports.calendars.matches') }}
+                            </Link>
+                            <Link
+                                v-if="!season.readOnly"
+                                :href="edition.importUrl"
+                                class="inline-flex min-h-11 items-center text-sm font-semibold text-accent underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-accent"
+                            >
+                                {{ t('sports.calendars.import_link') }}
                             </Link>
                             <Link
                                 v-if="edition.enrollmentsUrl"

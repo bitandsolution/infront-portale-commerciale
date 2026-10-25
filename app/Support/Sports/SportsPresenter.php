@@ -2,8 +2,11 @@
 
 namespace App\Support\Sports;
 
+use App\Domain\Sports\Data\CalendarPreview;
+use App\Enums\CalendarImportStatus;
 use App\Enums\CompetitionType;
 use App\Enums\SeasonStatus;
+use App\Models\CalendarImport;
 use App\Models\Club;
 use App\Models\ClubAlias;
 use App\Models\Competition;
@@ -16,6 +19,8 @@ use Illuminate\Support\Carbon;
 /**
  * Sports registry as the pages show it (M02): Italian labels from lang/it/sports.php, sports dates
  * as dd/mm/yyyy (C7: local dates, no conversion).
+ *
+ * @phpstan-import-type PreviewRow from CalendarPreview
  */
 final class SportsPresenter
 {
@@ -205,6 +210,61 @@ final class SportsPresenter
             ->map(fn (CompetitionSeason $edition): array => ['value' => (string) $edition->id, 'label' => $edition->competition->name])
             ->values()
             ->all());
+    }
+
+    /**
+     * A calendar import in the list and in the header of its page (FL-02).
+     *
+     * @return array{id: int, edition: string, competition: string, fileName: string, fileUrl: string, uploadedBy: string, uploadedAt: string|null, status: string, statusLabel: string, statusTone: string, inserted: int, updated: int, unchanged: int, discarded: int, confirmedAt: string|null, showUrl: string}
+     */
+    public static function importRow(CalendarImport $import): array
+    {
+        return [
+            'id' => $import->id,
+            'edition' => $import->competitionSeason->label(),
+            'competition' => $import->competitionSeason->competition->name,
+            'fileName' => $import->file->original_name ?? $import->file->downloadName(),
+            'fileUrl' => route('files.download', $import->file_id),
+            'uploadedBy' => $import->uploader->fullName(),
+            'uploadedAt' => self::dateTime($import->created_at),
+            'status' => $import->status->value,
+            'statusLabel' => $import->status->label(),
+            'statusTone' => match ($import->status) {
+                CalendarImportStatus::Confirmed => 'success',
+                CalendarImportStatus::Preview => 'notice',
+                CalendarImportStatus::Discarded => 'muted',
+            },
+            'inserted' => $import->inserted_count,
+            'updated' => $import->updated_count,
+            'unchanged' => $import->unchanged_count,
+            'discarded' => $import->discarded_count,
+            'confirmedAt' => self::dateTime($import->confirmed_at),
+            'showUrl' => route('sports.imports.show', $import),
+        ];
+    }
+
+    /**
+     * A row of the preview (FL-02 step 2), with the date as dd/mm/yyyy.
+     *
+     * @param  PreviewRow  $row
+     * @return array{line: int, matchday: int|null, date: string|null, time: string|null, home: string, away: string, stadium: string, outcome: string, unknown: bool, errors: list<string>, warnings: list<string>, changes: list<string>}
+     */
+    public static function importPreviewRow(array $row): array
+    {
+        return [
+            'line' => $row['line'],
+            'matchday' => $row['matchday'],
+            'date' => $row['date'] !== null ? Carbon::parse($row['date'])->format('d/m/Y') : null,
+            'time' => $row['time'],
+            'home' => $row['home'],
+            'away' => $row['away'],
+            'stadium' => $row['stadium'],
+            'outcome' => $row['outcome'],
+            'unknown' => $row['unknown'],
+            'errors' => $row['errors'],
+            'warnings' => $row['warnings'],
+            'changes' => $row['changes'],
+        ];
     }
 
     public static function date(Carbon $date): string

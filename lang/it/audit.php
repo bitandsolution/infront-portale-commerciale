@@ -59,6 +59,7 @@ return [
         'match_updated' => 'Partita modificata',
         'match_cancelled' => 'Partita annullata',
         'match_restored' => 'Partita ripristinata',
+        'calendar_import_confirmed' => 'Calendario importato',
     ],
 
     'reasons' => [

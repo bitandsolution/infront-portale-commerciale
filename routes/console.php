@@ -21,6 +21,13 @@ Schedule::command('audit:prune')
     ->withoutOverlapping()
     ->onOneServer();
 
+// Calendar imports left in preview for more than 7 days (FL-02, F1-04): discarded, preview cleared.
+Schedule::command('calendar-imports:prune')
+    ->dailyAt('03:30')
+    ->timezone('Europe/Rome')
+    ->withoutOverlapping()
+    ->onOneServer();
+
 // Files of the private disk without a stored_files row, older than 24 hours (C10, PR-06), e.g. left
 // by a process killed between the write and the commit.
 Schedule::command('files:prune-orphans')

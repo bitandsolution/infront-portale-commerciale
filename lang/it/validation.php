@@ -27,6 +27,7 @@ return [
     ],
     'min' => [
         'array' => 'Scegli almeno :min :attribute.',
+        'numeric' => 'Il campo :attribute deve essere almeno :min.',
         'string' => 'Il campo :attribute deve contenere almeno :min caratteri.',
     ],
     'password' => [
