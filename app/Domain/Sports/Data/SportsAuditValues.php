@@ -2,9 +2,11 @@
 
 namespace App\Domain\Sports\Data;
 
+use App\Models\Club;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\Season;
+use App\Models\Stadium;
 
 /**
  * Fields of the sports registry recorded in the audit events (D-127, D-284): plain values, dates
@@ -54,6 +56,39 @@ final class SportsAuditValues
             'competition' => $edition->competition->code,
             'season' => $edition->season->code,
             'standard_home_matches' => $edition->standard_home_matches,
+        ];
+    }
+
+    /**
+     * @return array<string, string|int|bool|null>
+     */
+    public static function stadium(Stadium $stadium): array
+    {
+        return [
+            'name' => $stadium->name,
+            'city' => $stadium->city,
+            'capacity' => $stadium->capacity,
+            'is_active' => $stadium->is_active,
+        ];
+    }
+
+    /**
+     * The home stadium is recorded by name, readable also after a rename; the logo has its own event.
+     *
+     * @return array<string, string|bool|null>
+     */
+    public static function club(Club $club): array
+    {
+        return [
+            'club_code' => $club->code,
+            'name' => $club->name,
+            'short_name' => $club->short_name,
+            'home_stadium' => $club->home_stadium_id !== null ? Stadium::query()->find($club->home_stadium_id)?->name : null,
+            'primary_color' => $club->primary_color,
+            'secondary_color' => $club->secondary_color,
+            'is_infront' => $club->is_infront,
+            'is_top_match_opponent' => $club->is_top_match_opponent,
+            'is_active' => $club->is_active,
         ];
     }
 }

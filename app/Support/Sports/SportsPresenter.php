@@ -4,9 +4,12 @@ namespace App\Support\Sports;
 
 use App\Enums\CompetitionType;
 use App\Enums\SeasonStatus;
+use App\Models\Club;
+use App\Models\ClubAlias;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\Season;
+use App\Models\Stadium;
 use Illuminate\Support\Carbon;
 
 /**
@@ -91,6 +94,73 @@ final class SportsPresenter
             fn (CompetitionType $type): array => ['value' => $type->value, 'label' => $type->label()],
             CompetitionType::cases(),
         );
+    }
+
+    /**
+     * @return array{id: int, name: string, city: string, capacity: int|null, isActive: bool, clubs: int, url: string}
+     */
+    public static function stadiumRow(Stadium $stadium, int $clubs): array
+    {
+        return [
+            'id' => $stadium->id,
+            'name' => $stadium->name,
+            'city' => $stadium->city,
+            'capacity' => $stadium->capacity,
+            'isActive' => $stadium->is_active,
+            'clubs' => $clubs,
+            'url' => route('sports.stadiums.edit', $stadium),
+        ];
+    }
+
+    /**
+     * @return array{id: int, code: string, name: string, shortName: string, homeStadiumId: int|null, homeStadium: string|null, primaryColor: string|null, secondaryColor: string|null, isInfront: bool, isTopMatchOpponent: bool, isActive: bool, logoUrl: string|null, url: string}
+     */
+    public static function clubRow(Club $club): array
+    {
+        return [
+            'id' => $club->id,
+            'code' => $club->code,
+            'name' => $club->name,
+            'shortName' => $club->short_name,
+            'homeStadiumId' => $club->home_stadium_id,
+            'homeStadium' => $club->homeStadium?->name,
+            'primaryColor' => $club->primary_color,
+            'secondaryColor' => $club->secondary_color,
+            'isInfront' => $club->is_infront,
+            'isTopMatchOpponent' => $club->is_top_match_opponent,
+            'isActive' => $club->is_active,
+            'logoUrl' => $club->logo_file_id !== null ? route('files.download', $club->logo_file_id) : null,
+            'url' => route('sports.clubs.edit', $club),
+        ];
+    }
+
+    /**
+     * @return array{id: int, alias: string, source: string, sourceLabel: string, destroyUrl: string}
+     */
+    public static function aliasRow(ClubAlias $alias): array
+    {
+        return [
+            'id' => $alias->id,
+            'alias' => $alias->alias,
+            'source' => $alias->source->value,
+            'sourceLabel' => $alias->source->label(),
+            'destroyUrl' => route('sports.clubs.aliases.destroy', $alias),
+        ];
+    }
+
+    /**
+     * Stadiums for a select: the active ones, plus the one already chosen even if deactivated.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public static function stadiumOptions(?int $selectedId = null): array
+    {
+        return array_values(Stadium::query()
+            ->where(fn ($query) => $query->where('is_active', true)->orWhere('id', $selectedId))
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Stadium $stadium): array => ['value' => (string) $stadium->id, 'label' => $stadium->name.' ('.$stadium->city.')'])
+            ->all());
     }
 
     public static function date(Carbon $date): string

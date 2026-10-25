@@ -49,13 +49,21 @@ enum AuditAction: string
     case EditionCreated = 'edition.created';
     case EditionUpdated = 'edition.updated';
     case EditionRemoved = 'edition.removed';
+    // F1-02: stadiums, clubs, their logos and aliases.
+    case StadiumCreated = 'stadium.created';
+    case StadiumUpdated = 'stadium.updated';
+    case ClubCreated = 'club.created';
+    case ClubUpdated = 'club.updated';
+    case ClubLogoChanged = 'club.logo_changed';
+    case ClubAliasCreated = 'club_alias.created';
+    case ClubAliasRemoved = 'club_alias.removed';
 
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
             'access' => AuditArea::Access,
             'setting' => AuditArea::Settings,
-            'season', 'competition', 'edition' => AuditArea::Sports,
+            'season', 'competition', 'edition', 'stadium', 'club', 'club_alias' => AuditArea::Sports,
             default => AuditArea::Users,
         };
     }

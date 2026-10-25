@@ -46,6 +46,13 @@ return [
         'edition_created' => 'Competizione aggiunta alla stagione',
         'edition_updated' => 'Numero standard di partite modificato',
         'edition_removed' => 'Competizione tolta dalla stagione',
+        'stadium_created' => 'Stadio creato',
+        'stadium_updated' => 'Stadio modificato',
+        'club_created' => 'Club creato',
+        'club_updated' => 'Club modificato',
+        'club_logo_changed' => 'Logo del club cambiato',
+        'club_alias_created' => 'Alias del club aggiunto',
+        'club_alias_removed' => 'Alias del club tolto',
     ],
 
     'reasons' => [
