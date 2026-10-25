@@ -1,6 +1,9 @@
 <?php
 
 use App\Enums\FilePurpose;
+use App\Models\Competition;
+use App\Models\CompetitionSeason;
+use App\Models\Season;
 use App\Models\StoredFile;
 use App\Models\User;
 use Illuminate\Routing\Route as RouteDefinition;
@@ -125,6 +128,23 @@ function routeMatrix(): array
         'pages.sports_competitions' => ['method' => 'GET', 'expected' => $admin],
         'pages.sports_clubs' => ['method' => 'GET', 'expected' => $admin],
 
+        // M02 — seasons, competitions and their editions: admin only (D-137, D-321). Forms are sent
+        // empty; the removal of an empty edition goes back to the page with a toast
+        'sports.seasons.create' => ['method' => 'GET', 'expected' => $admin],
+        'sports.seasons.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'sports.seasons.edit' => ['method' => 'GET', 'expected' => $admin],
+        'sports.seasons.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'sports.editions.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'sports.editions.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'sports.editions.destroy' => ['method' => 'DELETE', 'expected' => $adminForm],
+        'sports.competitions.create' => ['method' => 'GET', 'expected' => $admin],
+        'sports.competitions.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'sports.competitions.edit' => ['method' => 'GET', 'expected' => $admin],
+        'sports.competitions.update' => ['method' => 'PUT', 'expected' => $adminForm],
+
+        // Season of the top bar (D-317): every role; sent empty, back with the errors
+        'season.select' => ['method' => 'POST', 'expected' => $signedInForm],
+
         // M10 — reports R-01…R-05 (D-134); access report and audit admin only (D-129)
         'pages.reports_proposals' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.reports_agents' => ['method' => 'GET', 'expected' => $backOffice],
@@ -212,6 +232,15 @@ function matrixParameters(string $route): array
                 'user' => User::factory()->agent()->create()->id,
             ],
         str_starts_with($route, 'access.') => ['token' => str_repeat('x', 64)],
+        in_array($route, ['sports.seasons.edit', 'sports.seasons.update', 'sports.editions.store'], true) => [
+            'season' => Season::factory()->create()->id,
+        ],
+        in_array($route, ['sports.editions.update', 'sports.editions.destroy'], true) => [
+            'competitionSeason' => CompetitionSeason::factory()->create()->id,
+        ],
+        in_array($route, ['sports.competitions.edit', 'sports.competitions.update'], true) => [
+            'competition' => Competition::factory()->create()->id,
+        ],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
         str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],
         str_starts_with($route, 'horizon.') && str_ends_with($route, '.show'),

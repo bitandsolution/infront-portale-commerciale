@@ -41,11 +41,21 @@ enum AuditAction: string
     // Settings (PR-07): one event per changed key, with the value before and after.
     case SettingUpdated = 'setting.updated';
 
+    // Sports registry (M02; F1-01, D-321): one event per manual write, with the changed fields.
+    case SeasonCreated = 'season.created';
+    case SeasonUpdated = 'season.updated';
+    case CompetitionCreated = 'competition.created';
+    case CompetitionUpdated = 'competition.updated';
+    case EditionCreated = 'edition.created';
+    case EditionUpdated = 'edition.updated';
+    case EditionRemoved = 'edition.removed';
+
     public function area(): AuditArea
     {
-        return match (true) {
-            str_starts_with($this->value, 'access.') => AuditArea::Access,
-            str_starts_with($this->value, 'setting.') => AuditArea::Settings,
+        return match (strstr($this->value, '.', true)) {
+            'access' => AuditArea::Access,
+            'setting' => AuditArea::Settings,
+            'season', 'competition', 'edition' => AuditArea::Sports,
             default => AuditArea::Users,
         };
     }

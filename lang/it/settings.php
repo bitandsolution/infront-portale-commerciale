@@ -55,7 +55,7 @@ return [
     'last_change' => 'Ultima modifica il :date da :user',
 
     'toasts' => [
-        'saved' => 'Impostazioni salvate.',
-        'unchanged' => 'Nessuna modifica da salvare.',
+        'saved' => 'Impostazioni salvate',
+        'unchanged' => 'Nessuna modifica da salvare',
     ],
 ];

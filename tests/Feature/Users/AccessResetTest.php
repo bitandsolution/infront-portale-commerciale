@@ -110,7 +110,7 @@ it('D-279: the password reset is only for a user with the second factor', functi
     $pending = User::factory()->agent()->withoutTwoFactor()->create(['activated_at' => null]);
 
     adminRuns($this, 'users.reset-password', $pending,
-        "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso.");
+        "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso");
 
     Mail::assertNothingOutgoing();
 });
@@ -193,7 +193,7 @@ it('D-277: a new link only for a user who has still to set password and second f
     $agent = User::factory()->agent()->create();
 
     adminRuns($this, 'users.resend-link', $agent,
-        "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi.");
+        "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi");
 
     Mail::assertNothingOutgoing();
 });

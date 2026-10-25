@@ -86,7 +86,7 @@ it('D-127: saving writes one audit event per changed key, with the value before 
     $this->actingAs($admin)
         ->put(route('settings.update'), settingsForm(['hospitality_max_seats' => '4', 'audit_ip_retention_days' => '365']))
         ->assertRedirect()
-        ->assertSessionHas('toast.message', 'Impostazioni salvate.');
+        ->assertSessionHas('toast.message', 'Impostazioni salvate');
 
     expect(app(Settings::class)->hospitalityMaxSeats())->toBe(4)
         ->and(app(Settings::class)->auditIpRetentionDays())->toBe(365)
@@ -120,7 +120,7 @@ it('D-127: saving the same values writes nothing and says so', function () {
     $this->actingAs($admin)
         ->put(route('settings.update'), settingsForm())
         ->assertRedirect()
-        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare.');
+        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare');
 
     expect(AuditEvent::query()->count())->toBe(0)
         ->and(Setting::query()->whereNotNull('updated_by')->exists())->toBeFalse();
@@ -131,7 +131,7 @@ it('D-191: a missing row is created at the first change, with the default as val
 
     $this->actingAs($admin)
         ->put(route('settings.update'), settingsForm(['forced_reason_min_length' => 20]))
-        ->assertSessionHas('toast.message', 'Impostazioni salvate.');
+        ->assertSessionHas('toast.message', 'Impostazioni salvate');
 
     expect(Setting::query()->pluck('value', 'key')->all())->toBe(['forced_reason_min_length' => 20])
         ->and(soleAuditEvent(AuditAction::SettingUpdated)->old_values)->toBe(['forced_reason_min_length' => 10]);
@@ -164,7 +164,7 @@ it('D-062, D-063: the fixed settings cannot be changed, even when sent', functio
 
     $this->actingAs($admin)
         ->put(route('settings.update'), settingsForm(['led_step_seconds' => 60, 'availability_method' => 'per_match']))
-        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare.');
+        ->assertSessionHas('toast.message', 'Nessuna modifica da salvare');
 
     app(UpdateSettings::class)->handle(['led_step_seconds' => 60, 'availability_method' => 'per_match'], $admin);
 

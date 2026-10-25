@@ -41,14 +41,21 @@ export interface LayoutData {
         profileUrl: string;
         logoutUrl: string;
     };
+    /** Season selector of the top bar (D-317). */
     season: {
         label: string;
         enabled: boolean;
+        current: number | null;
+        options: Option[];
+        selectUrl: string;
     };
 }
 
 /** Account status of a user (UserPresenter::status on the server). */
 export type UserStatus = 'active' | 'pending' | 'inactive';
+
+/** Colour of a status pill (StatusPill.vue); the status is always written as text too. */
+export type StatusTone = 'success' | 'notice' | 'muted';
 
 export interface Option {
     value: string;
@@ -76,6 +83,58 @@ export interface UserDetail extends UserRow {
     activatedAt: string | null;
     deactivatedAt: string | null;
     deactivatedBy: string | null;
+}
+
+/** One row of the Seasons page (SportsPresenter::seasonRow). */
+export interface SeasonRow {
+    id: number;
+    code: string;
+    name: string;
+    startsOn: string;
+    endsOn: string;
+    status: string;
+    statusLabel: string;
+    competitions: number;
+    url: string;
+}
+
+/** Season being edited (SeasonController::edit), dates as YYYY-MM-DD. */
+export interface SeasonDetail {
+    id: number;
+    code: string;
+    name: string;
+    startsOn: string;
+    endsOn: string;
+    status: string;
+    readOnly: boolean;
+}
+
+/** Competition of a season with its standard number of home matches (SportsPresenter::editionRow). */
+export interface EditionRow {
+    id: number;
+    competitionCode: string;
+    competitionName: string;
+    competitionActive: boolean;
+    standardHomeMatches: number;
+    calendarLoadedAt: string | null;
+    updateUrl: string;
+    destroyUrl: string;
+}
+
+/** One row of the Competitions page (SportsPresenter::competitionRow). */
+export interface CompetitionRow {
+    id: number;
+    code: string;
+    name: string;
+    shortName: string;
+    type: string;
+    typeLabel: string;
+    tier: number;
+    hasTopMatchKpi: boolean;
+    isActive: boolean;
+    sortOrder: number;
+    seasons: number;
+    url: string;
 }
 
 export interface SharedProps {

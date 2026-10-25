@@ -3,6 +3,9 @@
 namespace App\Domain\Audit\Data;
 
 use App\Enums\SettingKey;
+use App\Models\Competition;
+use App\Models\CompetitionSeason;
+use App\Models\Season;
 use App\Models\Setting;
 use App\Models\User;
 
@@ -32,6 +35,28 @@ final readonly class AuditSubject
     public static function setting(SettingKey $key, Setting $setting): self
     {
         return new self('setting', $setting->id, $key->label().' ('.$key->value.')');
+    }
+
+    /**
+     * A season of the sports registry (F1-01), e.g. "Stagione 2027-28 (2027-28)".
+     */
+    public static function season(Season $season): self
+    {
+        return new self('season', $season->id, $season->name.' ('.$season->code.')');
+    }
+
+    public static function competition(Competition $competition): self
+    {
+        return new self('competition', $competition->id, $competition->name.' ('.$competition->code.')');
+    }
+
+    /**
+     * An edition (competition × season), e.g. "Serie A 2027-28". The label is computed before a
+     * removal, so the event stays readable afterwards.
+     */
+    public static function edition(CompetitionSeason $edition): self
+    {
+        return new self('competition_season', $edition->id, $edition->label());
     }
 
     /**

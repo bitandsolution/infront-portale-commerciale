@@ -5,13 +5,16 @@ namespace App\Enums;
 /**
  * Area of an audit event (M10 §4.1), stored in audit_events.area (C8). The other areas of M10
  * (proposals, documents, catalog, inventory, sports, clients, content) are added by the slices that
- * write their events. "settings" (PR-07) covers the changes of the system settings by the admin.
+ * write their events. "settings" (PR-07) covers the changes of the system settings by the admin;
+ * "sports" (F1) the sports registry: seasons, competitions, editions, then clubs, stadiums,
+ * enrollments, matches and calendar imports (D-321).
  */
 enum AuditArea: string
 {
     case Access = 'access';
     case Users = 'users';
     case Settings = 'settings';
+    case Sports = 'sports';
 
     /**
      * Italian label (lang/it/audit.php).
