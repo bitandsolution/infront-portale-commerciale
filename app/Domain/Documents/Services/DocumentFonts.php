@@ -24,6 +24,13 @@ final class DocumentFonts
      */
     private const SIGNATURES = ["\x00\x01\x00\x00", 'true', 'OTTO'];
 
+    /**
+     * Files already checked by this instance (one generation or one request).
+     *
+     * @var array<int, string>|null
+     */
+    private ?array $files = null;
+
     public function __construct(private readonly Application $app) {}
 
     /**
@@ -41,6 +48,10 @@ final class DocumentFonts
      */
     public function files(): array
     {
+        if ($this->files !== null) {
+            return $this->files;
+        }
+
         $fontsPath = $this->fontsPath();
 
         if ($fontsPath === null && ! $this->app->environment('local', 'testing')) {
@@ -57,7 +68,7 @@ final class DocumentFonts
             $files[$weight->value] = $this->checked($path);
         }
 
-        return $files;
+        return $this->files = $files;
     }
 
     /**

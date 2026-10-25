@@ -46,6 +46,14 @@ return [
         'timeout' => (int) env('DOCUMENT_CHROMIUM_TIMEOUT', 240),
     ],
 
+    // Folder of the jobs: each generation writes its HTML, images and raw PDF into a new subfolder,
+    // removed at the end (D-312).
+    'work_path' => env('DOCUMENT_WORK_PATH', storage_path('framework/documents')),
+
+    // Development only (D-309): folder with real JPEG images extracted from the example PDFs, used
+    // by "documents:try --samples" on the VM; never in the repository.
+    'samples_path' => env('DOCUMENT_SAMPLES_PATH') ?: null,
+
     // Command-line tools of the checks and of the optimisation (R1, D-308).
     'qpdf_binary' => env('DOCUMENT_QPDF_BINARY', 'qpdf'),
     'pdffonts_binary' => env('DOCUMENT_PDFFONTS_BINARY', 'pdffonts'),

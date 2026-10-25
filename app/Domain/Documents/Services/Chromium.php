@@ -11,10 +11,27 @@ use Spatie\Browsershot\Browsershot;
  * puppeteer from the node_modules of the project (no global npm), timeout, sandbox. Browsershot
  * launches chrome-headless-shell, installed into .cache/puppeteer (.puppeteerrc.cjs).
  *
- * The isolation from the network of D-312 and the page model of the documents arrive with S1-02.
+ * Isolation from the network (D-312, D-176), on three levels:
+ * 1. the page is a file in the folder of the job and its fonts and images are file:// resources;
+ *    JavaScript is disabled;
+ * 2. Chromium goes through a proxy that does not exist (127.0.0.1:9), loopback included, so any
+ *    request to a network address fails;
+ * 3. Browsershot aborts every request to a network scheme before it leaves the page.
  */
 final class Chromium
 {
+    /**
+     * A proxy nobody listens to: every network request of Chromium fails (D-312, level 2).
+     */
+    public const BLACKHOLE_PROXY = '127.0.0.1:9';
+
+    /**
+     * Requests aborted by Browsershot before they leave the page (D-312, level 3).
+     *
+     * @var list<string>
+     */
+    public const BLOCKED_URLS = ['http://', 'https://', 'ws://', 'wss://', 'ftp://'];
+
     public function __construct(private readonly Application $app) {}
 
     /**
@@ -27,7 +44,11 @@ final class Chromium
         $browsershot = Browsershot::htmlFromFilePath($htmlFile)
             ->setNodeBinary($this->stringConfig('documents.chromium.node_binary', 'node'))
             ->setNodeModulePath(base_path('node_modules'))
-            ->timeout($this->timeout());
+            ->timeout($this->timeout())
+            ->disableJavascript()
+            ->setProxyServer(self::BLACKHOLE_PROXY)
+            ->addChromiumArguments(['proxy-bypass-list' => '<-loopback>'])
+            ->blockUrls(self::BLOCKED_URLS);
 
         if ($this->sandboxDisabled()) {
             $browsershot->noSandbox();
