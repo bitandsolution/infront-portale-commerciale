@@ -129,11 +129,12 @@ jobs:
             - name: Install npm dependencies and Chrome for Testing
               run: npm ci --no-audit --no-fund
 
+            # Informational only: an unexpected exit code of a --version must not stop the job.
             - name: Versions of the PDF tools
               run: |
-                  find .cache/puppeteer -type f -name chrome-headless-shell -exec {} --version \;
-                  qpdf --version | head -n 1
-                  pdffonts -v 2>&1 | head -n 1
+                  npx puppeteer browsers list || true
+                  qpdf --version || true
+                  pdffonts -v || true
 
             - name: Prepare environment
               run: |
