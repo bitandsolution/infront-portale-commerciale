@@ -34,7 +34,7 @@ use Illuminate\Support\Carbon;
  *
  * All matches are of the regular stage (D-325). Matches of the edition that are not in the file are
  * listed and left as they are (D-319). An empty stadium cell means the home stadium of the home club
- * (M02 §6).
+ * for a new match (M02 §6) and no change for an existing one (D-326).
  *
  * @phpstan-import-type PreviewRow from CalendarPreview
  */
@@ -146,6 +146,12 @@ final class CalendarAnalyzer
                     $outcome = CalendarPreview::NEW;
                 } else {
                     $matchId = $match->id;
+
+                    // D-326: an empty stadium cell leaves the stadium of an existing match as it is.
+                    if ($stadium === '') {
+                        $stadiumId = $match->stadium_id;
+                    }
+
                     $changes = $this->changes($match, $date, $time, $stadiumId);
                     $outcome = $changes === [] ? CalendarPreview::UNCHANGED : CalendarPreview::UPDATE;
 
