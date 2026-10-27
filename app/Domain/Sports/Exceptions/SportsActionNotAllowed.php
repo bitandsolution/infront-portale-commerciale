@@ -140,4 +140,28 @@ final class SportsActionNotAllowed extends RuntimeException
     {
         return new self(Text::get('sports.errors.period_outside_season', ['season' => $season]));
     }
+
+    /** D-318: the CSV extracted from the old system cannot be read. */
+    public static function legacyFileUnreadable(string $path): self
+    {
+        return new self(Text::get('sports.legacy.file_unreadable', ['path' => $path]));
+    }
+
+    /** D-318: the CSV needs the columns of the documented query. */
+    public static function legacyFileColumns(string $columns): self
+    {
+        return new self(Text::get('sports.legacy.file_columns', ['columns' => $columns]));
+    }
+
+    /** D-318: a group to join names an id that is not in the file. */
+    public static function legacyUnknownId(int $id): self
+    {
+        return new self(Text::get('sports.legacy.unknown_id', ['id' => (string) $id]));
+    }
+
+    /** D-329: repeated or invalid codes stop the import before any write. */
+    public static function legacyConflicts(string $conflicts): self
+    {
+        return new self(Text::get('sports.legacy.conflicts', ['conflicts' => $conflicts]));
+    }
 }
