@@ -526,3 +526,26 @@ it('calendar-imports:prune discards the previews untouched for more than 7 days'
         ->and($recent->fresh()?->status)->toBe(CalendarImportStatus::Preview)
         ->and($confirmed->fresh()?->status)->toBe(CalendarImportStatus::Confirmed);
 });
+
+it('D-326: an empty stadium cell keeps the stadium of an existing match; a new match gets the home stadium', function () {
+    [$edition, $clubs] = importsEdition();
+    $manager = User::factory()->manager()->create();
+    $neutral = Stadium::factory()->create(['name' => 'Campo Neutro']);
+    $rows = [importRow(1, '03/09/2051', 'Prova 01', 'Prova 02')];
+
+    $first = importUpload($edition, $rows, $manager);
+    $this->actingAs($manager)->post(route('sports.imports.confirm', $first));
+
+    $match = FixtureMatch::query()->sole();
+    expect($match->stadium_id)->toBe($clubs[0]->home_stadium_id);
+    $match->update(['stadium_id' => $neutral->id]);
+
+    $second = importUpload($edition, [...$rows, importRow(1, '03/09/2051', 'Prova 03', 'Prova 04')], $manager);
+
+    expect(importPreviewLine($second, 2))->toMatchArray(['outcome' => 'unchanged', 'stadium_id' => $neutral->id])
+        ->and(importPreviewLine($second, 3))->toMatchArray(['outcome' => 'new', 'stadium_id' => $clubs[2]->home_stadium_id]);
+
+    $this->actingAs($manager)->post(route('sports.imports.confirm', $second));
+
+    expect($match->fresh()?->stadium_id)->toBe($neutral->id);
+});
