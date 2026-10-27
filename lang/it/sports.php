@@ -86,7 +86,31 @@ return [
         'none' => 'non indicata',
     ],
 
+    // Match service (F-12; RB-05, D-187).
+    'match_service' => [
+        'prorated' => 'Calendario di :club non ancora caricato: :matches partite stimate dal numero standard (:standard) in proporzione al periodo del contratto',
+    ],
+
     'console' => [
+        'matches_period' => 'Stagione :season, dal :from al :to',
+        'matches_club' => 'Club',
+        'matches_competition' => 'Competizione',
+        'matches_source' => 'Fonte',
+        'matches_count' => 'Partite in casa',
+        'matches_top' => 'Top match',
+        'matches_first' => 'Prima',
+        'matches_last' => 'Ultima',
+        'matches_calendar' => 'calendario',
+        'matches_standard' => 'standard',
+        'matches_total' => 'Totale partite: :total',
+        'matches_campaign' => 'Campagna: :months mesi (:from → :to)',
+        'matches_campaign_none' => 'Campagna: nessuna partita in casa nel periodo',
+        'matches_top_total' => 'Top match: :value',
+        'matches_top_not_available' => 'n.d. (calendario non caricato)',
+        'matches_top_not_applicable' => 'non previsti per queste competizioni',
+        'matches_unknown_season' => 'Stagione sconosciuta: :season',
+        'matches_unknown_club' => 'Club sconosciuto: :club',
+        'matches_invalid_date' => 'Data non valida: :date (formato gg/mm/aaaa)',
         'imports_pruned' => 'Import in anteprima scartati perché fermi da oltre 7 giorni: :count.',
     ],
 
@@ -187,6 +211,8 @@ return [
         'import_closed' => 'Questo import è già concluso: carica di nuovo il file per un nuovo import',
         'import_nothing_to_confirm' => 'Non ci sono partite da importare: correggi le righe in errore o scegli le colonne',
         'import_columns_invalid' => 'Scegli una colonna diversa per ogni campo obbligatorio: giornata, data, squadra casa e squadra ospite',
+        'club_not_in_league' => ':club non è iscritto a un campionato della stagione :season: l\'amministratore lo iscrive dalla pagina della stagione',
+        'period_outside_season' => 'Il periodo del contratto è fuori dalla stagione :season',
         'import_name_not_unknown' => '«:name» non è tra le squadre da associare di questo import',
         'edition_in_use' => ':edition ha già club iscritti, partite o import: non si può togliere dalla stagione',
     ],
