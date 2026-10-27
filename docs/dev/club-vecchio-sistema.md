@@ -25,15 +25,15 @@ Le colonne devono avere esattamente questi nomi, in qualsiasi ordine. Le entità
 2. Fai prima una prova senza salvare:
 
    ```bash
-   ./vendor/bin/sail artisan sports:import-legacy-clubs storage/app/private/club-idoc.csv --merge=21,35 --dry-run
+   ./vendor/bin/sail artisan sports:import-legacy-clubs storage/app/private/club-idoc.csv --merge=8,20 --merge=11,39 --merge=21,35 --merge=25,36 --dry-run
    ```
 3. Leggi il report: club creati, club già presenti, alias, riferimenti e anomalie.
 4. Se va bene, rilancia senza `--dry-run`. Poi cancella il file.
 
 ## 3. Regole
 
-- **Righe con lo stesso nome normalizzato** formano un solo club: Frosinone 11/39, Atalanta 8/20, Roma 25/36.
-- **Altri duplicati** si uniscono con `--merge=id,id`, da ripetere per ogni gruppo. Bologna 21/35 è scritto `xxx__BOLOGNA__xxx`.
+- **Righe con lo stesso nome normalizzato** formano un solo club da sole.
+- **Altri duplicati** si uniscono con `--merge=id,id`, da ripetere per ogni gruppo. I quattro duplicati noti (M11) sono Atalanta 8/20, Frosinone 11/39, Bologna 21/35 (`xxx__BOLOGNA__xxx`) e Roma 25/36. Si passano sempre tutti e quattro: unire due righe già unite per nome non cambia nulla. Nel collaudo del 27/10/2026 Atalanta 8/20 aveva nomi diversi e senza `--merge` dava il codice `ATALANTA` due volte.
 - **Riga principale** del gruppo: la prima con `deleted = 0`, altrimenti la prima per id.
 - **`deleted`**: `0` = club Infront; `1` = avversario, attivo (M11).
 - **Codice**: dall'alias, se c'è, altrimenti dal nome; in maiuscolo, senza accenti, con `_` al posto degli spazi. Per esempio alias "Lazio" → `LAZIO`. **Nome breve** = alias, oppure il nome (D-329).
