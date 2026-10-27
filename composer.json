@@ -98,6 +98,11 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "ignore": {
+                "PKSA-qhjm-rpqc-qkn6": "D-327: PHPUnit 13.4.3 is a development dependency (Pest), never deployed; the advisory concerns PHPT code coverage, which the project does not use. Remove when Pest supports phpunit >= 13.4.4."
+            }
         }
     },
     "minimum-stability": "stable",
