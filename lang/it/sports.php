@@ -91,6 +91,32 @@ return [
         'prorated' => 'Calendario di :club non ancora caricato: :matches partite stimate dal numero standard (:standard) in proporzione al periodo del contratto',
     ],
 
+    // Clubs of the old system (D-318, D-329): command sports:import-legacy-clubs.
+    'legacy' => [
+        'audit_label' => 'Club dal vecchio sistema',
+        'file_unreadable' => 'Il file :path non si legge',
+        'file_columns' => 'Il file deve avere la riga di intestazione con le colonne: :columns',
+        'unknown_id' => 'L\'id :id indicato in --merge non è nel file',
+        'conflicts' => 'Nessun club importato. Codici da sistemare (correggi l\'alias nel file o unisci i club con --merge): :conflicts',
+        'code_invalid' => 'id :id «:name» darebbe il codice non valido «:code»',
+        'code_taken' => 'id :id «:name» darebbe il codice «:code», già usato',
+        'row_skipped' => 'id :id: riga senza id o senza nome, ignorata',
+        'color_invalid' => 'id :id: colore «:color» non valido, ignorato',
+        'reference_other_club' => 'id :id: il riferimento idoc punta già a un club diverso da :club',
+        'alias_taken' => 'Alias «:alias» di :club non aggiunto: indica già :other',
+        'top_added' => ':club: flag top match aggiunto per D-257 (nel vecchio sistema non c\'era)',
+        'top_dropped' => ':club: nel vecchio sistema aveva il flag top match, che D-257 non prevede',
+        'top_missing' => 'Club :club dell\'elenco top match (D-257) non presente nel portale',
+        'category_missing' => 'id :id «:name»: categoria 3 inesistente nel vecchio sistema',
+        'dry_run' => 'Prova senza salvare: nessuna modifica scritta.',
+        'created' => 'Club creati: :count',
+        'existing' => 'Club già presenti, non modificati: :count',
+        'aliases' => 'Alias aggiunti: :count',
+        'references' => 'Riferimenti idoc aggiunti: :count',
+        'anomalies' => 'Anomalie da controllare: :count',
+        'merge_invalid' => 'Formato di --merge non valido: «:value» (esempio: --merge=21,35)',
+    ],
+
     'console' => [
         'matches_period' => 'Stagione :season, dal :from al :to',
         'matches_club' => 'Club',

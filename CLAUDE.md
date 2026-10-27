@@ -145,7 +145,8 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Lettura del file del calendario / controllo delle righe e anteprima | `CalendarFileReader` (OpenSpout, D-316) → `CalendarSheet` / `CalendarAnalyzer` (`App\Domain\Sports\Services`) |
 | Passi dell'import (caricamento, ricalcolo, colonne, associazione dei nomi, conferma, scarto) | `UploadCalendar`, `RefreshCalendarPreview`, `MapCalendarColumns`, `ResolveCalendarName`, `ConfirmCalendarImport` (evento `calendar_import.confirmed`), `DiscardCalendarImport`; anteprime ferme da 7 giorni: comando `calendar-imports:prune` |
 | Servizio partite (F-12): partite in casa di campionato di club e periodo, campagna, top match | `MatchCounter` (`App\Domain\Sports\Services`) → `MatchCount` (stato dei top match: available / not_available / not_applicable) con un `ClubMatchCount` per club; verifica da server `sports:matches` (D-320, D-328) |
-| Riferimento esterno | `ExternalReference` · `external_references` (`platform`: `idoc` = `ExternalReference::PLATFORM_IDOC`, poi `accrediti`) |
+| Club dal vecchio sistema (CSV di `idoc__teams_list`, una tantum) | `LegacyClubFile` → `LegacyClubRow`, `ImportLegacyClubs` → `LegacyClubReport`; comando `sports:import-legacy-clubs` (`docs/dev/club-vecchio-sistema.md`, D-318, D-329) |
+| Riferimento esterno | `ExternalReference` · `external_references` (`platform`: `idoc` = `ExternalReference::PLATFORM_IDOC`, poi `accrediti`; `entity_type`: `club` = `ExternalReference::ENTITY_CLUB`) |
 | Territorio | `Territory` · `territories` |
 | Tipo visibilità (Classica, Virtual) | `VisibilityType` · `visibility_types` |
 | Bacino (1ª fila, 2ª fila…) | `InventoryPool` · `inventory_pools` |
@@ -302,6 +303,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan files:prune-orphans  # file del disco privato senza riga (notturno in produzione, PR-06)
 ./vendor/bin/sail artisan calendar-imports:prune  # import del calendario in anteprima da oltre 7 giorni: scartati (notturno in produzione, F1-04)
 ./vendor/bin/sail artisan sports:matches 2027-28 LAZIO --from=01/10/2027  # partite in casa, campagna e top match di club e periodo (sola lettura, F1-05)
+./vendor/bin/sail artisan sports:import-legacy-clubs storage/app/private/club-idoc.csv --merge=21,35 --dry-run  # club dal vecchio sistema, una tantum (F1-06; senza --dry-run salva)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
 ./vendor/bin/sail artisan documents:try # prova della pipeline PDF: deck di 40 slide, tempi, peso, PDF scaricabile da admin (solo sviluppo, S1-02; --samples con DOCUMENT_SAMPLES_PATH)
 ./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)
