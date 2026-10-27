@@ -128,4 +128,16 @@ final class SportsActionNotAllowed extends RuntimeException
     {
         return back()->with('toast', Toast::error($this->getMessage()));
     }
+
+    /** D-328: the match service needs the league of every club of the contract. */
+    public static function clubNotInLeague(string $club, string $season): self
+    {
+        return new self(Text::get('sports.errors.club_not_in_league', ['club' => $club, 'season' => $season]));
+    }
+
+    /** D-320: the period of the contract falls within the season. */
+    public static function periodOutsideSeason(string $season): self
+    {
+        return new self(Text::get('sports.errors.period_outside_season', ['season' => $season]));
+    }
 }
