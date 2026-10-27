@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Settings\SettingsController;
+use App\Http\Controllers\Sports\CalendarImportController;
 use App\Http\Controllers\Sports\ClubController;
 use App\Http\Controllers\Sports\CompetitionController;
 use App\Http\Controllers\Sports\CompetitionSeasonController;
@@ -168,6 +169,15 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::put('anagrafiche/stadi/{stadium}', [StadiumController::class, 'update'])->whereNumber('stadium')->name('sports.stadiums.update');
 
             // Matches (F-08): manual entry and change, cancellation and restore (D-319), never deleted.
+            // Calendar import (F-09, FL-02; D-325): upload, preview, corrections, confirmation.
+            Route::post('anagrafiche/import', [CalendarImportController::class, 'store'])->name('sports.imports.store');
+            Route::get('anagrafiche/import/{calendarImport}', [CalendarImportController::class, 'show'])->whereNumber('calendarImport')->name('sports.imports.show');
+            Route::put('anagrafiche/import/{calendarImport}/colonne', [CalendarImportController::class, 'columns'])->whereNumber('calendarImport')->name('sports.imports.columns');
+            Route::post('anagrafiche/import/{calendarImport}/associa', [CalendarImportController::class, 'resolve'])->whereNumber('calendarImport')->name('sports.imports.resolve');
+            Route::post('anagrafiche/import/{calendarImport}/ricalcola', [CalendarImportController::class, 'refresh'])->whereNumber('calendarImport')->name('sports.imports.refresh');
+            Route::post('anagrafiche/import/{calendarImport}/conferma', [CalendarImportController::class, 'confirm'])->whereNumber('calendarImport')->name('sports.imports.confirm');
+            Route::post('anagrafiche/import/{calendarImport}/scarta', [CalendarImportController::class, 'discard'])->whereNumber('calendarImport')->name('sports.imports.discard');
+
             Route::get('anagrafiche/partite/nuova', [MatchController::class, 'create'])->name('sports.matches.create');
             Route::post('anagrafiche/partite', [MatchController::class, 'store'])->name('sports.matches.store');
             Route::get('anagrafiche/partite/{fixtureMatch}', [MatchController::class, 'edit'])->whereNumber('fixtureMatch')->name('sports.matches.edit');

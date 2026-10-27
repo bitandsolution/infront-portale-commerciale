@@ -82,6 +82,48 @@ final class SportsActionNotAllowed extends RuntimeException
         return new self(Text::get('sports.errors.match_exists'));
     }
 
+    /** F-09: the cells of the calendar file cannot be read (damaged or not a worksheet). */
+    public static function calendarUnreadable(): self
+    {
+        return new self(Text::get('sports.errors.calendar_unreadable'));
+    }
+
+    /** F-09: no header row or no match rows in the first sheet. */
+    public static function calendarEmpty(): self
+    {
+        return new self(Text::get('sports.errors.calendar_empty'));
+    }
+
+    /** D-322: a calendar has about 380–2,000 rows. */
+    public static function calendarTooManyRows(int $max): self
+    {
+        return new self(Text::get('sports.errors.calendar_too_many_rows', ['max' => (string) $max]));
+    }
+
+    /** FL-02: a confirmed or discarded import is read-only. */
+    public static function importClosed(): self
+    {
+        return new self(Text::get('sports.errors.import_closed'));
+    }
+
+    /** FL-02 step 4: nothing valid to import (all rows discarded, or columns still to choose). */
+    public static function importNothingToConfirm(): self
+    {
+        return new self(Text::get('sports.errors.import_nothing_to_confirm'));
+    }
+
+    /** D-325: every required field needs its own column of the file. */
+    public static function importColumnsInvalid(): self
+    {
+        return new self(Text::get('sports.errors.import_columns_invalid'));
+    }
+
+    /** FL-02 step 3: only the unknown names of the preview are associated. */
+    public static function importNameNotUnknown(string $name): self
+    {
+        return new self(Text::get('sports.errors.import_name_not_unknown', ['name' => $name]));
+    }
+
     public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));

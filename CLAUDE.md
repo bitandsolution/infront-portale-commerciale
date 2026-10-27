@@ -140,7 +140,10 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Partita | `FixtureMatch`, perché `Match` è parola riservata di PHP · `matches` (`status`: `MatchStatus` scheduled / cancelled; `source`: `MatchSource` manual / import) |
 | Iscrizione dei club / tolta di un club (un solo campionato per club e stagione) | `EnrollClubs`, `RemoveEnrollment` (`App\Domain\Sports\Actions`) |
 | Inserimento e modifica di una partita (stadio predefinito = abituale della squadra di casa; avvisi non bloccanti) | `SaveMatch` → `SavedMatch`; annullamento e ripristino `ChangeMatchStatus` (D-319) |
-| Import calendario | `CalendarImport` · `calendar_imports` |
+| Import calendario | `CalendarImport` · `calendar_imports` (`status`: `CalendarImportStatus` preview / confirmed / discarded; anteprima `CalendarPreview` in JSON); ultima importazione della partita `matches.last_import_id` |
+| Colonne del tracciato D-017 (riconosciute dall'intestazione o scelte a mano, D-325) | `CalendarColumn` |
+| Lettura del file del calendario / controllo delle righe e anteprima | `CalendarFileReader` (OpenSpout, D-316) → `CalendarSheet` / `CalendarAnalyzer` (`App\Domain\Sports\Services`) |
+| Passi dell'import (caricamento, ricalcolo, colonne, associazione dei nomi, conferma, scarto) | `UploadCalendar`, `RefreshCalendarPreview`, `MapCalendarColumns`, `ResolveCalendarName`, `ConfirmCalendarImport` (evento `calendar_import.confirmed`), `DiscardCalendarImport`; anteprime ferme da 7 giorni: comando `calendar-imports:prune` |
 | Riferimento esterno | `ExternalReference` · `external_references` (`platform`: `idoc` = `ExternalReference::PLATFORM_IDOC`, poi `accrediti`) |
 | Territorio | `Territory` · `territories` |
 | Tipo visibilità (Classica, Virtual) | `VisibilityType` · `visibility_types` |
@@ -296,6 +299,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan audit:list    # ultimi eventi di audit (sola lettura, PR-05)
 ./vendor/bin/sail artisan audit:prune   # conservazione dell'audit (notturna in produzione)
 ./vendor/bin/sail artisan files:prune-orphans  # file del disco privato senza riga (notturno in produzione, PR-06)
+./vendor/bin/sail artisan calendar-imports:prune  # import del calendario in anteprima da oltre 7 giorni: scartati (notturno in produzione, F1-04)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
 ./vendor/bin/sail artisan documents:try # prova della pipeline PDF: deck di 40 slide, tempi, peso, PDF scaricabile da admin (solo sviluppo, S1-02; --samples con DOCUMENT_SAMPLES_PATH)
 ./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)

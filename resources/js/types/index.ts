@@ -195,6 +195,44 @@ export interface MatchRow {
     restoreUrl: string;
 }
 
+/** A calendar import in the list and in its page (SportsPresenter::importRow). */
+export interface ImportRow {
+    id: number;
+    edition: string;
+    competition: string;
+    fileName: string;
+    fileUrl: string;
+    uploadedBy: string;
+    uploadedAt: string | null;
+    status: 'preview' | 'confirmed' | 'discarded';
+    statusLabel: string;
+    statusTone: StatusTone;
+    inserted: number;
+    updated: number;
+    unchanged: number;
+    discarded: number;
+    confirmedAt: string | null;
+    showUrl: string;
+}
+
+export type ImportOutcome = 'new' | 'update' | 'unchanged' | 'error';
+
+/** A row of the preview of an import (SportsPresenter::importPreviewRow). */
+export interface ImportPreviewRow {
+    line: number;
+    matchday: number | null;
+    date: string | null;
+    time: string | null;
+    home: string;
+    away: string;
+    stadium: string;
+    outcome: ImportOutcome;
+    unknown: boolean;
+    errors: string[];
+    warnings: string[];
+    changes: string[];
+}
+
 export interface SharedProps {
     app: {
         name: string;
