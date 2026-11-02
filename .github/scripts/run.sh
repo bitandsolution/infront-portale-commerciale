@@ -9,10 +9,5 @@ status=${PIPESTATUS[0]}
 if [ "$status" -ne 0 ]; then
     msg=$(tail -n 60 "$log" | sed -e 's/\x1b\[[0-9;]*m//g' -e 's/%/%25/g' -e 's/\r//g' | awk 'BEGIN{ORS="%0A"} {print}')
     echo "::error title=${title}::${msg}"
-    clean=$(mktemp); sed -e 's/\x1b\[[0-9;]*m//g' -e 's/\r//g' "$log" > "$clean"
-    grep -n "FAILED" "$clean" | head -n 9 | cut -d: -f1 | while read -r n; do
-        block=$(sed -n "${n},$((n+22))p" "$clean" | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"} {print}')
-        echo "::error title=${title} failed::${block}"
-    done
 fi
 exit "$status"
