@@ -55,6 +55,7 @@ enum AuditAction: string
     case ClubCreated = 'club.created';
     case ClubUpdated = 'club.updated';
     case ClubLogoChanged = 'club.logo_changed';
+    case ClubLegacyImported = 'club.legacy_imported';
     case ClubAliasCreated = 'club_alias.created';
     case ClubAliasRemoved = 'club_alias.removed';
     // F1-03: enrollments and matches.
