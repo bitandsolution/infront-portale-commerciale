@@ -189,7 +189,7 @@ jobs:
             # On a difference the test writes the actual image and the map of the different pixels.
             - name: Images of the visual differences
               if: failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: visual-differences
                   path: storage/framework/testing/visual/*.png
