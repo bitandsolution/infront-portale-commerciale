@@ -2,7 +2,7 @@
 
 Raccolta delle funzionalità **fuori MVP**: rinviate, predisposte nell'architettura o proposte come miglioramento. Si aggiorna durante l'analisi (D-133) e si consegna completa al termine.
 
-Ultimo aggiornamento: 2026-10-16
+Ultimo aggiornamento: 2026-11-02 (EV-25)
 
 Legenda stato:
 - **Predisposta:** l'architettura MVP la prevede, va solo attivata o sviluppata.
