@@ -35,3 +35,4 @@ Legenda stato:
 | EV-22 | Override manuale del prezzo di una riga (solo admin), oltre allo sconto sul totale | M07 | Proposta | D-153 | Nel vecchio sistema usato in 90 proposte su 185 per finalità promozionali |
 | EV-23 | **"Ricorda questo dispositivo"** per la 2FA (es. 30 giorni) | M01 | Rinviata | D-214 | Nell'MVP la 2FA si chiede a ogni login; utile per gli agenti su tablet |
 | EV-24 | **Archivio PDF delle proposte del vecchio sistema** consultabile nel portale | M09 | Rinviata | D-228 | I PDF vanno generati in blocco dal vecchio sistema (che non li salva, D-149) e riscritti con qpdf in import; tabella `legacy_documents` |
+| EV-25 | **Copia dei benefit da un club a un altro**, come base da rivedere | M03 | Rinviata | D-335 | M03 F-13; i benefit non sono usati nei documenti del rilascio 1.0 (D-117) |
