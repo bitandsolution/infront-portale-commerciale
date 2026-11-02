@@ -1,6 +1,6 @@
 # Pianificazione e MVP (Fase 6) — Portale Commerciale Infront
 
-Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in attesa di autorizzazione al codice** · ultimo aggiornamento 2026-10-21
+Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1 e F1 completate** · ultimo aggiornamento 2026-11-02
 
 Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 
@@ -10,7 +10,7 @@ Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 | 6.1 | Perimetro MVP e ordine dei moduli | ✅ Approvato (D-234…D-239) |
 | 6.2 | Stime e milestone, data di avvio, uso del vecchio sistema dopo l'avvio | ✅ Approvato (D-243…D-247) |
 | 6.3 | Preparazione del repository (`CLAUDE.md`, `docs/`, CI, verifica layout D-226) | ✅ Approvato (D-249…D-254) |
-| 6.4 | Avvio dello sviluppo dalla fetta F0 — **solo con autorizzazione esplicita al codice** | In attesa di autorizzazione |
+| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026; prossima F2 |
 
 ---
 
@@ -118,7 +118,7 @@ flowchart LR
 | giugno 2027 | Apertura vendite 2027-28 (D-242) | — | ❓ Giorno esatto da comunicare: il margine reale dipende da quello |
 
 ⚠️ **Margine ridotto**: circa 23 settimane di sviluppo su 27 disponibili.
-✅ **Avanzamento al 25/10/2026**: F0 e S1 completate circa 4 settimane prima del calendario. Il calendario approvato (D-243) non cambia: l'anticipo resta margine sul go-live e si rivede al checkpoint del 12/3/2027.
+✅ **Avanzamento al 2/11/2026**: F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, circa 4 settimane prima del calendario. Il calendario approvato (D-243) non cambia: l'anticipo resta margine sul go-live e si rivede al checkpoint del 12/3/2027.
 ✅ **Checkpoint al 12/3/2027** (D-247): se il ritardo supera 2 settimane si decide solo allora una delle leve:
 - report R-01…R-05 e R-07 in un rilascio 1.0.1 entro 3 settimane dal go-live (l'audit registra comunque dal primo giorno; R-06 resta nel 1.0);
 - spostamento del go-live, se l'apertura delle vendite lo consente.
