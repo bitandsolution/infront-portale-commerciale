@@ -8,6 +8,11 @@ updates:
       directory: /
       schedule:
           interval: weekly
+      ignore:
+          # TypeScript 7 (native compiler) breaks vue-tsc and the build: stay on 6.x
+          # until vue-tsc supports it (D-338). Minor and patch updates still arrive.
+          - dependency-name: typescript
+            update-types: ["version-update:semver-major"]
     - package-ecosystem: github-actions
       directory: /
       schedule:
