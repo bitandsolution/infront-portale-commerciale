@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
 final class CatalogPresenter
 {
     /**
-     * @return array{territories: list<array{code: string, name: string, isActive: bool}>, visibilityTypes: list<array{code: string, name: string, isActive: bool}>, pools: list<array{code: string, name: string, visibilityType: string, isActive: bool}>, formats: list<array<string, mixed>>, tiers: list<array<string, mixed>>, variants: list<array<string, mixed>>, categories: list<array<string, mixed>>}
+     * @return array<string, array<int, array<string, mixed>>>
      */
     public static function values(): array
     {
