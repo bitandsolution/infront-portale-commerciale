@@ -57,9 +57,33 @@ class CatalogValueController extends Controller
         return $this->edit($request, $benefitCategory);
     }
 
-    public function update(CatalogValueRequest $request, UpdateCatalogValue $updateCatalogValue): RedirectResponse
+    /*
+     * The update actions name the model in their signature, so the route binding resolves it before
+     * the form request reads it (CatalogValueRequest::catalogValue()).
+     */
+
+    public function updateFormat(CatalogValueRequest $request, LedFormat $ledFormat, UpdateCatalogValue $updateCatalogValue): RedirectResponse
     {
-        $value = $request->catalogValue();
+        return $this->update($request, $ledFormat, $updateCatalogValue);
+    }
+
+    public function updateTier(CatalogValueRequest $request, PartnershipTier $partnershipTier, UpdateCatalogValue $updateCatalogValue): RedirectResponse
+    {
+        return $this->update($request, $partnershipTier, $updateCatalogValue);
+    }
+
+    public function updateVariant(CatalogValueRequest $request, HospitalityVariant $hospitalityVariant, UpdateCatalogValue $updateCatalogValue): RedirectResponse
+    {
+        return $this->update($request, $hospitalityVariant, $updateCatalogValue);
+    }
+
+    public function updateCategory(CatalogValueRequest $request, BenefitCategory $benefitCategory, UpdateCatalogValue $updateCatalogValue): RedirectResponse
+    {
+        return $this->update($request, $benefitCategory, $updateCatalogValue);
+    }
+
+    private function update(CatalogValueRequest $request, LedFormat|PartnershipTier|HospitalityVariant|BenefitCategory $value, UpdateCatalogValue $updateCatalogValue): RedirectResponse
+    {
         $changed = $updateCatalogValue->handle($value, $request->catalogValueData(), $this->actor($request));
 
         return back()->with('toast', Toast::success($changed

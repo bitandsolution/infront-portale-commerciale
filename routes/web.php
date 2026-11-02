@@ -191,13 +191,13 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
         // "catalogo/valori" page above; codes come from the system data, nothing is created or deleted.
         Route::middleware('can:'.Ability::CatalogManage->value)->group(function (): void {
             Route::get('catalogo/valori/format/{ledFormat}', [CatalogValueController::class, 'editFormat'])->whereNumber('ledFormat')->name('catalog.values.formats.edit');
-            Route::put('catalogo/valori/format/{ledFormat}', [CatalogValueController::class, 'update'])->whereNumber('ledFormat')->name('catalog.values.formats.update');
+            Route::put('catalogo/valori/format/{ledFormat}', [CatalogValueController::class, 'updateFormat'])->whereNumber('ledFormat')->name('catalog.values.formats.update');
             Route::get('catalogo/valori/livelli/{partnershipTier}', [CatalogValueController::class, 'editTier'])->whereNumber('partnershipTier')->name('catalog.values.tiers.edit');
-            Route::put('catalogo/valori/livelli/{partnershipTier}', [CatalogValueController::class, 'update'])->whereNumber('partnershipTier')->name('catalog.values.tiers.update');
+            Route::put('catalogo/valori/livelli/{partnershipTier}', [CatalogValueController::class, 'updateTier'])->whereNumber('partnershipTier')->name('catalog.values.tiers.update');
             Route::get('catalogo/valori/varianti/{hospitalityVariant}', [CatalogValueController::class, 'editVariant'])->whereNumber('hospitalityVariant')->name('catalog.values.variants.edit');
-            Route::put('catalogo/valori/varianti/{hospitalityVariant}', [CatalogValueController::class, 'update'])->whereNumber('hospitalityVariant')->name('catalog.values.variants.update');
+            Route::put('catalogo/valori/varianti/{hospitalityVariant}', [CatalogValueController::class, 'updateVariant'])->whereNumber('hospitalityVariant')->name('catalog.values.variants.update');
             Route::get('catalogo/valori/categorie/{benefitCategory}', [CatalogValueController::class, 'editCategory'])->whereNumber('benefitCategory')->name('catalog.values.categories.edit');
-            Route::put('catalogo/valori/categorie/{benefitCategory}', [CatalogValueController::class, 'update'])->whereNumber('benefitCategory')->name('catalog.values.categories.update');
+            Route::put('catalogo/valori/categorie/{benefitCategory}', [CatalogValueController::class, 'updateCategory'])->whereNumber('benefitCategory')->name('catalog.values.categories.update');
         });
 
         // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.
