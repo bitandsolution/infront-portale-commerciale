@@ -59,10 +59,11 @@ it('D-279: the password reset by the admin stops working at once and closes the 
     expect(sentAccessLink($agent->email, AccessLinkType::PasswordReset))->toStartWith(url('nuova-password').'/');
 
     // Back on the tablet: the session is closed (auth.session, D-273).
+    $agent->refresh();
+    $this->actingAs($agent);
     session()->flush();
     session()->put($tablet);
-    $agent->refresh();
-    $this->actingAs($agent)->get(PortalPages::url('dashboard'))->assertRedirect(route('login'));
+    $this->get(PortalPages::url('dashboard'))->assertRedirect(route('login'));
     $this->assertGuest();
 });
 
@@ -135,9 +136,10 @@ it('D-280: the reset of the second factor clears secret, codes and password and 
     sentAccessLink($agent->email, AccessLinkType::TwoFactorReset);
 
     // The session left open on the lost smartphone is closed: it cannot configure a new factor.
+    $this->actingAs($agent);
     session()->flush();
     session()->put($phone);
-    $this->actingAs($agent)->get(route('two-factor.setup'))->assertRedirect(route('login'));
+    $this->get(route('two-factor.setup'))->assertRedirect(route('login'));
     $this->assertGuest();
 });
 
