@@ -99,7 +99,7 @@ flowchart LR
 | 20/10 – 30/10/2026 | **6.3** Preparazione del repository e verifica D-226 | 1,5 | `CLAUDE.md`, `docs/`, layout verificati |
 | 2/11 – 18/11 | **F0** Fondamenta | 2,5 | ✅ Completata il 25/10/2026 (PR-00…PR-09) |
 | 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | ✅ Completata il 25/10/2026 (D-308…D-314). Sulla VM con Interstate: deck di 40 slide, **10,5 MB** (M09-CA4 ≤ 15 MB), **12,3 s** (composizione 2,9 · Chromium 1,8 · qpdf 0,2 · controlli 7,4); recap network con la grafica dell'originale (D-314). Da ripetere sullo staging |
-| 26/11 – 9/12 | **F1** M02 | 2 | |
+| 26/11 – 9/12 | **F1** M02 | 2 | ✅ Completata il 2/11/2026 (PR #31…#39, D-315…D-329). Import del calendario provato con file fittizi: il calendario reale di Infront è atteso entro il 30/11 |
 | 10/12 – 23/12 | **F2** M03 + M04 | 2 | |
 | 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | |
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
