@@ -51,6 +51,7 @@ return [
         'club_created' => 'Club creato',
         'club_updated' => 'Club modificato',
         'club_logo_changed' => 'Logo del club cambiato',
+        'club_legacy_imported' => 'Club importati dal vecchio sistema',
         'club_alias_created' => 'Alias del club aggiunto',
         'club_alias_removed' => 'Alias del club tolto',
         'enrollment_created' => 'Club iscritto alla competizione',

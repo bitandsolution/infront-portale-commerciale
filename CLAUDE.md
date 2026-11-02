@@ -24,7 +24,7 @@ Portale web in cui gli agenti commerciali di **Infront Italy** configurano offer
 | UX | `docs/ux-architettura.md` + mockup (link in `docs/README.md`) | Navigazione per ruolo, stati, errori, breakpoint |
 | Layout dei documenti | `docs/layout-dinamici.md` | Misure, font e regole dei 9 layout dinamici |
 | Piano | `docs/pianificazione.md` | Fette, ordine, milestone, PR della fetta corrente |
-| Fuori perimetro | `docs/features-evolutive.md` | EV-01…EV-24: **non si sviluppano** |
+| Fuori perimetro | `docs/features-evolutive.md` | EV-01…EV-25: **non si sviluppano** |
 
 **Se manca un'informazione o due fonti non si conciliano, non decidere da solo.** Fermati e scrivi la domanda nella descrizione della PR o nella risposta ad Antonio, con le opzioni e una raccomandazione. Non inventare requisiti, campi, stati o regole di calcolo.
 
@@ -145,7 +145,8 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Lettura del file del calendario / controllo delle righe e anteprima | `CalendarFileReader` (OpenSpout, D-316) → `CalendarSheet` / `CalendarAnalyzer` (`App\Domain\Sports\Services`) |
 | Passi dell'import (caricamento, ricalcolo, colonne, associazione dei nomi, conferma, scarto) | `UploadCalendar`, `RefreshCalendarPreview`, `MapCalendarColumns`, `ResolveCalendarName`, `ConfirmCalendarImport` (evento `calendar_import.confirmed`), `DiscardCalendarImport`; anteprime ferme da 7 giorni: comando `calendar-imports:prune` |
 | Servizio partite (F-12): partite in casa di campionato di club e periodo, campagna, top match | `MatchCounter` (`App\Domain\Sports\Services`) → `MatchCount` (stato dei top match: available / not_available / not_applicable) con un `ClubMatchCount` per club; verifica da server `sports:matches` (D-320, D-328) |
-| Riferimento esterno | `ExternalReference` · `external_references` (`platform`: `idoc` = `ExternalReference::PLATFORM_IDOC`, poi `accrediti`) |
+| Club dal vecchio sistema (CSV di `idoc__teams_list`, una tantum) | `LegacyClubFile` → `LegacyClubRow`, `ImportLegacyClubs` → `LegacyClubReport`; comando `sports:import-legacy-clubs` (`docs/dev/club-vecchio-sistema.md`, D-318, D-329) |
+| Riferimento esterno | `ExternalReference` · `external_references` (`platform`: `idoc` = `ExternalReference::PLATFORM_IDOC`, poi `accrediti`; `entity_type`: `club` = `ExternalReference::ENTITY_CLUB`) |
 | Territorio | `Territory` · `territories` |
 | Tipo visibilità (Classica, Virtual) | `VisibilityType` · `visibility_types` |
 | Bacino (1ª fila, 2ª fila…) | `InventoryPool` · `inventory_pools` |
@@ -262,7 +263,7 @@ Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 2. Branch: `feat/<fetta>-<breve-descrizione>` (es. `feat/f0-two-factor`), `fix/…`, `docs/…`. **Mai push su `main`.**
 3. Ogni PR contiene: obiettivo; criteri di accettazione coperti (es. `M01-CA2`) con i test che li verificano; decisioni applicate (`D-xxx`); domande aperte; istruzioni di collaudo manuale; **elenco dei file creati e modificati con percorso**.
 4. La CI deve essere verde prima della revisione.
-5. Se durante lo sviluppo emerge un'idea fuori perimetro, aggiungila in `docs/features-evolutive.md` (ultima: EV-24) e **non svilupparla**.
+5. Se durante lo sviluppo emerge un'idea fuori perimetro, aggiungila in `docs/features-evolutive.md` (ultima: EV-25) e **non svilupparla**.
 6. Se una decisione approvata va cambiata, non cambiarla nel codice: proponila ad Antonio. Il registro si aggiorna solo con la sua conferma.
 
 ## 11. Test
@@ -302,6 +303,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan files:prune-orphans  # file del disco privato senza riga (notturno in produzione, PR-06)
 ./vendor/bin/sail artisan calendar-imports:prune  # import del calendario in anteprima da oltre 7 giorni: scartati (notturno in produzione, F1-04)
 ./vendor/bin/sail artisan sports:matches 2027-28 LAZIO --from=01/10/2027  # partite in casa, campagna e top match di club e periodo (sola lettura, F1-05)
+./vendor/bin/sail artisan sports:import-legacy-clubs storage/app/private/club-idoc.csv --merge=8,20 --merge=11,39 --merge=21,35 --merge=25,36 --dry-run  # club dal vecchio sistema, una tantum (F1-06; senza --dry-run salva)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
 ./vendor/bin/sail artisan documents:try # prova della pipeline PDF: deck di 40 slide, tempi, peso, PDF scaricabile da admin (solo sviluppo, S1-02; --samples con DOCUMENT_SAMPLES_PATH)
 ./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)
@@ -324,7 +326,7 @@ Una funzione è fatta quando:
 
 - Non usare `float` per importi o minuti.
 - Non cambiare stack, versioni o architettura.
-- Non sviluppare le evolutive (EV-01…EV-24) né le funzioni del rilascio 1.1 (D-236, D-237) durante la 1.0.
+- Non sviluppare le evolutive (EV-01…EV-25) né le funzioni del rilascio 1.1 (D-236, D-237) durante la 1.0.
 - Non introdurre tabelle di permessi configurabili: i ruoli sono fissi (D-208).
 - Non installare i font nel sistema e non committarli.
 - Non usare risorse esterne (CDN, font web, immagini remote) nei documenti PDF.

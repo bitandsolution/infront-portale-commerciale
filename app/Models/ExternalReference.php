@@ -25,6 +25,9 @@ final class ExternalReference extends Model
     /** Old proposal system (D-229, D-318). */
     public const PLATFORM_IDOC = 'idoc';
 
+    /** Entity types of the references (stable names, as in the audit). */
+    public const ENTITY_CLUB = 'club';
+
     protected $guarded = ['id'];
 
     /**
