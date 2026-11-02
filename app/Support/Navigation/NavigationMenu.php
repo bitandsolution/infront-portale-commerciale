@@ -41,6 +41,7 @@ final class NavigationMenu
                 new NavigationItem('catalog_led', 'Tags', $backOffice),
                 new NavigationItem('catalog_partnership', 'Tags', $backOffice),
                 new NavigationItem('catalog_hospitality', 'Tags', $backOffice),
+                new NavigationItem('catalog_values', 'Tags', $admin),
             ]),
             new NavigationItem('inventory', 'Warehouse', $backOffice, [
                 new NavigationItem('inventory_availability', 'Warehouse', $backOffice),

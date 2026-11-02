@@ -13,6 +13,7 @@ return [
         'users' => 'Utenti',
         'settings' => 'Impostazioni',
         'sports' => 'Anagrafiche sportive',
+        'catalog' => 'Catalogo e listini',
     ],
 
     'actions' => [
@@ -61,6 +62,10 @@ return [
         'match_cancelled' => 'Partita annullata',
         'match_restored' => 'Partita ripristinata',
         'calendar_import_confirmed' => 'Calendario importato',
+        'led_format_updated' => 'Format LED modificato',
+        'partnership_tier_updated' => 'Livello di partnership modificato',
+        'hospitality_variant_updated' => 'Variante hospitality modificata',
+        'benefit_category_updated' => 'Categoria di benefit modificata',
     ],
 
     'reasons' => [

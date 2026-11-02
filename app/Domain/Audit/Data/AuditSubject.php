@@ -2,11 +2,16 @@
 
 namespace App\Domain\Audit\Data;
 
+use App\Enums\CatalogValueKind;
 use App\Enums\SettingKey;
+use App\Models\BenefitCategory;
 use App\Models\Club;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\FixtureMatch;
+use App\Models\HospitalityVariant;
+use App\Models\LedFormat;
+use App\Models\PartnershipTier;
 use App\Models\Season;
 use App\Models\Setting;
 use App\Models\Stadium;
@@ -81,6 +86,15 @@ final readonly class AuditSubject
     public static function stadium(Stadium $stadium): self
     {
         return new self('stadium', $stadium->id, $stadium->name.' ('.$stadium->city.')');
+    }
+
+    /**
+     * A value of the catalogue (F2-01), e.g. "Domination (DOMINATION)": the type is the kind
+     * (led_format, partnership_tier, hospitality_variant, benefit_category).
+     */
+    public static function catalogValue(LedFormat|PartnershipTier|HospitalityVariant|BenefitCategory $value): self
+    {
+        return new self(CatalogValueKind::of($value)->value, $value->id, $value->name.' ('.$value->code.')');
     }
 
     /**
