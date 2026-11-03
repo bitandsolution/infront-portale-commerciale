@@ -107,9 +107,7 @@ final class PriceListPresenter
                         ->map(fn (BenefitCategory $category): array => [
                             'id' => $category->id,
                             'name' => $category->name,
-                            'body' => $benefits
-                                ->first(fn (PartnershipBenefit $benefit): bool => $benefit->partnership_tier_id === $tier->id && $benefit->benefit_category_id === $category->id)
-                                ?->body ?? '',
+                            'body' => self::benefitBody($benefits->all(), $tier, $category),
                         ])
                         ->values()
                         ->all(),
@@ -141,7 +139,7 @@ final class PriceListPresenter
     /**
      * On-top texts of a club, or the general ones (club null), in their order.
      *
-     * @return array{items: list<array{id: int, title: string, body: string, updateUrl: string, removeUrl: string}>, createUrl: string, clubId: int|null}
+     * @return array{items: array<int, array{id: int, title: string, body: string, updateUrl: string, removeUrl: string}>, createUrl: string, clubId: int|null}
      */
     private static function onTop(PriceList $priceList, ?Club $club): array
     {
@@ -163,6 +161,22 @@ final class PriceListPresenter
             'createUrl' => route('catalog.on-top.store', $priceList),
             'clubId' => $club?->id,
         ];
+    }
+
+    /**
+     * Text of a tier and category among the benefits of a club, '' when there is none.
+     *
+     * @param  array<int, PartnershipBenefit>  $benefits
+     */
+    private static function benefitBody(array $benefits, PartnershipTier $tier, BenefitCategory $category): string
+    {
+        foreach ($benefits as $benefit) {
+            if ($benefit->partnership_tier_id === $tier->id && $benefit->benefit_category_id === $category->id) {
+                return $benefit->body;
+            }
+        }
+
+        return '';
     }
 
     /**
