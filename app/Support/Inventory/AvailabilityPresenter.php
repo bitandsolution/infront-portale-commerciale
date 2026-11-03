@@ -8,7 +8,6 @@ use App\Domain\Inventory\Data\ResourceAvailability;
 use App\Domain\Inventory\Data\SellableOption;
 use App\Domain\Inventory\Services\InventoryAvailability;
 use App\Domain\Inventory\Services\SellableOptions;
-use App\Enums\InventoryResource;
 use App\Enums\SellableStatus;
 use App\Models\Club;
 use App\Models\ClubEnrollment;
