@@ -69,12 +69,19 @@ enum AuditAction: string
     // F1-04: one event for the whole calendar import (D-321).
     case CalendarImportConfirmed = 'calendar_import.confirmed';
 
+    // F2-01: values of the catalogue changed by the admin (D-331); codes never change.
+    case LedFormatUpdated = 'led_format.updated';
+    case PartnershipTierUpdated = 'partnership_tier.updated';
+    case HospitalityVariantUpdated = 'hospitality_variant.updated';
+    case BenefitCategoryUpdated = 'benefit_category.updated';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
             'access' => AuditArea::Access,
             'setting' => AuditArea::Settings,
             'season', 'competition', 'edition', 'stadium', 'club', 'club_alias', 'enrollment', 'match', 'calendar_import' => AuditArea::Sports,
+            'led_format', 'partnership_tier', 'hospitality_variant', 'benefit_category' => AuditArea::Catalog,
             default => AuditArea::Users,
         };
     }

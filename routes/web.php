@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AccessLinkController;
 use App\Http\Controllers\Auth\PasswordForgottenController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\TwoFactorSetupController;
+use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Settings\SettingsController;
@@ -184,6 +185,19 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::put('anagrafiche/partite/{fixtureMatch}', [MatchController::class, 'update'])->whereNumber('fixtureMatch')->name('sports.matches.update');
             Route::post('anagrafiche/partite/{fixtureMatch}/annulla', [MatchController::class, 'cancel'])->whereNumber('fixtureMatch')->name('sports.matches.cancel');
             Route::post('anagrafiche/partite/{fixtureMatch}/ripristina', [MatchController::class, 'restore'])->whereNumber('fixtureMatch')->name('sports.matches.restore');
+        });
+
+        // Catalogue values (M03 F-01…F-04, F-06; D-331): admin only. The list is the
+        // "catalogo/valori" page above; codes come from the system data, nothing is created or deleted.
+        Route::middleware('can:'.Ability::CatalogManage->value)->group(function (): void {
+            Route::get('catalogo/valori/format/{ledFormat}', [CatalogValueController::class, 'editFormat'])->whereNumber('ledFormat')->name('catalog.values.formats.edit');
+            Route::put('catalogo/valori/format/{ledFormat}', [CatalogValueController::class, 'updateFormat'])->whereNumber('ledFormat')->name('catalog.values.formats.update');
+            Route::get('catalogo/valori/livelli/{partnershipTier}', [CatalogValueController::class, 'editTier'])->whereNumber('partnershipTier')->name('catalog.values.tiers.edit');
+            Route::put('catalogo/valori/livelli/{partnershipTier}', [CatalogValueController::class, 'updateTier'])->whereNumber('partnershipTier')->name('catalog.values.tiers.update');
+            Route::get('catalogo/valori/varianti/{hospitalityVariant}', [CatalogValueController::class, 'editVariant'])->whereNumber('hospitalityVariant')->name('catalog.values.variants.edit');
+            Route::put('catalogo/valori/varianti/{hospitalityVariant}', [CatalogValueController::class, 'updateVariant'])->whereNumber('hospitalityVariant')->name('catalog.values.variants.update');
+            Route::get('catalogo/valori/categorie/{benefitCategory}', [CatalogValueController::class, 'editCategory'])->whereNumber('benefitCategory')->name('catalog.values.categories.edit');
+            Route::put('catalogo/valori/categorie/{benefitCategory}', [CatalogValueController::class, 'updateCategory'])->whereNumber('benefitCategory')->name('catalog.values.categories.update');
         });
 
         // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.

@@ -7,7 +7,8 @@ namespace App\Enums;
  * (proposals, documents, catalog, inventory, sports, clients, content) are added by the slices that
  * write their events. "settings" (PR-07) covers the changes of the system settings by the admin;
  * "sports" (F1) the sports registry: seasons, competitions, editions, then clubs, stadiums,
- * enrollments, matches and calendar imports (D-321).
+ * enrollments, matches and calendar imports (D-321); "catalog" (F2) the catalogue and the price lists
+ * (D-337).
  */
 enum AuditArea: string
 {
@@ -15,6 +16,7 @@ enum AuditArea: string
     case Users = 'users';
     case Settings = 'settings';
     case Sports = 'sports';
+    case Catalog = 'catalog';
 
     /**
      * Italian label (lang/it/audit.php).

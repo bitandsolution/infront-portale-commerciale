@@ -37,6 +37,7 @@ return [
         'catalog_led' => 'Listini LED',
         'catalog_partnership' => 'Partnership',
         'catalog_hospitality' => 'Hospitality',
+        'catalog_values' => 'Valori',
 
         'inventory' => 'Magazzino',
         'inventory_availability' => 'Disponibilità',
@@ -667,6 +668,53 @@ return [
     // Pages of the access links sent by e-mail (D-277…D-280).
     // Settings page (PR-07; D-191, D-286): admin only. Labels and descriptions of the single
     // settings come from the server (lang/it/settings.php).
+    // Catalogue (M03; F2): pages of the back office. Labels of the values and server messages are in
+    // lang/it/catalog.php.
+    'catalog' => [
+        'active' => 'Attivo',
+        'inactive' => 'Disattivato',
+
+        'values' => [
+            'intro' => 'I valori del catalogo e i loro codici arrivano dai dati di sistema: qui non si creano e non si cancellano. Puoi cambiare nome, ordine e stato; un valore disattivato non compare più nei listini e nel configuratore.',
+            'system_title' => 'Valori di sistema',
+            'system_intro' => 'Territori, tipi di visibilità e bacini si consultano soltanto: la loro attivazione è un\'evoluzione futura.',
+            'territories' => 'Territori',
+            'visibility_types' => 'Tipi di visibilità',
+            'pools' => 'Bacini',
+            'formats' => 'Format LED',
+            'formats_intro' => 'I bacini consumati da ogni format sono fissi: Jumbo e Domination scalano gli stessi minuti dalla 1ª e dalla 2ª fila.',
+            'tiers' => 'Livelli di partnership',
+            'tiers_intro' => 'Il pacchetto Libera non ha prezzo, benefit né contatore.',
+            'variants' => 'Varianti hospitality',
+            'categories' => 'Categorie di benefit',
+            'categories_intro' => 'I testi dei benefit sono facoltativi: nei documenti i benefit sono slide statiche.',
+            'empty_title' => 'Nessun valore',
+            'empty_message' => 'I valori arrivano dai dati di sistema: chiedi di eseguire il seeder dei dati di sistema.',
+            'open' => 'Modifica :value',
+            'columns' => [
+                'code' => 'Codice',
+                'name' => 'Nome',
+                'description' => 'Descrizione',
+                'visibility_type' => 'Visibilità',
+                'notes' => 'Note',
+                'sort_order' => 'Ordine',
+                'status' => 'Stato',
+            ],
+            'fields' => [
+                'name' => 'Nome',
+                'description' => 'Descrizione (facoltativa)',
+                'sort_order' => 'Ordine',
+                'sort_order_help' => 'I valori compaiono dal numero più basso; a parità di numero, in ordine di nome.',
+                'is_active' => 'Valore attivo',
+                'is_active_help' => 'Un valore disattivato non compare più nei listini e nel configuratore; le proposte che lo usano restano invariate.',
+            ],
+            'code_label' => 'Codice :code',
+            'code_help' => 'Il codice è fisso: lo usano i consumi dei bacini e le condizioni delle slide.',
+            'save' => 'Salva',
+            'back' => 'Torna ai valori del catalogo',
+        ],
+    ],
+
     'settings' => [
         'intro' => "Valori di sistema usati da configuratore, magazzino e audit. Le modifiche valgono da subito e restano registrate nell'audit.",
         'fixed' => 'Fisso',

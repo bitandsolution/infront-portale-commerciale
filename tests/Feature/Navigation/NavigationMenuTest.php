@@ -42,7 +42,7 @@ it('D-161: hides the admin-only entries from the manager', function () {
             'catalog>catalog_led', 'inventory>inventory_availability', 'content>content_slides',
             'sports>sports_calendars', 'sports>sports_import', 'sports>sports_matches', 'sports>sports_stadiums',
             'reports>reports_proposals', 'reports>reports_sectors')
-        ->not->toContain('inventory>inventory_capacity', 'sports>sports_seasons', 'sports>sports_competitions',
+        ->not->toContain('catalog>catalog_values', 'inventory>inventory_capacity', 'sports>sports_seasons', 'sports>sports_competitions',
             'sports>sports_clubs', 'reports>reports_access', 'audit', 'users', 'settings',
             'proposals_new', 'proposals_mine', 'clients_mine', 'profile');
 });
@@ -51,7 +51,7 @@ it('D-161: gives the admin every back-office entry', function () {
     $admin = menuKeys(Role::Admin);
 
     expect($admin)
-        ->toContain('inventory>inventory_capacity', 'sports>sports_seasons', 'sports>sports_competitions',
+        ->toContain('catalog>catalog_values', 'inventory>inventory_capacity', 'sports>sports_seasons', 'sports>sports_competitions',
             'sports>sports_clubs', 'reports>reports_access', 'audit', 'users', 'settings')
         ->and(array_diff(menuKeys(Role::Manager), $admin))->toBe([]);
 });

@@ -139,6 +139,31 @@ export interface CompetitionRow {
     url: string;
 }
 
+/** A value of the catalogue the admin changes (CatalogPresenter::valueRow; D-331). */
+export interface CatalogValueRow {
+    id: number;
+    kind: 'led_format' | 'partnership_tier' | 'hospitality_variant' | 'benefit_category';
+    code: string;
+    name: string;
+    /** Only LED formats have a description. */
+    description: string | null;
+    /** Benefit categories have no active flag. */
+    isActive: boolean | null;
+    sortOrder: number;
+    /** Fixed facts from the system data: pools consumed, free package. */
+    notes: string[];
+    url: string;
+}
+
+/** A value of the system data shown read-only on the page "Catalogo › Valori" (D-331). */
+export interface CatalogSystemValue {
+    code: string;
+    name: string;
+    isActive: boolean;
+    /** Only for the pools. */
+    visibilityType?: string;
+}
+
 /** One row of the Stadiums page (SportsPresenter::stadiumRow). */
 export interface StadiumRow {
     id: number;

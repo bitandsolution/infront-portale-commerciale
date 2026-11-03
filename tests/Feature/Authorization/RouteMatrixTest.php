@@ -2,6 +2,7 @@
 
 use App\Enums\AliasSource;
 use App\Enums\FilePurpose;
+use App\Models\BenefitCategory;
 use App\Models\CalendarImport;
 use App\Models\Club;
 use App\Models\ClubAlias;
@@ -9,6 +10,9 @@ use App\Models\ClubEnrollment;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\FixtureMatch;
+use App\Models\HospitalityVariant;
+use App\Models\LedFormat;
+use App\Models\PartnershipTier;
 use App\Models\Season;
 use App\Models\Stadium;
 use App\Models\StoredFile;
@@ -116,6 +120,16 @@ function routeMatrix(): array
         'pages.catalog_led' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.catalog_partnership' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.catalog_hospitality' => ['method' => 'GET', 'expected' => $backOffice],
+        // M03 — values of the catalogue: admin only (D-331). Forms are sent empty
+        'pages.catalog_values' => ['method' => 'GET', 'expected' => $admin],
+        'catalog.values.formats.edit' => ['method' => 'GET', 'expected' => $admin],
+        'catalog.values.formats.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'catalog.values.tiers.edit' => ['method' => 'GET', 'expected' => $admin],
+        'catalog.values.tiers.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'catalog.values.variants.edit' => ['method' => 'GET', 'expected' => $admin],
+        'catalog.values.variants.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'catalog.values.categories.edit' => ['method' => 'GET', 'expected' => $admin],
+        'catalog.values.categories.update' => ['method' => 'PUT', 'expected' => $adminForm],
 
         // M04 — consultation (D-137); capacities only admin (D-137, M01-CA3)
         'pages.inventory_availability' => ['method' => 'GET', 'expected' => $backOffice],
@@ -302,6 +316,10 @@ function matrixParameters(string $route): array
         in_array($route, ['sports.competitions.edit', 'sports.competitions.update'], true) => [
             'competition' => Competition::factory()->create()->id,
         ],
+        str_starts_with($route, 'catalog.values.formats.') => ['ledFormat' => LedFormat::factory()->create()->id],
+        str_starts_with($route, 'catalog.values.tiers.') => ['partnershipTier' => PartnershipTier::factory()->create()->id],
+        str_starts_with($route, 'catalog.values.variants.') => ['hospitalityVariant' => HospitalityVariant::factory()->create()->id],
+        str_starts_with($route, 'catalog.values.categories.') => ['benefitCategory' => BenefitCategory::factory()->create()->id],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
         str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],
         str_starts_with($route, 'horizon.') && str_ends_with($route, '.show'),

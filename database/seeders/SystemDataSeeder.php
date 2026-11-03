@@ -14,8 +14,9 @@ use Illuminate\Database\Seeder;
  * admin survive every run. No audit event: these are the initial data of the system, like the
  * migrations.
  *
- * Settings (D-191, PR-07); sports registry: discipline and competitions (F1-01, D-321). The
- * catalogue arrives with slice F2, in its own seeder called from here.
+ * Settings (D-191, PR-07); sports registry: discipline and competitions (F1-01, D-321); catalogue:
+ * territories, visibility types, pools, LED formats, partnership tiers, hospitality variants and
+ * benefit categories (F2-01, D-332).
  */
 class SystemDataSeeder extends Seeder
 {
@@ -41,5 +42,6 @@ class SystemDataSeeder extends Seeder
         ));
 
         $this->call(SportsSystemDataSeeder::class);
+        $this->call(CatalogSystemDataSeeder::class);
     }
 }

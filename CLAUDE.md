@@ -155,6 +155,8 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Pacchetto Libera | `is_free_package` |
 | Variante hospitality (Premium, Base) | `HospitalityVariant` · `hospitality_variants` |
 | Categoria di benefit | `BenefitCategory` · `benefit_categories` |
+| Valori del catalogo modificabili dall'admin (nome, ordine; descrizione solo dei format; attivo tranne le categorie) | `CatalogValueKind` (`led_format`, `partnership_tier`, `hospitality_variant`, `benefit_category`), Action `UpdateCatalogValue` (`App\Domain\Catalog\Actions`), pagina "Catalogo › Valori" (`catalog_values`, D-331); area di audit `catalog` |
+| Dati di sistema del catalogo (codici, bacini consumati dai format, flag della Libera) | `CatalogSystemDataSeeder`, chiamato da `SystemDataSeeder` (D-332) |
 | Listino | `PriceList` · `price_lists` (`status`: draft / published) |
 | Costo per 1′ a partita (costo/cad) | `unit_price` su `led_prices` |
 | Prezzo stagionale partnership | `season_price` su `partnership_prices` |

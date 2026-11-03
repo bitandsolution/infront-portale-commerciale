@@ -20,4 +20,5 @@ it('the texts shown in a toast never end with a period', function (string $group
     'settings.toasts',
     'sports.toasts',
     'sports.errors',
+    'catalog.toasts',
 ]);

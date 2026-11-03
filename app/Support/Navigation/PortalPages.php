@@ -3,6 +3,7 @@
 namespace App\Support\Navigation;
 
 use App\Enums\Ability;
+use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -45,6 +46,7 @@ final class PortalPages
         'catalog_led' => ['catalogo/led', Ability::CatalogView],
         'catalog_partnership' => ['catalogo/partnership', Ability::CatalogView],
         'catalog_hospitality' => ['catalogo/hospitality', Ability::CatalogView],
+        'catalog_values' => ['catalogo/valori', Ability::CatalogManage],
 
         'inventory_availability' => ['magazzino/disponibilita', Ability::InventoryView],
         'inventory_capacity' => ['magazzino/capacita', Ability::InventoryCapacityManage],
@@ -89,6 +91,7 @@ final class PortalPages
         'sports_calendars' => [CalendarController::class, 'index'],
         'sports_import' => [CalendarImportController::class, 'index'],
         'sports_matches' => [MatchController::class, 'index'],
+        'catalog_values' => [CatalogValueController::class, 'index'],
     ];
 
     /**
