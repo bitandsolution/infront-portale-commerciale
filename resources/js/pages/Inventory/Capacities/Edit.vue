@@ -190,7 +190,14 @@ function save(confirmed = false): void {
                         v-else
                         class="overflow-x-auto"
                     >
-                        <table class="w-full min-w-[640px] border-collapse text-sm">
+                        <table class="w-full min-w-[640px] table-fixed border-collapse text-sm">
+                            <colgroup>
+                                <col class="w-[26%]">
+                                <col class="w-[12%]">
+                                <col class="w-[30%]">
+                                <col class="w-[16%]">
+                                <col class="w-[16%]">
+                            </colgroup>
                             <thead>
                                 <tr class="bg-surface text-xs tracking-wide text-muted uppercase">
                                     <th
