@@ -157,7 +157,12 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Categoria di benefit | `BenefitCategory` · `benefit_categories` |
 | Valori del catalogo modificabili dall'admin (nome, ordine; descrizione solo dei format; attivo tranne le categorie) | `CatalogValueKind` (`led_format`, `partnership_tier`, `hospitality_variant`, `benefit_category`), Action `UpdateCatalogValue` (`App\Domain\Catalog\Actions`), pagina "Catalogo › Valori" (`catalog_values`, D-331, D-339); area di audit `catalog` |
 | Dati di sistema del catalogo (codici, bacini consumati dai format, flag della Libera) | `CatalogSystemDataSeeder`, chiamato da `SystemDataSeeder` (D-332) |
-| Listino | `PriceList` · `price_lists` (`status`: draft / published) |
+| Listino | `PriceList` · `price_lists` (`status`: `PriceListStatus` draft (Bozza) / published (Pubblicato): la pubblicazione non si annulla, i prezzi restano modificabili, D-333) |
+| Righe e colonne delle griglie del listino (club Infront attivi iscritti a una competizione della stagione; format attivi di un tipo di visibilità attivo) e club senza offerte prima della pubblicazione | `PriceListGrid` (`App\Domain\Catalog\Services`, D-337): `clubs()`, `ledFormats()`, `clubsWithoutOffers()` |
+| Creazione, prezzo di una cella, pubblicazione del listino | `CreatePriceList`, `SetLedPrice` → `PriceChange` (created / updated / removed / unchanged), `PublishPriceList` (`App\Domain\Catalog\Actions`); eventi `price_list.created`, `led_price.updated` (uno per prezzo, prima e dopo), `price_list.published` |
+| Regola del catalogo che rifiuta l'operazione | `CatalogActionNotAllowed` (toast) |
+| Pagina "Catalogo › Listino LED" (griglia club × format, modifica in cella dell'admin, gestore in sola lettura) | `catalog_led`, `LedPriceListController`, `PriceListPresenter` (`App\Support\Catalog`) |
+| Importi in euro: notazione italiana nei campi ("3.157,89"), stringhe decimali esatte nel codice | `Amounts` (`App\Support`, `brick/math`, D-336) |
 | Costo per 1′ a partita (costo/cad) | `unit_price` su `led_prices` |
 | Prezzo stagionale partnership | `season_price` su `partnership_prices` |
 | Prezzo a posto hospitality | `seat_price` su `hospitality_prices` |

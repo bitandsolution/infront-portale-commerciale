@@ -75,13 +75,18 @@ enum AuditAction: string
     case HospitalityVariantUpdated = 'hospitality_variant.updated';
     case BenefitCategoryUpdated = 'benefit_category.updated';
 
+    // F2-02: price list of a season and LED prices (D-333): one event for every price changed.
+    case PriceListCreated = 'price_list.created';
+    case PriceListPublished = 'price_list.published';
+    case LedPriceUpdated = 'led_price.updated';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
             'access' => AuditArea::Access,
             'setting' => AuditArea::Settings,
             'season', 'competition', 'edition', 'stadium', 'club', 'club_alias', 'enrollment', 'match', 'calendar_import' => AuditArea::Sports,
-            'led_format', 'partnership_tier', 'hospitality_variant', 'benefit_category' => AuditArea::Catalog,
+            'led_format', 'partnership_tier', 'hospitality_variant', 'benefit_category', 'price_list', 'led_price' => AuditArea::Catalog,
             default => AuditArea::Users,
         };
     }

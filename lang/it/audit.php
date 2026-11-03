@@ -66,6 +66,9 @@ return [
         'partnership_tier_updated' => 'Livello di partnership modificato',
         'hospitality_variant_updated' => 'Variante hospitality modificata',
         'benefit_category_updated' => 'Categoria di benefit modificata',
+        'price_list_created' => 'Listino creato',
+        'price_list_published' => 'Listino pubblicato',
+        'led_price_updated' => 'Prezzo LED modificato',
     ],
 
     'reasons' => [

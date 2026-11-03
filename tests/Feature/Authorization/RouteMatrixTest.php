@@ -13,6 +13,7 @@ use App\Models\FixtureMatch;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
 use App\Models\PartnershipTier;
+use App\Models\PriceList;
 use App\Models\Season;
 use App\Models\Stadium;
 use App\Models\StoredFile;
@@ -130,6 +131,12 @@ function routeMatrix(): array
         'catalog.values.variants.update' => ['method' => 'PUT', 'expected' => $adminForm],
         'catalog.values.categories.edit' => ['method' => 'GET', 'expected' => $admin],
         'catalog.values.categories.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        // M03 — price list of a season and LED prices (D-333): the grid is pages.catalog_led above
+        // (the manager reads it); writes admin only. Forms sent empty; the publication of a draft
+        // goes back to the page with a toast
+        'catalog.price-lists.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'catalog.led-prices.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'catalog.price-lists.publish' => ['method' => 'POST', 'expected' => $adminForm],
 
         // M04 — consultation (D-137); capacities only admin (D-137, M01-CA3)
         'pages.inventory_availability' => ['method' => 'GET', 'expected' => $backOffice],
@@ -320,6 +327,7 @@ function matrixParameters(string $route): array
         str_starts_with($route, 'catalog.values.tiers.') => ['partnershipTier' => PartnershipTier::factory()->create()->id],
         str_starts_with($route, 'catalog.values.variants.') => ['hospitalityVariant' => HospitalityVariant::factory()->create()->id],
         str_starts_with($route, 'catalog.values.categories.') => ['benefitCategory' => BenefitCategory::factory()->create()->id],
+        in_array($route, ['catalog.led-prices.update', 'catalog.price-lists.publish'], true) => ['priceList' => PriceList::factory()->create()->id],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
         str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],
         str_starts_with($route, 'horizon.') && str_ends_with($route, '.show'),

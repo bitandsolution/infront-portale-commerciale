@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PasswordForgottenController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Auth\TwoFactorSetupController;
 use App\Http\Controllers\Catalog\CatalogValueController;
+use App\Http\Controllers\Catalog\LedPriceListController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Settings\SettingsController;
@@ -198,6 +199,12 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::put('catalogo/valori/varianti/{hospitalityVariant}', [CatalogValueController::class, 'updateVariant'])->whereNumber('hospitalityVariant')->name('catalog.values.variants.update');
             Route::get('catalogo/valori/categorie/{benefitCategory}', [CatalogValueController::class, 'editCategory'])->whereNumber('benefitCategory')->name('catalog.values.categories.edit');
             Route::put('catalogo/valori/categorie/{benefitCategory}', [CatalogValueController::class, 'updateCategory'])->whereNumber('benefitCategory')->name('catalog.values.categories.update');
+
+            // Price list of a season and LED prices (M03 F-05, F-11; D-333): the grid is the
+            // "catalogo/led" page above (catalog.view, the manager reads it); writes admin only.
+            Route::post('catalogo/listini', [LedPriceListController::class, 'store'])->name('catalog.price-lists.store');
+            Route::put('catalogo/listini/{priceList}/led', [LedPriceListController::class, 'updatePrice'])->whereNumber('priceList')->name('catalog.led-prices.update');
+            Route::post('catalogo/listini/{priceList}/pubblica', [LedPriceListController::class, 'publish'])->whereNumber('priceList')->name('catalog.price-lists.publish');
         });
 
         // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.
