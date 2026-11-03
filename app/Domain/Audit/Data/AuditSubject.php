@@ -12,6 +12,7 @@ use App\Models\FixtureMatch;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
 use App\Models\PartnershipTier;
+use App\Models\PriceList;
 use App\Models\Season;
 use App\Models\Setting;
 use App\Models\Stadium;
@@ -95,6 +96,19 @@ final readonly class AuditSubject
     public static function catalogValue(LedFormat|PartnershipTier|HospitalityVariant|BenefitCategory $value): self
     {
         return new self(CatalogValueKind::of($value)->value, $value->id, $value->name.' ('.$value->code.')');
+    }
+
+    /**
+     * The price list of a season (F2-02), e.g. "Listino 2027-28". A price adds club and format to
+     * the label, e.g. "Listino 2027-28 · SS Lazio (LAZIO) · 1ª fila (FILA_1)": the events of all the
+     * prices of a list share the same object.
+     */
+    public static function priceList(PriceList $priceList, ?string $detail = null): self
+    {
+        $label = __('catalog.price_list_label', ['season' => $priceList->season->code]);
+        $label = is_string($label) ? $label : $priceList->season->code;
+
+        return new self('price_list', $priceList->id, $detail === null ? $label : $label.' · '.$detail);
     }
 
     /**
