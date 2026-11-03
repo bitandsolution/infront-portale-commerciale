@@ -40,6 +40,51 @@ return [
     'below_item' => ':name (impegnato :committed, capacità :capacity)',
     'below_item_not_managed' => ':name (non gestito, impegnato :committed)',
 
+    // Status of an option in the configurator (SellableStatus, F2-05).
+    'sellable_statuses' => [
+        'available' => 'Vendibile',
+        'sold_out' => 'Esaurito',
+        'not_managed' => 'Non gestito',
+        'not_available' => 'Non disponibile',
+    ],
+
+    // Why a club is not selectable in the configurator (ClubSellabilityReason, F2-05).
+    'sellability_reasons' => [
+        'not_in_season' => 'non è un club Infront attivo iscritto a una competizione della stagione',
+        'no_price_list' => 'la stagione non ha un listino',
+        'price_list_draft' => 'il listino della stagione è in bozza',
+        'no_prices' => 'il listino pubblicato non ha prezzi per il club',
+    ],
+
+    // Command inventory:availability (read only, F2-05).
+    'console' => [
+        'unknown_season' => 'Stagione :season inesistente',
+        'unknown_club' => 'Club :club inesistente',
+        'selectable' => ':club, stagione :season: selezionabile nel configuratore',
+        'not_selectable' => ':club, stagione :season: non selezionabile nel configuratore (:reason)',
+        'availability' => 'Disponibilità',
+        'options' => 'Opzioni del configuratore',
+        'resource' => 'Risorsa',
+        'value' => 'Valore',
+        'managed' => 'Gestito',
+        'capacity' => 'Capacità',
+        'committed' => 'Impegnato',
+        'remaining' => 'Residuo',
+        'kind' => 'Tipo',
+        'option' => 'Opzione',
+        'status' => 'Stato',
+        'list_price' => 'Prezzo di listino',
+        'yes' => 'sì',
+        'no' => 'no',
+        'not_configured' => 'non impostato',
+        'free_package' => 'pacchetto senza prezzo',
+        'kinds' => [
+            'led' => 'Format LED',
+            'partnership' => 'Partnership',
+            'hospitality' => 'Hospitality',
+        ],
+    ],
+
     'errors' => [
         'method_not_supported' => 'Il metodo di calcolo della disponibilità ":method" non è ancora disponibile: va impostato "Stagionale"',
         'season_closed' => 'La stagione :season è chiusa: il magazzino è in sola lettura',
