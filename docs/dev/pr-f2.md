@@ -1,6 +1,6 @@
 # Fetta F2 — M03 Catalogo e listini + M04 Capacità: elenco delle PR
 
-Stato: ✅ approvato (D-330…D-338, 2/11/2026). Unite: F2-01 (#57, D-339), F2-02 (#59, D-340, D-341).
+Stato: ✅ approvato (D-330…D-338, 2/11/2026). Unite: F2-01 (#57, D-339), F2-02 (#59, D-340, D-341), F2-03 (#61, D-342, D-343, D-344).
 Periodo previsto: 10/12 – 23/12/2026 (D-243), avviata in anticipo. Riferimenti: pianificazione §6.1.3, `docs/specs/spec-M03-catalogo-listini.md`, `docs/specs/spec-M04-magazzino-disponibilita.md`, progettazione-tecnica §5.3.3, mockup "Listino LED" e "Magazzino".
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |
