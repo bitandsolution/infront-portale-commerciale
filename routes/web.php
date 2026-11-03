@@ -10,6 +10,7 @@ use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\OnTopAssetController;
 use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
+use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -218,6 +219,13 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('catalogo/listini/{priceList}/on-top', [OnTopAssetController::class, 'store'])->whereNumber('priceList')->name('catalog.on-top.store');
             Route::put('catalogo/on-top/{onTopAsset}', [OnTopAssetController::class, 'update'])->whereNumber('onTopAsset')->name('catalog.on-top.update');
             Route::delete('catalogo/on-top/{onTopAsset}', [OnTopAssetController::class, 'destroy'])->whereNumber('onTopAsset')->name('catalog.on-top.destroy');
+        });
+
+        // Capacities of the inventory (M04 F-01…F-03; D-191, D-337): admin only. The list is the
+        // "magazzino/capacita" page above.
+        Route::middleware('can:'.Ability::InventoryCapacityManage->value)->group(function (): void {
+            Route::get('magazzino/capacita/club/{club}', [CapacityController::class, 'edit'])->whereNumber('club')->name('inventory.capacities.edit');
+            Route::put('magazzino/capacita/club/{club}', [CapacityController::class, 'update'])->whereNumber('club')->name('inventory.capacities.update');
         });
 
         // System settings (D-191, D-286; PR-07): admin only. The page is "impostazioni" above.
