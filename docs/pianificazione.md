@@ -10,7 +10,7 @@ Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 | 6.1 | Perimetro MVP e ordine dei moduli | ✅ Approvato (D-234…D-239) |
 | 6.2 | Stime e milestone, data di avvio, uso del vecchio sistema dopo l'avvio | ✅ Approvato (D-243…D-247) |
 | 6.3 | Preparazione del repository (`CLAUDE.md`, `docs/`, CI, verifica layout D-226) | ✅ Approvato (D-249…D-254) |
-| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026; F2 in corso (piano D-330…D-338): F2-01 Catalogo (#57) e F2-02 Listino e prezzi LED (#59) unite il 3/11/2026 |
+| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026; F2 in corso (piano D-330…D-338): F2-01 Catalogo (#57), F2-02 Listino e prezzi LED (#59) e F2-03 Partnership e hospitality (#61) unite il 3/11/2026 |
 
 ---
 
@@ -100,7 +100,7 @@ flowchart LR
 | 2/11 – 18/11 | **F0** Fondamenta | 2,5 | ✅ Completata il 25/10/2026 (PR-00…PR-09) |
 | 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | ✅ Completata il 25/10/2026 (D-308…D-314). Sulla VM con Interstate: deck di 40 slide, **10,5 MB** (M09-CA4 ≤ 15 MB), **12,3 s** (composizione 2,9 · Chromium 1,8 · qpdf 0,2 · controlli 7,4); recap network con la grafica dell'originale (D-314). Da ripetere sullo staging |
 | 26/11 – 9/12 | **F1** M02 | 2 | ✅ Completata il 2/11/2026 (PR #31…#39, D-315…D-329). Import del calendario provato con file fittizi: il calendario reale di Infront è atteso entro il 30/11 |
-| 10/12 – 23/12 | **F2** M03 + M04 | 2 | Avviata in anticipo: F2-01 e F2-02 unite il 3/11/2026 |
+| 10/12 – 23/12 | **F2** M03 + M04 | 2 | Avviata in anticipo: F2-01, F2-02 e F2-03 unite il 3/11/2026 |
 | 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | |
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
 | 7/1 – 13/1 | **F3** M05 | 1 | |
