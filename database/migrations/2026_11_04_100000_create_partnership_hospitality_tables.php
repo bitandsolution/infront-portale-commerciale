@@ -15,7 +15,8 @@ use Illuminate\Support\Facades\Schema;
  * - "Not available" is the absence of the row (D-190), as for the LED prices.
  * - partnership_benefits: one optional text per club, tier and category (D-117, D-335).
  * - on_top_assets: descriptive texts without price (D-049), for a club or general (club_id null).
- * - Every foreign key is RESTRICT (C3).
+ * - Every foreign key is RESTRICT (C3). The unique keys have short names: the generated ones
+ *   exceed the 64 characters of MariaDB.
  */
 return new class extends Migration
 {
@@ -29,7 +30,7 @@ return new class extends Migration
             $table->decimal('season_price', 12, 2);
             $table->timestamps();
 
-            $table->unique(['price_list_id', 'club_id', 'partnership_tier_id']);
+            $table->unique(['price_list_id', 'club_id', 'partnership_tier_id'], 'partnership_prices_cell_unique');
             $table->index('club_id');
             $table->index('partnership_tier_id');
         });
@@ -42,7 +43,7 @@ return new class extends Migration
             $table->decimal('seat_price', 12, 2);
             $table->timestamps();
 
-            $table->unique(['price_list_id', 'club_id', 'hospitality_variant_id']);
+            $table->unique(['price_list_id', 'club_id', 'hospitality_variant_id'], 'hospitality_prices_cell_unique');
             $table->index('club_id');
             $table->index('hospitality_variant_id');
         });
