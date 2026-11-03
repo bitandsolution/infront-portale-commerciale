@@ -2,6 +2,7 @@
 
 namespace App\Domain\Catalog\Exceptions;
 
+use App\Enums\PriceKind;
 use App\Support\Text;
 use App\Support\Toast;
 use Illuminate\Http\RedirectResponse;
@@ -38,10 +39,16 @@ final class CatalogActionNotAllowed extends RuntimeException
         return new self(Text::get('catalog.errors.club_not_in_grid', ['club' => $club, 'season' => $season]));
     }
 
-    /** A deactivated format (D-331) is not sold and gets no new prices. */
-    public static function formatNotSold(string $format): self
+    /** A deactivated value of the catalogue (D-331) is not sold and gets no new prices. */
+    public static function valueNotSold(PriceKind $kind, string $name): self
     {
-        return new self(Text::get('catalog.errors.format_not_sold', ['format' => $format]));
+        return new self(Text::get('catalog.errors.not_sold_'.$kind->value, ['value' => $name]));
+    }
+
+    /** RB-04: the free package "Libera" has no price and no benefits. */
+    public static function freePackage(string $name): self
+    {
+        return new self(Text::get('catalog.errors.free_package', ['value' => $name]));
     }
 
     public function render(): RedirectResponse

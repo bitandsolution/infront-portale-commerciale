@@ -12,6 +12,7 @@ use App\Models\CompetitionSeason;
 use App\Models\FixtureMatch;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
+use App\Models\OnTopAsset;
 use App\Models\PartnershipTier;
 use App\Models\PriceList;
 use App\Models\Season;
@@ -131,12 +132,18 @@ function routeMatrix(): array
         'catalog.values.variants.update' => ['method' => 'PUT', 'expected' => $adminForm],
         'catalog.values.categories.edit' => ['method' => 'GET', 'expected' => $admin],
         'catalog.values.categories.update' => ['method' => 'PUT', 'expected' => $adminForm],
-        // M03 — price list of a season and LED prices (D-333): the grid is pages.catalog_led above
-        // (the manager reads it); writes admin only. Forms sent empty; the publication of a draft
-        // goes back to the page with a toast
+        // M03 — price list of a season, prices, benefits and on-top texts (D-333, D-335): the grids
+        // are pages.catalog_led|partnership|hospitality above and the benefit page of a club is read
+        // by the manager too; writes admin only. Forms sent empty; the publication of a draft and
+        // the removal of an on-top text go back to the page with a toast
         'catalog.price-lists.store' => ['method' => 'POST', 'expected' => $adminForm],
-        'catalog.led-prices.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'catalog.prices.update' => ['method' => 'PUT', 'expected' => $adminForm],
         'catalog.price-lists.publish' => ['method' => 'POST', 'expected' => $adminForm],
+        'catalog.benefits.show' => ['method' => 'GET', 'expected' => $backOffice],
+        'catalog.benefits.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'catalog.on-top.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'catalog.on-top.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        'catalog.on-top.destroy' => ['method' => 'DELETE', 'expected' => $adminForm],
 
         // M04 — consultation (D-137); capacities only admin (D-137, M01-CA3)
         'pages.inventory_availability' => ['method' => 'GET', 'expected' => $backOffice],
@@ -327,7 +334,12 @@ function matrixParameters(string $route): array
         str_starts_with($route, 'catalog.values.tiers.') => ['partnershipTier' => PartnershipTier::factory()->create()->id],
         str_starts_with($route, 'catalog.values.variants.') => ['hospitalityVariant' => HospitalityVariant::factory()->create()->id],
         str_starts_with($route, 'catalog.values.categories.') => ['benefitCategory' => BenefitCategory::factory()->create()->id],
-        in_array($route, ['catalog.led-prices.update', 'catalog.price-lists.publish'], true) => ['priceList' => PriceList::factory()->create()->id],
+        $route === 'catalog.prices.update' => ['priceList' => PriceList::factory()->create()->id, 'kind' => 'led'],
+        in_array($route, ['catalog.price-lists.publish', 'catalog.on-top.store'], true) => ['priceList' => PriceList::factory()->create()->id],
+        in_array($route, ['catalog.benefits.show', 'catalog.benefits.update'], true) => ['priceList' => PriceList::factory()->create()->id, 'club' => Club::factory()->infront()->create()->id],
+        in_array($route, ['catalog.on-top.update', 'catalog.on-top.destroy'], true) => [
+            'onTopAsset' => OnTopAsset::query()->create(['price_list_id' => PriceList::factory()->create()->id, 'club_id' => null, 'title' => 'Match sponsor', 'body' => 'Testo di prova'])->id,
+        ],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
         str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],
         str_starts_with($route, 'horizon.') && str_ends_with($route, '.show'),

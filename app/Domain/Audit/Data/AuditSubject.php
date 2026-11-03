@@ -11,6 +11,7 @@ use App\Models\CompetitionSeason;
 use App\Models\FixtureMatch;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
+use App\Models\OnTopAsset;
 use App\Models\PartnershipTier;
 use App\Models\PriceList;
 use App\Models\Season;
@@ -109,6 +110,19 @@ final readonly class AuditSubject
         $label = is_string($label) ? $label : $priceList->season->code;
 
         return new self('price_list', $priceList->id, $detail === null ? $label : $label.' · '.$detail);
+    }
+
+    /**
+     * An on-top text of a price list (F2-03), e.g. "Listino 2027-28 · SS Lazio (LAZIO) · Match
+     * sponsor"; the general texts say "Generale" instead of the club.
+     */
+    public static function onTopAsset(PriceList $priceList, OnTopAsset $asset, ?Club $club): self
+    {
+        $general = __('catalog.on_top_general');
+        $owner = $club === null ? (is_string($general) ? $general : 'Generale') : $club->name.' ('.$club->code.')';
+        $subject = self::priceList($priceList, $owner.' · '.$asset->title);
+
+        return new self('on_top_asset', $asset->id, $subject->label);
     }
 
     /**

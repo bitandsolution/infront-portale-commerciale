@@ -1,10 +1,11 @@
 <?php
 
-use App\Domain\Catalog\Actions\SetLedPrice;
+use App\Domain\Catalog\Actions\SetPrice;
 use App\Domain\Catalog\Data\PriceChange;
 use App\Domain\Catalog\Exceptions\CatalogActionNotAllowed;
 use App\Enums\AuditAction;
 use App\Enums\AuditArea;
+use App\Enums\PriceKind;
 use App\Enums\PriceListStatus;
 use App\Models\Club;
 use App\Models\ClubEnrollment;
@@ -115,7 +116,7 @@ it('D-054, D-057: the admin writes the cost for 1′ per match in Italian notati
     $format = ledPriceListFormat('FILA_1');
 
     $this->actingAs($this->admin)
-        ->put(route('catalog.led-prices.update', $priceList), ['club_id' => $lazio->id, 'led_format_id' => $format->id, 'unit_price' => '3.157,89'])
+        ->put(route('catalog.prices.update', [$priceList, 'led']), ['club_id' => $lazio->id, 'column_id' => $format->id, 'amount' => '3.157,89'])
         ->assertSessionHasNoErrors()
         ->assertSessionHas('toast.message', 'Prezzo di SS Lazio, 1ª fila salvato');
 
@@ -134,11 +135,11 @@ it('D-333: changing a price records the value before and after; the same value w
     $priceList = PriceList::factory()->create();
     $club = ledPriceListClub(CompetitionSeason::factory()->create(['season_id' => $priceList->season_id]), 'Alfa');
     $format = ledPriceListFormat('DOMINATION');
-    $action = app(SetLedPrice::class);
+    $action = app(SetPrice::class);
 
-    expect($action->handle($priceList, $club, $format, '4736.84', $this->admin))->toBe(PriceChange::Created)
-        ->and($action->handle($priceList, $club, $format, '4800', $this->admin))->toBe(PriceChange::Updated)
-        ->and($action->handle($priceList, $club, $format, '4800.00', $this->admin))->toBe(PriceChange::Unchanged);
+    expect($action->handle($priceList, PriceKind::Led, $club, $format, '4736.84', $this->admin))->toBe(PriceChange::Created)
+        ->and($action->handle($priceList, PriceKind::Led, $club, $format, '4800', $this->admin))->toBe(PriceChange::Updated)
+        ->and($action->handle($priceList, PriceKind::Led, $club, $format, '4800.00', $this->admin))->toBe(PriceChange::Unchanged);
 
     $events = auditEventsOf(AuditAction::LedPriceUpdated);
     expect($events)->toHaveCount(2)
@@ -151,10 +152,10 @@ it('D-190: emptying the cell makes the format not available again: the row is re
     $priceList = PriceList::factory()->create();
     $club = ledPriceListClub(CompetitionSeason::factory()->create(['season_id' => $priceList->season_id]), 'Beta');
     $format = ledPriceListFormat('JUMBO');
-    app(SetLedPrice::class)->handle($priceList, $club, $format, '5263.16', $this->admin);
+    app(SetPrice::class)->handle($priceList, PriceKind::Led, $club, $format, '5263.16', $this->admin);
 
     $this->actingAs($this->admin)
-        ->put(route('catalog.led-prices.update', $priceList), ['club_id' => $club->id, 'led_format_id' => $format->id, 'unit_price' => ''])
+        ->put(route('catalog.prices.update', [$priceList, 'led']), ['club_id' => $club->id, 'column_id' => $format->id, 'amount' => ''])
         ->assertSessionHasNoErrors()
         ->assertSessionHas('toast.message', 'Beta, Jumbo: ora non disponibile');
 
@@ -167,8 +168,8 @@ it('M03 §8: the cost is ≥ 0 with at most 2 decimals, in Italian notation', fu
     $club = ledPriceListClub(CompetitionSeason::factory()->create(['season_id' => $priceList->season_id]), 'Gamma');
 
     $this->actingAs($this->admin)
-        ->put(route('catalog.led-prices.update', $priceList), ['club_id' => $club->id, 'led_format_id' => ledPriceListFormat('FILA_2')->id, 'unit_price' => $input])
-        ->assertSessionHasErrors('unit_price');
+        ->put(route('catalog.prices.update', [$priceList, 'led']), ['club_id' => $club->id, 'column_id' => ledPriceListFormat('FILA_2')->id, 'amount' => $input])
+        ->assertSessionHasErrors('amount');
 
     expect(LedPrice::query()->count())->toBe(0)
         ->and(auditEventsOf(AuditAction::LedPriceUpdated))->toHaveCount(0);
@@ -188,7 +189,7 @@ it('D-337: only the active Infront clubs enrolled in the season are rows of the 
         ClubEnrollment::query()->create(['competition_season_id' => CompetitionSeason::factory()->create(['season_id' => $priceList->season_id])->id, 'club_id' => $club->id]);
     }
 
-    expect(fn () => app(SetLedPrice::class)->handle($priceList, $club, ledPriceListFormat('FILA_1'), '100', $this->admin))
+    expect(fn () => app(SetPrice::class)->handle($priceList, PriceKind::Led, $club, ledPriceListFormat('FILA_1'), '100', $this->admin))
         ->toThrow(CatalogActionNotAllowed::class, 'Fuori listino non è un club Infront attivo iscritto a una competizione della stagione '.$priceList->season->code);
 })->with([
     'opponent' => [['is_infront' => false], true],
@@ -202,7 +203,7 @@ it('D-331: a deactivated format gets no new prices', function () {
     $format = ledPriceListFormat('JUMBO');
     $format->update(['is_active' => false]);
 
-    expect(fn () => app(SetLedPrice::class)->handle($priceList, $club, $format, '100', $this->admin))
+    expect(fn () => app(SetPrice::class)->handle($priceList, PriceKind::Led, $club, $format, '100', $this->admin))
         ->toThrow(CatalogActionNotAllowed::class, 'Il format Jumbo non è attivo: riattivalo da Catalogo, Valori');
 });
 
@@ -211,7 +212,7 @@ it('D-333: prices stay editable after the publication, each change with its audi
     $club = ledPriceListClub(CompetitionSeason::factory()->create(['season_id' => $priceList->season_id]), 'Epsilon');
 
     $this->actingAs($this->admin)
-        ->put(route('catalog.led-prices.update', $priceList), ['club_id' => $club->id, 'led_format_id' => ledPriceListFormat('FILA_1')->id, 'unit_price' => '2.526,32'])
+        ->put(route('catalog.prices.update', [$priceList, 'led']), ['club_id' => $club->id, 'column_id' => ledPriceListFormat('FILA_1')->id, 'amount' => '2.526,32'])
         ->assertSessionHasNoErrors();
 
     expect(ledPriceOf($priceList, $club, ledPriceListFormat('FILA_1')))->toBe('2526.32')
@@ -225,7 +226,7 @@ it('D-333: the price list of a closed season is read-only', function () {
     $season->update(['status' => 'closed']);
 
     $this->actingAs($this->admin)
-        ->put(route('catalog.led-prices.update', $priceList), ['club_id' => $club->id, 'led_format_id' => ledPriceListFormat('FILA_1')->id, 'unit_price' => '10'])
+        ->put(route('catalog.prices.update', [$priceList, 'led']), ['club_id' => $club->id, 'column_id' => ledPriceListFormat('FILA_1')->id, 'amount' => '10'])
         ->assertSessionHas('toast.message', "La stagione {$season->code} è chiusa: il suo listino è in sola lettura");
 
     $this->post(route('catalog.price-lists.publish', $priceList))
@@ -242,7 +243,7 @@ it('D-333: publishing is final, with date, author and the number of clubs withou
     $edition = CompetitionSeason::factory()->create(['season_id' => $priceList->season_id]);
     $offered = ledPriceListClub($edition, 'Alfa');
     ledPriceListClub($edition, 'Beta');
-    app(SetLedPrice::class)->handle($priceList, $offered, ledPriceListFormat('FILA_1'), '1000', $this->admin);
+    app(SetPrice::class)->handle($priceList, PriceKind::Led, $offered, ledPriceListFormat('FILA_1'), '1000', $this->admin);
 
     $this->actingAs($this->admin)
         ->post(route('catalog.price-lists.publish', $priceList))
@@ -273,7 +274,7 @@ it('D-337: the admin sees the grid club × format of the season, with the compet
     $lazio = ledPriceListClub($serieA, 'SS Lazio');
     $bari = ledPriceListClub($serieB, 'SSC Bari');
     Club::factory()->create(['name' => 'Avversario']);
-    app(SetLedPrice::class)->handle($priceList, $lazio, ledPriceListFormat('FILA_1'), '3157.89', $this->admin);
+    app(SetPrice::class)->handle($priceList, PriceKind::Led, $lazio, ledPriceListFormat('FILA_1'), '3157.89', $this->admin);
     $fila1 = (string) ledPriceListFormat('FILA_1')->id;
 
     $this->actingAs($this->admin)
@@ -281,18 +282,19 @@ it('D-337: the admin sees the grid club × format of the season, with the compet
         ->get(PortalPages::url('catalog_led'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Catalog/Led/Index')
+            ->component('Catalog/PriceList/Index')
+            ->where('page.kind', 'led')
             ->where('page.season.code', $season->code)
             ->where('page.canManage', true)
             ->where('page.priceList.status', 'draft')
             ->where('page.priceList.statusLabel', 'Bozza')
-            ->where('page.priceList.updateUrl', route('catalog.led-prices.update', $priceList))
+            ->where('page.priceList.updateUrl', route('catalog.prices.update', [$priceList, 'led']))
             ->where('page.competitions', [
                 ['id' => $serieA->competition_id, 'name' => 'Serie A'],
                 ['id' => $serieB->competition_id, 'name' => 'Serie B'],
             ])
-            ->has('page.formats', 4)
-            ->where('page.formats.0.code', 'JUMBO')
+            ->has('page.columns', 4)
+            ->where('page.columns.0.code', 'JUMBO')
             ->has('page.rows', 2)
             ->where('page.rows.0.name', 'SS Lazio')
             ->where('page.rows.0.competitionIds', [$serieA->competition_id])

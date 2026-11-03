@@ -69,6 +69,12 @@ return [
         'price_list_created' => 'Listino creato',
         'price_list_published' => 'Listino pubblicato',
         'led_price_updated' => 'Prezzo LED modificato',
+        'partnership_price_updated' => 'Prezzo partnership modificato',
+        'hospitality_price_updated' => 'Prezzo hospitality modificato',
+        'partnership_benefit_updated' => 'Benefit modificato',
+        'on_top_asset_created' => 'Testo on top aggiunto',
+        'on_top_asset_updated' => 'Testo on top modificato',
+        'on_top_asset_removed' => 'Testo on top tolto',
     ],
 
     'reasons' => [

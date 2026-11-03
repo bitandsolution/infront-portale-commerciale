@@ -273,3 +273,49 @@ declare module '@inertiajs/core' {
         sharedPageProps: SharedProps;
     }
 }
+
+/** Price list grids (F2-02, F2-03; PriceListPresenter on the server). */
+export interface PriceCell {
+    value: string;
+    display: string;
+}
+
+export interface PriceRow {
+    clubId: number;
+    name: string;
+    competitionIds: number[];
+    prices: Record<string, PriceCell | null>;
+    benefitsUrl: string | null;
+}
+
+export interface PriceColumn {
+    id: number;
+    code: string;
+    name: string;
+}
+
+export interface PriceListInfo {
+    id: number;
+    status: string;
+    statusLabel: string;
+    isPublished: boolean;
+    publishedAt: string | null;
+    publishedBy: string | null;
+    updateUrl: string;
+    publishUrl: string;
+}
+
+/** On-top texts of a price list, general or of a club (F2-03). */
+export interface OnTopItem {
+    id: number;
+    title: string;
+    body: string;
+    updateUrl: string;
+    removeUrl: string;
+}
+
+export interface OnTopData {
+    items: OnTopItem[];
+    createUrl: string;
+    clubId: number | null;
+}

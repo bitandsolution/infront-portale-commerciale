@@ -9,10 +9,11 @@ use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * One cell of the LED price list (M03 F-05, §8): the cost for 1′ per match in Italian notation
- * ("3.157,89"), ≥ 0 with at most 2 decimals (D-057); an empty cell means "not available" (D-190).
+ * One cell of a price list grid (M03 F-05, F-07, F-09, §8): club, value of the catalogue (format,
+ * tier or variant, after the kind of the route) and amount in Italian notation ("3.157,89"), ≥ 0
+ * with at most 2 decimals (D-057); an empty cell means "not available" (D-190).
  */
-class LedPriceRequest extends FormRequest
+class PriceCellRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -26,8 +27,8 @@ class LedPriceRequest extends FormRequest
     {
         return [
             'club_id' => ['bail', 'required', 'integer', 'exists:clubs,id'],
-            'led_format_id' => ['bail', 'required', 'integer', 'exists:led_formats,id'],
-            'unit_price' => ['nullable', 'string', 'max:30', function (string $attribute, mixed $value, Closure $fail): void {
+            'column_id' => ['bail', 'required', 'integer', 'min:1'],
+            'amount' => ['nullable', 'string', 'max:30', function (string $attribute, mixed $value, Closure $fail): void {
                 if (! is_string($value)) {
                     return;
                 }
@@ -54,9 +55,9 @@ class LedPriceRequest extends FormRequest
     /**
      * Decimal string with two decimals, or null for "not available" (empty field).
      */
-    public function unitPrice(): ?string
+    public function amount(): ?string
     {
-        $text = $this->string('unit_price')->trim()->toString();
+        $text = $this->string('amount')->trim()->toString();
 
         return $text === '' ? null : Amounts::parseItalian($text);
     }
