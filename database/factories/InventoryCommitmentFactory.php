@@ -41,12 +41,22 @@ class InventoryCommitmentFactory extends Factory
             'partnership_tier_id' => null,
             'hospitality_variant_id' => null,
             'quantity' => 60,
-            'starts_on' => fn (array $attributes): string => Season::query()->findOrFail($attributes['season_id'])->starts_on->toDateString(),
-            'ends_on' => fn (array $attributes): string => Season::query()->findOrFail($attributes['season_id'])->ends_on->toDateString(),
+            'starts_on' => fn (array $attributes): string => self::season($attributes)->starts_on->toDateString(),
+            'ends_on' => fn (array $attributes): string => self::season($attributes)->ends_on->toDateString(),
             'is_forced' => false,
             'forced_reason' => null,
             'created_by' => User::factory()->admin(),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private static function season(array $attributes): Season
+    {
+        $id = $attributes['season_id'];
+
+        return Season::query()->whereKey(is_int($id) || is_string($id) ? $id : 0)->firstOrFail();
     }
 
     public function forPool(InventoryPool $pool, int $seconds): static
