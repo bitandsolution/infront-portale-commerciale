@@ -30,6 +30,10 @@ use Illuminate\Support\Carbon;
  * @property-read Season $season
  * @property-read User|null $publisher
  * @property-read Collection<int, LedPrice> $ledPrices
+ * @property-read Collection<int, PartnershipPrice> $partnershipPrices
+ * @property-read Collection<int, HospitalityPrice> $hospitalityPrices
+ * @property-read Collection<int, PartnershipBenefit> $partnershipBenefits
+ * @property-read Collection<int, OnTopAsset> $onTopAssets
  */
 final class PriceList extends Model
 {
@@ -86,5 +90,37 @@ final class PriceList extends Model
     public function ledPrices(): HasMany
     {
         return $this->hasMany(LedPrice::class);
+    }
+
+    /**
+     * @return HasMany<PartnershipPrice, $this>
+     */
+    public function partnershipPrices(): HasMany
+    {
+        return $this->hasMany(PartnershipPrice::class);
+    }
+
+    /**
+     * @return HasMany<HospitalityPrice, $this>
+     */
+    public function hospitalityPrices(): HasMany
+    {
+        return $this->hasMany(HospitalityPrice::class);
+    }
+
+    /**
+     * @return HasMany<PartnershipBenefit, $this>
+     */
+    public function partnershipBenefits(): HasMany
+    {
+        return $this->hasMany(PartnershipBenefit::class);
+    }
+
+    /**
+     * @return HasMany<OnTopAsset, $this>
+     */
+    public function onTopAssets(): HasMany
+    {
+        return $this->hasMany(OnTopAsset::class);
     }
 }

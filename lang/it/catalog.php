@@ -24,6 +24,7 @@ return [
         'published' => 'Pubblicato',
     ],
     'price_list_label' => 'Listino :season',
+    'on_top_general' => 'Generale',
 
     // Names of the fields in the validation messages.
     'attributes' => [
@@ -35,6 +36,13 @@ return [
         'club_id' => 'club',
         'led_format_id' => 'format',
         'unit_price' => 'costo per 1′ a partita',
+        'column_id' => 'valore del catalogo',
+        'amount' => 'importo',
+        'partnership_tier_id' => 'livello di partnership',
+        'texts' => 'testi dei benefit',
+        'texts.*' => 'testo del benefit',
+        'title' => 'titolo',
+        'body' => 'testo',
     ],
 
     'validation' => [
@@ -48,10 +56,14 @@ return [
         'nothing_changed' => 'Nessuna modifica da salvare',
         'price_list_created' => 'Listino :season creato in bozza',
         'price_list_published' => 'Listino :season pubblicato: da ora è usato dal configuratore',
-        'led_price_created' => 'Prezzo di :club, :format salvato',
-        'led_price_updated' => 'Prezzo di :club, :format aggiornato',
-        'led_price_removed' => ':club, :format: ora non disponibile',
-        'led_price_unchanged' => 'Prezzo di :club, :format invariato',
+        'price_created' => 'Prezzo di :club, :value salvato',
+        'price_updated' => 'Prezzo di :club, :value aggiornato',
+        'price_removed' => ':club, :value: ora non disponibile',
+        'price_unchanged' => 'Prezzo di :club, :value invariato',
+        'benefits_saved' => 'Benefit di :club, :tier salvati',
+        'on_top_created' => 'Testo on top :title aggiunto',
+        'on_top_updated' => 'Testo on top :title salvato',
+        'on_top_removed' => 'Testo on top :title tolto',
     ],
 
     'errors' => [
@@ -59,6 +71,9 @@ return [
         'price_list_exists' => 'Il listino della stagione :season esiste già',
         'already_published' => 'Il listino :season è già pubblicato: la pubblicazione non si annulla',
         'club_not_in_grid' => ':club non è un club Infront attivo iscritto a una competizione della stagione :season',
-        'format_not_sold' => 'Il format :format non è attivo: riattivalo da Catalogo, Valori',
+        'not_sold_led' => 'Il format :value non è attivo: riattivalo da Catalogo, Valori',
+        'not_sold_partnership' => 'Il livello :value non è attivo: riattivalo da Catalogo, Valori',
+        'not_sold_hospitality' => 'La variante :value non è attiva: riattivala da Catalogo, Valori',
+        'free_package' => 'Il pacchetto :value non ha prezzo né benefit',
     ],
 ];
