@@ -5,6 +5,7 @@ namespace App\Support\Navigation;
 use App\Enums\Ability;
 use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\PriceListController;
+use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -96,6 +97,7 @@ final class PortalPages
         'catalog_led' => [PriceListController::class, 'led'],
         'catalog_partnership' => [PriceListController::class, 'partnership'],
         'catalog_hospitality' => [PriceListController::class, 'hospitality'],
+        'inventory_capacity' => [CapacityController::class, 'index'],
     ];
 
     /**

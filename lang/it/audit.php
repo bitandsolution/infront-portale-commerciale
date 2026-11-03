@@ -14,6 +14,7 @@ return [
         'settings' => 'Impostazioni',
         'sports' => 'Anagrafiche sportive',
         'catalog' => 'Catalogo e listini',
+        'inventory' => 'Magazzino',
     ],
 
     'actions' => [
@@ -75,6 +76,9 @@ return [
         'on_top_asset_created' => 'Testo on top aggiunto',
         'on_top_asset_updated' => 'Testo on top modificato',
         'on_top_asset_removed' => 'Testo on top tolto',
+        'pool_capacity_updated' => 'Capacità di un bacino LED modificata',
+        'partnership_capacity_updated' => 'Capacità di un livello di partnership modificata',
+        'hospitality_capacity_updated' => 'Capacità hospitality modificata',
     ],
 
     'reasons' => [

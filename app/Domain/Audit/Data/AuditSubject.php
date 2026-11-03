@@ -126,6 +126,14 @@ final readonly class AuditSubject
     }
 
     /**
+     * A capacity of the inventory (F2-04), e.g. "SS Lazio (LAZIO) · 2027-28 · 1ª fila (FILA_1)".
+     */
+    public static function capacity(int $id, Season $season, Club $club, string $resource): self
+    {
+        return new self('capacity', $id, $club->name.' ('.$club->code.') · '.$season->code.' · '.$resource);
+    }
+
+    /**
      * Login attempted with an e-mail that matches no user: only what was typed (M10-CA2).
      */
     public static function attemptedEmail(string $email): self

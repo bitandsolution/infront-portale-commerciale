@@ -172,7 +172,12 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Asset on top | `OnTopAsset` · `on_top_assets` |
 | Capacità (magazzino) | `PoolCapacity`, `PartnershipCapacity`, `HospitalityCapacity` |
 | Bacino gestito (flag) | `is_enabled` |
-| Impegno di magazzino | `InventoryCommitment` · `inventory_commitments` |
+| Impegno di magazzino | `InventoryCommitment` · `inventory_commitments` (`resource_type`: `InventoryResource` pool / partnership / hospitality; immutabile per trigger, solo rilascio una volta con `release_reason` `CommitmentReleaseReason` superseded / cancelled, D-192; FK verso le proposte con F5, D-334) |
+| Capacità di un club nella stagione (gestito + quantità, salvate insieme, conferma se sotto l'impegnato) | `SetClubCapacities` (`App\Domain\Inventory\Actions`) con `CapacityInput`; `CapacityBelowCommitted` (conferma, RB-10); eventi `pool_capacity.updated`, `partnership_capacity.updated`, `hospitality_capacity.updated`; area di audit `inventory` |
+| Residuo di magazzino (capacità − impegni aperti, metodo stagionale) | `InventoryAvailability` (`App\Domain\Inventory\Services`) → `ResourceAvailability`; con `per_match` rifiuta (D-293) |
+| Regola del magazzino che rifiuta l'operazione | `InventoryActionNotAllowed` (toast) |
+| Durate LED (secondi ↔ "28′30″", minuti digitati "28,5") | `LedDuration` (`App\Support`) |
+| Pagine "Magazzino › Capacità" e capacità di un club | `inventory_capacity`, `CapacityController`, rotte `inventory.capacities.edit` / `.update`; `InventoryPresenter` (`App\Support\Inventory`) |
 | Residuo | `remaining` (calcolato, mai salvato) |
 | Forzatura | `is_forced`, `forced_reason` |
 | Impostazioni | `Setting` · `settings` |

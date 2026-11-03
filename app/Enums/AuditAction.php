@@ -88,6 +88,11 @@ enum AuditAction: string
     case OnTopAssetUpdated = 'on_top_asset.updated';
     case OnTopAssetRemoved = 'on_top_asset.removed';
 
+    // F2-04: capacities of the inventory per season and club (D-191, D-337): area "inventory".
+    case PoolCapacityUpdated = 'pool_capacity.updated';
+    case PartnershipCapacityUpdated = 'partnership_capacity.updated';
+    case HospitalityCapacityUpdated = 'hospitality_capacity.updated';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
@@ -95,6 +100,7 @@ enum AuditAction: string
             'setting' => AuditArea::Settings,
             'season', 'competition', 'edition', 'stadium', 'club', 'club_alias', 'enrollment', 'match', 'calendar_import' => AuditArea::Sports,
             'led_format', 'partnership_tier', 'hospitality_variant', 'benefit_category', 'price_list', 'led_price', 'partnership_price', 'hospitality_price', 'partnership_benefit', 'on_top_asset' => AuditArea::Catalog,
+            'pool_capacity', 'partnership_capacity', 'hospitality_capacity' => AuditArea::Inventory,
             default => AuditArea::Users,
         };
     }

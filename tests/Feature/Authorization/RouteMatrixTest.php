@@ -148,6 +148,9 @@ function routeMatrix(): array
         // M04 — consultation (D-137); capacities only admin (D-137, M01-CA3)
         'pages.inventory_availability' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.inventory_capacity' => ['method' => 'GET', 'expected' => $admin],
+        // M04 — capacities of a club (D-191, D-337): admin only; the form is sent empty
+        'inventory.capacities.edit' => ['method' => 'GET', 'expected' => $admin],
+        'inventory.capacities.update' => ['method' => 'PUT', 'expected' => $adminForm],
 
         // M08 (D-109)
         'pages.content_slides' => ['method' => 'GET', 'expected' => $backOffice],
@@ -339,6 +342,10 @@ function matrixParameters(string $route): array
         in_array($route, ['catalog.benefits.show', 'catalog.benefits.update'], true) => ['priceList' => PriceList::factory()->create()->id, 'club' => Club::factory()->infront()->create()->id],
         in_array($route, ['catalog.on-top.update', 'catalog.on-top.destroy'], true) => [
             'onTopAsset' => OnTopAsset::query()->create(['price_list_id' => PriceList::factory()->create()->id, 'club_id' => null, 'title' => 'Match sponsor', 'body' => 'Testo di prova'])->id,
+        ],
+        in_array($route, ['inventory.capacities.edit', 'inventory.capacities.update'], true) => [
+            'club' => ($club = Club::factory()->infront()->create())->id,
+            'stagione' => ClubEnrollment::query()->create(['competition_season_id' => CompetitionSeason::factory()->create()->id, 'club_id' => $club->id])->competitionSeason->season_id,
         ],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
         str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],
