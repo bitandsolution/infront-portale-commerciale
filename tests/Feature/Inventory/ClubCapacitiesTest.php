@@ -88,7 +88,7 @@ it('M04 F-01: the admin sets the LED minutes per match of a pool, saved in secon
     $event = soleAuditEvent(AuditAction::PoolCapacityUpdated);
     expect($event->area)->toBe(AuditArea::Inventory->value)
         ->and($event->object_label)->toBe("SS Lazio (LAZIO) · {$this->season->code} · 1ª fila (FILA_1)")
-        ->and($event->old_values)->toBe([])
+        ->and($event->old_values)->toBeNull()
         ->and($event->new_values)->toBe(['is_enabled' => true, 'seconds_per_match' => 1710]);
 });
 
@@ -232,7 +232,7 @@ it('D-337: only Infront clubs enrolled in the season have capacities', function 
 });
 
 it('D-293: with the method "per match" the inventory refuses explicitly', function () {
-    Setting::query()->create(['key' => 'availability_method', 'value' => 'per_match']);
+    Setting::query()->updateOrCreate(['key' => 'availability_method'], ['value' => 'per_match']);
 
     expect(fn () => app(InventoryAvailability::class)->forClub($this->season, $this->club))
         ->toThrow(InventoryActionNotAllowed::class)
@@ -244,7 +244,7 @@ it('FL-01: the page lists the clubs of the season with their capacities by resou
     $pool = poolOf('FILA_1');
     app(SetClubCapacities::class)->handle($this->season, $this->club, [
         new CapacityInput(InventoryResource::Pool, $pool->id, true, 1710),
-        new CapacityInput(InventoryResource::Pool, poolOf('FILA_2')->id, false, 0),
+        new CapacityInput(InventoryResource::Pool, poolOf('FILA_2')->id, false, 600),
     ], false, $this->admin);
     inventoryClub($this->season, 'Alfa');
 

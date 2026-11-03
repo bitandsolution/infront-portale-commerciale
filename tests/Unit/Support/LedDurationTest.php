@@ -30,7 +30,8 @@ it('D-063: reads the minutes typed by the admin, with comma or point', function 
     ['-1', null],
     ['abc', null],
     ['', null],
-    ['1.000', 60000],
+    // The point is always the decimal separator here: minutes per match never reach the thousands.
+    ['1.000', 60],
 ]);
 
 it('writes the minutes for the input field without useless decimals', function (int $seconds, string $expected) {

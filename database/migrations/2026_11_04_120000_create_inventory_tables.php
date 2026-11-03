@@ -108,7 +108,7 @@ return new class extends Migration
         )');
         DB::statement("ALTER TABLE inventory_commitments ADD CONSTRAINT inventory_commitments_release_coherent CHECK (
             (released_at IS NULL AND released_by IS NULL AND release_reason IS NULL)
-            OR (released_at IS NOT NULL AND release_reason IN ('superseded', 'cancelled'))
+            OR (released_at IS NOT NULL AND release_reason IS NOT NULL AND release_reason IN ('superseded', 'cancelled'))
         )");
 
         DB::unprepared(<<<'SQL'
