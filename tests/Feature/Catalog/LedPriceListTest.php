@@ -316,16 +316,24 @@ it('D-137: the manager reads the price list without editing it', function () {
             ->where('page.withoutOffers', []));
 });
 
-it('shows the empty states: no season, and no price list yet for the season', function () {
+it('shows the empty state without any season', function () {
     $this->actingAs($this->admin)
         ->get(PortalPages::url('catalog_led'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('page', null));
+});
 
+/*
+ * A separate test: CurrentSeason is resolved once per request (scoped binding), and two requests of
+ * the same test share it.
+ */
+it('shows the empty state of a season without a price list, with the creation for the admin', function () {
     $season = Season::factory()->open()->create();
 
-    $this->withSession(['sports.season_id' => $season->id])
+    $this->actingAs($this->admin)
+        ->withSession(['sports.season_id' => $season->id])
         ->get(PortalPages::url('catalog_led'))
+        ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('page.priceList', null)
             ->where('page.canManage', true)
