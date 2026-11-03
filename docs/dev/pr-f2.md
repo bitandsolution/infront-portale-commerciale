@@ -1,6 +1,6 @@
 # Fetta F2 — M03 Catalogo e listini + M04 Capacità: elenco delle PR
 
-Stato: ✅ approvato (D-330…D-338, 2/11/2026).
+Stato: ✅ approvato (D-330…D-338, 2/11/2026). Unite: F2-01 (#57, D-339), F2-02 (#59, D-340, D-341).
 Periodo previsto: 10/12 – 23/12/2026 (D-243), avviata in anticipo. Riferimenti: pianificazione §6.1.3, `docs/specs/spec-M03-catalogo-listini.md`, `docs/specs/spec-M04-magazzino-disponibilita.md`, progettazione-tecnica §5.3.3, mockup "Listino LED" e "Magazzino".
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |
@@ -10,7 +10,7 @@ Periodo previsto: 10/12 – 23/12/2026 (D-243), avviata in anticipo. Riferimenti
 | **F2-03** Partnership e hospitality | Tabelle `partnership_prices`, `hospitality_prices`, `partnership_benefits`, `on_top_assets`. Pagine **Partnership** (prezzi club × livello, benefit per categoria, testi on top) e **Hospitality** (prezzo a posto club × variante); Libera senza prezzo | M03 F-07…F-10, RB-03, RB-04; **M03-CA7**; D-029, D-055, D-117, D-335 | F2-02 |
 | **F2-04** Capacità e impegni | Tabelle `pool_capacities`, `partnership_capacities`, `hospitality_capacities` (flag `is_enabled`), `inventory_commitments` senza FK verso le proposte (D-334). Pagina **Magazzino › Capacità** (solo admin), minuti a passi letti da `Settings`; servizio `InventoryAvailability` (residuo = capacità − impegni non rilasciati); avviso non bloccante sotto l'impegnato. Area di audit `inventory` | M04 F-01…F-03, RB-01, RB-08, RB-10, RB-12; **M04-CA10**; D-062, D-066, D-072, D-191, D-192, D-334 | F2-01 |
 | **F2-05** Vendibilità e disponibilità | Servizio `SellableOptions`: opzioni vendibili per club e stagione (listino pubblicato, prezzo presente, bacini attivi e gestiti; esaurito distinto da non gestito). Pagina **Magazzino › Disponibilità** (admin e gestore): capacità, impegnato, in attesa (vuota fino a F5), residuo, negativi evidenziati. Comando `inventory:availability` | **M03-CA4**, **M04-CA3**, **M04-CA4**; M04 F-06, F-09; D-065, D-066, D-071, D-085, D-337 | F2-02, F2-03, F2-04 |
-| **F2-06** Calcolo dei prezzi | Servizio `PriceCalculator`, unica implementazione per configuratore (F4) e documenti (F7): LED = costo per 1′ × secondi / 60 × partite da `MatchCounter`, arrotondato a 2 decimali solo sul club; partnership a prezzo fisso; hospitality = posti × prezzo a posto. Comando `catalog:price` | **M03-CA1, CA2, CA3, CA9**; RB-01, RB-03, RB-05; D-054, D-029, D-055, D-190, D-336 | F2-02, F2-03 |
+| **F2-06** Calcolo dei prezzi | Servizio `PriceCalculator`, unica implementazione per configuratore (F4) e documenti (F7): LED = costo per 1′ × secondi / 60 × partite da `MatchCounter`, arrotondato a 2 decimali solo sul club; partnership a prezzo fisso; hospitality = posti × prezzo a posto. Comando `catalog:price`. Nella pagina Listino LED il prezzo stagionale indicativo della cella selezionata (D-340) | **M03-CA1, CA2, CA3, CA9**; RB-01, RB-03, RB-05; D-054, D-029, D-055, D-190, D-336, D-340 | F2-02, F2-03 |
 
 Note:
 - F2-04 può procedere in parallelo a F2-02 e F2-03; F2-06 in parallelo a F2-05.
