@@ -111,10 +111,12 @@ final class InventoryPresenter
     }
 
     /**
+     * Competitions of the clubs of a grid, for the filter (also used by AvailabilityPresenter).
+     *
      * @param  iterable<Club>  $clubs
      * @return list<array{id: int, name: string}>
      */
-    private static function competitions(iterable $clubs): array
+    public static function competitions(iterable $clubs): array
     {
         $competitions = [];
 

@@ -176,6 +176,8 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Capacità di un club nella stagione (gestito + quantità, salvate insieme, conferma se sotto l'impegnato) | `SetClubCapacities` (`App\Domain\Inventory\Actions`) con `CapacityInput`; `CapacityBelowCommitted` (conferma, RB-10); eventi `pool_capacity.updated`, `partnership_capacity.updated`, `hospitality_capacity.updated`; area di audit `inventory` |
 | Residuo di magazzino (capacità − impegni aperti, metodo stagionale) | `InventoryAvailability` (`App\Domain\Inventory\Services`) → `ResourceAvailability`; con `per_match` rifiuta (D-293) |
 | Regola del magazzino che rifiuta l'operazione | `InventoryActionNotAllowed` (toast) |
+| Opzioni vendibili di un club per il configuratore (listino pubblicato, prezzo presente, bacini e contatori gestiti; esaurito distinto da non gestito) | `SellableOptions` (`App\Domain\Inventory\Services`, F2-05): `forClub()` → `ClubSellability` con le `SellableOption` di format, livelli e varianti; `selectableClubs()`. Stato `SellableStatus` (`available`, `sold_out`, `not_managed`, `not_available`); club non selezionabile `ClubSellabilityReason` (`not_in_season`, `no_price_list`, `price_list_draft`, `no_prices`) |
+| Pagina "Magazzino › Disponibilità" (admin e gestore, sola lettura) | `inventory_availability`, `AvailabilityController`, `AvailabilityPresenter` (`App\Support\Inventory`); comando `inventory:availability` |
 | Durate LED (secondi ↔ "28′30″", minuti digitati "28,5") | `LedDuration` (`App\Support`) |
 | Pagine "Magazzino › Capacità" e capacità di un club | `inventory_capacity`, `CapacityController`, rotte `inventory.capacities.edit` / `.update`; `InventoryPresenter` (`App\Support\Inventory`) |
 | Residuo | `remaining` (calcolato, mai salvato) |
@@ -318,6 +320,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan calendar-imports:prune  # import del calendario in anteprima da oltre 7 giorni: scartati (notturno in produzione, F1-04)
 ./vendor/bin/sail artisan sports:matches 2027-28 LAZIO --from=01/10/2027  # partite in casa, campagna e top match di club e periodo (sola lettura, F1-05)
 ./vendor/bin/sail artisan sports:import-legacy-clubs storage/app/private/club-idoc.csv --merge=8,20 --merge=11,39 --merge=21,35 --merge=25,36 --dry-run  # club dal vecchio sistema, una tantum (F1-06; senza --dry-run salva)
+./vendor/bin/sail artisan inventory:availability 2027-28 LAZIO  # disponibilità e opzioni vendibili di un club (sola lettura, F2-05)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
 ./vendor/bin/sail artisan documents:try # prova della pipeline PDF: deck di 40 slide, tempi, peso, PDF scaricabile da admin (solo sviluppo, S1-02; --samples con DOCUMENT_SAMPLES_PATH)
 ./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)
