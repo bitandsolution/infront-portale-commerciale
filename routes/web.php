@@ -9,6 +9,7 @@ use App\Http\Controllers\Catalog\BenefitController;
 use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\OnTopAssetController;
 use App\Http\Controllers\Catalog\PriceListController;
+use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\Inventory\CapacityController;
@@ -200,6 +201,16 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::get('clienti/settori/{commoditySector}', [CommoditySectorController::class, 'edit'])->whereNumber('commoditySector')->name('clients.sectors.edit');
             Route::put('clienti/settori/{commoditySector}', [CommoditySectorController::class, 'update'])->whereNumber('commoditySector')->name('clients.sectors.update');
         });
+
+        // Clients (M05 F-01, F-03, F-04; D-076, D-078, D-358). New client: agent and admin. Page and
+        // change of a client: ClientPolicy (the agent only his own, the manager read-only). Never
+        // deleted (C4, RB-06). The lists are the "clienti/miei" and "clienti" pages above.
+        Route::middleware('can:'.Ability::ClientsOwn->value)->group(function (): void {
+            Route::get('clienti/nuovo', [ClientController::class, 'create'])->name('clients.create');
+            Route::post('clienti', [ClientController::class, 'store'])->name('clients.store');
+        });
+        Route::get('clienti/{client}', [ClientController::class, 'edit'])->whereNumber('client')->name('clients.edit');
+        Route::put('clienti/{client}', [ClientController::class, 'update'])->whereNumber('client')->name('clients.update');
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.
         Route::get('catalogo/listini/{priceList}/club/{club}/benefit', [BenefitController::class, 'show'])

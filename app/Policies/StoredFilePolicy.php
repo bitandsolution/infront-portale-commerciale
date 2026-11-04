@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\Ability;
 use App\Enums\FilePurpose;
 use App\Enums\Role;
+use App\Models\Client;
 use App\Models\StoredFile;
 use App\Models\User;
 
@@ -13,7 +14,9 @@ use App\Models\User;
  *
  * Who may see a file depends on the entity that uses it, so each slice replaces the case of its
  * purpose with a check on that entity, with its own tests:
- * - client logo: who can see the client (F3);
+ * - client logo: the admin every logo; the others the current logo of a client they can see (F3-02:
+ *   the agent his own clients, the manager every client). A replaced logo stays admin only until the
+ *   documents of F7 point to it (RB-07);
  * - club logo: every active user (F1-02, D-321): logos are not reserved and the agent sees them in
  *   the configurator (F4); calendar import: who manages the calendars, admin and manager (F1-04,
  *   D-321);
@@ -30,7 +33,8 @@ class StoredFilePolicy
         return match ($file->purpose) {
             FilePurpose::ClubLogo => true,
             FilePurpose::CalendarImport => Ability::SportsCalendarsManage->allows($user->role),
-            FilePurpose::ClientLogo,
+            FilePurpose::ClientLogo => $user->role === Role::Admin
+                || Client::query()->visibleTo($user)->where('logo_file_id', $file->id)->exists(),
             FilePurpose::SlideImage,
             FilePurpose::GeneratedPdf => $user->role === Role::Admin,
         };

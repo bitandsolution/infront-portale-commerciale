@@ -186,6 +186,39 @@ export interface CommoditySectorRow {
     url: string;
 }
 
+/** One row of the client lists (ClientsPresenter::clientRow); the owner only for the back office. */
+export interface ClientRow {
+    id: number;
+    companyName: string;
+    vatNumber: string | null;
+    email: string;
+    sector: string;
+    contactName: string | null;
+    owner: string | null;
+    isActive: boolean;
+    logoUrl: string;
+    url: string;
+}
+
+/** The fields of the client form (ClientsPresenter::clientForm). */
+export interface ClientForm {
+    id: number;
+    companyName: string;
+    vatNumber: string;
+    email: string;
+    sectorId: number;
+    sectorFreeText: string;
+    contactName: string;
+    owner: string;
+    isActive: boolean;
+    logoUrl: string;
+}
+
+/** A sector of the client form, with the free-text flag (RB-04). */
+export interface SectorOption extends Option {
+    requiresFreeText: boolean;
+}
+
 /** One row of the Clubs page (SportsPresenter::clubRow). */
 export interface ClubRow {
     id: number;

@@ -5,6 +5,7 @@ namespace App\Domain\Audit\Data;
 use App\Enums\CatalogValueKind;
 use App\Enums\SettingKey;
 use App\Models\BenefitCategory;
+use App\Models\Client;
 use App\Models\Club;
 use App\Models\CommoditySector;
 use App\Models\Competition;
@@ -92,6 +93,17 @@ final readonly class AuditSubject
     public static function commoditySector(CommoditySector $sector): self
     {
         return new self('commodity_sector', $sector->id, $sector->name.' ('.$sector->code.')');
+    }
+
+    /**
+     * A client (F3-02), e.g. "Rossi Srl (P.IVA 01234567897)", or "Rossi Srl (cliente 12)" without a
+     * VAT number.
+     */
+    public static function client(Client $client): self
+    {
+        $reference = $client->vat_number !== null ? 'P.IVA '.$client->vat_number : 'cliente '.$client->id;
+
+        return new self('client', $client->id, $client->company_name.' ('.$reference.')');
     }
 
     public static function stadium(Stadium $stadium): self
