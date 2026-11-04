@@ -59,7 +59,7 @@ it('F-05, D-357: the admin creates a sector, with a code from the name and an au
     expect($event->area)->toBe('clients')
         ->and($event->user_role)->toBe('admin')
         ->and($event->object_label)->toBe('Sport & Fitness (SPORT_FITNESS)')
-        ->and($event->new_values)->toBe(['code' => 'SPORT_FITNESS', 'name' => 'Sport & Fitness', 'sort_order' => 250, 'is_active' => true]);
+        ->and($event->new_values)->toBe(['commodity_sector_code' => 'SPORT_FITNESS', 'name' => 'Sport & Fitness', 'sort_order' => 250, 'is_active' => true]);
 });
 
 it('D-357: the code drops accents, starts with a letter and gets a number when already used', function () {

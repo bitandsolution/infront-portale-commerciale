@@ -24,7 +24,7 @@ class CommoditySectorFactory extends Factory
             'name' => 'Settore di prova '.$number,
             'requires_free_text' => false,
             'is_active' => true,
-            'sort_order' => $number,
+            'sort_order' => fake()->numberBetween(1, 9999),
         ];
     }
 

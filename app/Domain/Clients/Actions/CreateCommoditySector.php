@@ -16,7 +16,8 @@ use Illuminate\Support\Str;
  * New commodity sector (M05 F-05; D-357): admin only. The code comes from the name and then never
  * changes (C3): capital letters without accents, other characters as "_", a number at the end when
  * the code is already used. A new sector never asks for a free text: only ALTRO_VARIE does (RB-04).
- * Audit commodity_sector.created with the code and every field.
+ * Audit commodity_sector.created with the code and every field: AuditLog drops the fields called
+ * "code" (like secrets), so the code is written as commodity_sector_code.
  */
 final class CreateCommoditySector
 {
@@ -40,7 +41,7 @@ final class CreateCommoditySector
                 $actor,
                 AuditSubject::commoditySector($sector),
                 [],
-                ['code' => $sector->code] + ClientsAuditValues::sector($sector),
+                ['commodity_sector_code' => $sector->code] + ClientsAuditValues::sector($sector),
             );
 
             return $sector;
