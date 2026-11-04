@@ -2,7 +2,9 @@
 
 namespace App\Support\Catalog;
 
+use App\Domain\Catalog\Services\PriceCalculator;
 use App\Domain\Catalog\Services\PriceListGrid;
+use App\Domain\Sports\Data\ClubMatchCount;
 use App\Enums\PriceKind;
 use App\Models\BenefitCategory;
 use App\Models\Club;
@@ -23,11 +25,18 @@ use App\Support\Sports\SportsPresenter;
  * the grids "Listini LED", "Partnership" and "Hospitality" (status of the price list, values of the
  * catalogue as columns, clubs as rows with their amounts as decimal string and Italian notation,
  * competitions of the filter, clubs without offers before the publication), and the page of the
- * benefit and on-top texts of a club.
+ * benefit and on-top texts of a club. In the LED grid every price carries the indicative seasonal
+ * price of 1′ per match for the whole season of the club (D-340), computed by PriceCalculator.
  */
 final class PriceListPresenter
 {
-    public function __construct(private readonly PriceListGrid $grid) {}
+    /** @var array<int, ClubMatchCount|null> matches of the whole season by club, one count per page */
+    private array $seasonMatches = [];
+
+    public function __construct(
+        private readonly PriceListGrid $grid,
+        private readonly PriceCalculator $calculator,
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -58,12 +67,13 @@ final class PriceListPresenter
                         ->map(fn (ClubEnrollment $enrollment): int => $enrollment->competitionSeason->competition_id)
                         ->unique()->values()->all(),
                     'prices' => $columns
-                        ->mapWithKeys(function (LedFormat|PartnershipTier|HospitalityVariant $value) use ($prices, $club): array {
+                        ->mapWithKeys(function (LedFormat|PartnershipTier|HospitalityVariant $value) use ($prices, $club, $kind, $season): array {
                             $price = $prices[$club->id][$value->id] ?? null;
 
                             return [(string) $value->id => $price === null ? null : [
                                 'value' => $price,
                                 'display' => Amounts::italian($price),
+                                'seasonal' => $kind === PriceKind::Led ? $this->seasonal($season, $club, $price) : null,
                             ]];
                         })
                         ->all(),
@@ -177,6 +187,29 @@ final class PriceListPresenter
         }
 
         return '';
+    }
+
+    /**
+     * Indicative seasonal price of a LED cell (D-340): 1′ per match for the home league matches of
+     * the whole season of the club; null when the club has no league in the season (D-328).
+     *
+     * @return array{display: string, matches: int, fromCalendar: bool}|null
+     */
+    private function seasonal(Season $season, Club $club, string $unitPrice): ?array
+    {
+        if (! array_key_exists($club->id, $this->seasonMatches)) {
+            $this->seasonMatches[$club->id] = $this->calculator->seasonMatches($season, $club);
+        }
+
+        $matches = $this->seasonMatches[$club->id];
+
+        if ($matches === null) {
+            return null;
+        }
+
+        $seasonal = $this->calculator->seasonal($matches, $unitPrice);
+
+        return ['display' => Amounts::italian($seasonal->price), 'matches' => $seasonal->matches, 'fromCalendar' => $seasonal->fromCalendar];
     }
 
     /**

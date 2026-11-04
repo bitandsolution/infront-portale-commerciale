@@ -165,6 +165,7 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Regola del catalogo che rifiuta l'operazione | `CatalogActionNotAllowed` (toast) |
 | Pagine "Catalogo › Listini LED", "Partnership", "Hospitality" (griglia comune, modifica in cella dell'admin, gestore in sola lettura) e pagina dei benefit e testi on top di un club | `catalog_led`, `catalog_partnership`, `catalog_hospitality`, `PriceListController`, `BenefitController`, `OnTopAssetController`; `PriceListPresenter` (`App\Support\Catalog`); componenti `PriceGridTable`, `OnTopTexts` |
 | Importi in euro: notazione italiana nei campi ("3.157,89"), stringhe decimali esatte nel codice | `Amounts` (`App\Support`, `brick/math`, D-336) |
+| Calcolo dei prezzi di listino (LED = costo per 1′ × secondi / 60 × partite, un solo arrotondamento al centesimo sul club; partnership a prezzo fisso; hospitality = posti × prezzo a posto) | `PriceCalculator` (`App\Domain\Catalog\Services`, F2-06): `quote()` → `Quote` con un `ClubQuote` per club (righe `HospitalityLine`), dalla scelta `ClubSelection`; solo listino pubblicato; `ledPrice()`, `hospitalityPrice()`; prezzo stagionale indicativo della pagina Listini LED `seasonalLedPrice()` → `SeasonalLedPrice` (D-340); comando `catalog:price` |
 | Costo per 1′ a partita (costo/cad) | `unit_price` su `led_prices` |
 | Prezzo stagionale partnership | `season_price` su `partnership_prices` |
 | Prezzo a posto hospitality | `seat_price` su `hospitality_prices` |
@@ -321,6 +322,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan sports:matches 2027-28 LAZIO --from=01/10/2027  # partite in casa, campagna e top match di club e periodo (sola lettura, F1-05)
 ./vendor/bin/sail artisan sports:import-legacy-clubs storage/app/private/club-idoc.csv --merge=8,20 --merge=11,39 --merge=21,35 --merge=25,36 --dry-run  # club dal vecchio sistema, una tantum (F1-06; senza --dry-run salva)
 ./vendor/bin/sail artisan inventory:availability 2027-28 LAZIO  # disponibilità e opzioni vendibili di un club (sola lettura, F2-05)
+./vendor/bin/sail artisan catalog:price 2027-28 LAZIO --format=FILA_1 --minutes=1,5 --tier=PREMIUM --seats=PREMIUM:2 --from=01/10/2027  # prezzi di listino di un club (sola lettura, F2-06)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
 ./vendor/bin/sail artisan documents:try # prova della pipeline PDF: deck di 40 slide, tempi, peso, PDF scaricabile da admin (solo sviluppo, S1-02; --samples con DOCUMENT_SAMPLES_PATH)
 ./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)

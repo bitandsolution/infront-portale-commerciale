@@ -754,10 +754,17 @@ return [
             'cell_label' => ':club, :value: :amount',
             'saving' => 'Salvataggio…',
             'benefits_link' => 'Benefit e testi on top di :club',
+            // Indicative seasonal price of the selected LED cell (D-340, F2-06), computed by the server.
+            'seasonal_hint' => ':club · :value: :unit €/partita ≈ :total € a stagione (1′ a partita per :matches partite, :source)',
+            'seasonal_calendar' => 'da calendario',
+            'seasonal_standard' => 'numero standard',
+            'seasonal_none' => ':club · :value: :unit €/partita. Prezzo stagionale non calcolabile: il club non è iscritto a un campionato della stagione',
+            'seasonal_prompt' => 'Seleziona una cella per vedere il prezzo stagionale indicativo (1′ a partita per le partite in casa della stagione)',
+            'select_cell' => 'Mostra il prezzo stagionale di :club, :value',
             'publish' => 'Pubblica listino',
             'publish_title' => 'Pubblicare il listino :season?',
             'publish_body' => 'Da quel momento il configuratore propone agli agenti i club e le opzioni con un prezzo. La pubblicazione non si annulla; i prezzi restano modificabili.',
-            'publish_warning' => 'Questi club non hanno ancora nessuna offerta LED o partnership e non compariranno nel configuratore:',
+            'publish_warning' => 'Questi club non hanno ancora nessuna offerta LED o partnership: nel configuratore compariranno solo se hanno un prezzo hospitality.',
             'publish_confirm' => 'Pubblica',
         ],
 

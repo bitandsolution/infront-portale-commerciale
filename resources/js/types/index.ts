@@ -278,6 +278,8 @@ declare module '@inertiajs/core' {
 export interface PriceCell {
     value: string;
     display: string;
+    /** Indicative seasonal price of a LED cell (D-340), computed by the server; null elsewhere. */
+    seasonal?: { display: string; matches: number; fromCalendar: boolean } | null;
 }
 
 export interface PriceRow {
