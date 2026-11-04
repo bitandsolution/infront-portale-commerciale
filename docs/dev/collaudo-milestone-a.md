@@ -9,7 +9,7 @@ La milestone si svolge in due tempi (D-353):
 | Tempo | Dove | Dati | Quando |
 |---|---|---|---|
 | **A1** | VM di collaudo | Fittizi (club del vecchio sistema, calendario e prezzi inventati) | Subito dopo la chiusura di F2 |
-| **A2** | Da decidere (vedi §5) | Calendario reale di Infront, listino e capacità reali di 2–3 club | All'arrivo del calendario (entro il 30/11/2026) |
+| **A2** | VM di collaudo, con l'eccezione di D-355 | Calendario reale di Infront, listino e capacità reali di 2–3 club | All'arrivo del calendario (entro il 30/11/2026) |
 
 Come si compila: per ogni passo segna ✅ (esito atteso), ❌ (diverso: annota cosa vedi) o ⏭ (saltato, con il motivo). Gli esiti con ❌ diventano una PR `fix/…` prima di R0.
 
@@ -87,7 +87,7 @@ Tutti i comandi si eseguono **nel terminale della VM** (collegamento da PowerShe
 
 ## 5. A2 — Dati reali
 
-Si svolge all'arrivo del calendario di Infront. ❓ **Ambiente da decidere** (D-261 e CLAUDE.md §7 vietano i dati reali sulla VM).
+Si svolge all'arrivo del calendario di Infront, **sulla VM** con l'eccezione di D-355: solo dati commerciali non personali reali (calendario, listino, capacità di 2–3 club), mai nel repository; partire da un'istantanea e chiudere con `sail artisan migrate:fresh --seed`.
 
 | # | Passo | Criterio | Esito atteso |
 |---|---|---|---|
@@ -104,3 +104,4 @@ Si svolge all'arrivo del calendario di Infront. ❓ **Ambiente da decidere** (D-
 | 6.2 | Istantanea della VM **"milestone A1"** | — |
 | 6.3 | **Produzione** su VM dedicata con root (D-354) conforme a R1–R7: pacchetti di `docs/dev/ambiente-locale.md`, tre utenti MariaDB (`docs/dev/database-utenti.md`), estensioni PHP `gd`, `fileinfo`, `zip`, `pcntl`, `posix`, processo permanente di Horizon, cron dello scheduler, struttura `releases/`/`shared/`/`current` e regola sudoers (`docs/dev/ci.md` §3), Chrome for Testing, qpdf, poppler-utils, font Interstate in `DOCUMENT_FONTS_PATH`, backup fuori dall'host (D-177) | Pronta entro il **15/1/2027** |
 | 6.4 | Primo deploy in produzione, `/health` = ok, `users:create-admin`, caricamento dei dati come al §4 (senza i passi "solo VM") | R0 entro il **18/1/2027** |
+| 6.5 | Dopo l'A2: `sail artisan migrate:fresh --seed` sulla VM (D-355) | Nessun dato reale resta sulla VM |
