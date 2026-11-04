@@ -4,6 +4,7 @@ use App\Models\AuditEvent;
 use App\Models\CommoditySector;
 use Database\Seeders\ClientsSystemDataSeeder;
 use Database\Seeders\SystemDataSeeder;
+use Illuminate\Database\QueryException;
 
 /*
 | System data of the clients (D-357): the 24 commodity sectors of M05 §6, run again at every release
@@ -36,7 +37,7 @@ it('D-295: running again creates nothing and keeps the changes of the admin', fu
 
 it('C9: the database refuses a code with lower-case letters and an empty name', function (array $row) {
     expect(fn () => CommoditySector::query()->insert($row + ['created_at' => now(), 'updated_at' => now()]))
-        ->toThrow(Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
 })->with([
     'code in lower case' => [['code' => 'abbigliamento', 'name' => 'Abbigliamento']],
     'empty name' => [['code' => 'VUOTO', 'name' => '   ']],
