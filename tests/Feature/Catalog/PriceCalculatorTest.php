@@ -209,10 +209,10 @@ it('D-103: the list total is the sum of the clubs at list prices, each club with
     ]);
 
     expect($quote->clubs[0]->total)->toBe('59999.91')
-        // 842,11 × 2 × 19 = 31.999,18 + 50.000
-        ->and($quote->clubs[1]->ledPrice)->toBe('31999.18')
-        ->and($quote->clubs[1]->total)->toBe('81999.18')
-        ->and($quote->listTotal)->toBe('141999.09')
+        // 842,11 × 2 × 19 = 32.000,18 + 50.000
+        ->and($quote->clubs[1]->ledPrice)->toBe('32000.18')
+        ->and($quote->clubs[1]->total)->toBe('82000.18')
+        ->and($quote->listTotal)->toBe('142000.09')
         ->and($quote->matchCount->totalMatches)->toBe(38);
 });
 
