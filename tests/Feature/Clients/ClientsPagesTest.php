@@ -150,7 +150,7 @@ it('M05-CA8, D-197: same name with two different VAT numbers is allowed, without
     $agent = User::factory()->agent()->create();
 
     $this->actingAs($agent)->post(route('clients.store'), clientsForm(['company_name' => 'Rossi Srl', 'vat_number' => '01234567897']))->assertSessionHasNoErrors();
-    // 09876543210 of the specification fails the check digit of D-361: 09876543217 is valid.
+    // D-362: the example VAT number of the specification is 09876543217 (09876543210 fails the check digit).
     $this->actingAs($agent)->post(route('clients.store'), clientsForm(['company_name' => 'Rossi Spa', 'vat_number' => '09876543217']))->assertSessionHasNoErrors();
     $this->actingAs($agent)->post(route('clients.store'), clientsForm(['company_name' => 'Rossi Spa', 'vat_number' => '']))
         ->assertSessionHasErrors(['duplicate' => CLIENTS_DUPLICATE]);
