@@ -101,7 +101,7 @@ flowchart LR
 | 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | ✅ Completata il 25/10/2026 (D-308…D-314). Sulla VM con Interstate: deck di 40 slide, **10,5 MB** (M09-CA4 ≤ 15 MB), **12,3 s** (composizione 2,9 · Chromium 1,8 · qpdf 0,2 · controlli 7,4); recap network con la grafica dell'originale (D-314). Da ripetere sullo staging |
 | 26/11 – 9/12 | **F1** M02 | 2 | ✅ Completata il 2/11/2026 (PR #31…#39, D-315…D-329). Import del calendario provato con file fittizi: il calendario reale di Infront è atteso entro il 30/11 |
 | 10/12 – 23/12 | **F2** M03 + M04 | 2 | ✅ Completata il 4/11/2026 (F2-01…F2-06, PR #57…#66, D-330…D-351). Catalogo, listino bozza/pubblicato con prezzi LED, partnership e hospitality, benefit e testi on top, capacità con flag "gestito", impegni immutabili, servizi `InventoryAvailability`, `SellableOptions` e `PriceCalculator`, pagina Disponibilità |
-| 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | |
+| 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | Anticipato in due tempi (D-353): **A1** sulla VM con dati fittizi da novembre 2026, **A2** con il calendario reale di Infront; checklist `docs/dev/collaudo-milestone-a.md` |
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
 | 7/1 – 13/1 | **F3** M05 | 1 | |
 | 14/1 – 3/2 | **F4** M06 | 3 | |
@@ -162,6 +162,7 @@ Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248). Con
 | `docs/dev/pr-f0.md` | Le 10 PR della fetta F0 |
 | `docs/dev/pr-f1.md` | Le 6 PR della fetta F1 (D-315) |
 | `docs/dev/pr-f2.md` | Le 6 PR della fetta F2 (D-330) |
+| `docs/dev/collaudo-milestone-a.md` | Checklist della milestone A e traccia di R0 (D-353) |
 | `docs/registro-decisioni.md`, `pianificazione.md`, `progettazione-tecnica.md`, `ux-architettura.md`, `features-evolutive.md` | Copie dei documenti di progetto |
 
 ### 6.3.1 Esito della verifica dei layout (sintesi; dettaglio in `docs/layout-dinamici.md`)
