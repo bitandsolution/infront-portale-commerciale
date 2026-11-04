@@ -76,7 +76,7 @@ final class ClientsPresenter
      * Sectors that can be chosen: the active ones, plus the current sector of the client even when
      * deactivated (RB-08). The free-text flag lets the form show the free-text field (RB-04).
      *
-     * @return list<array{value: string, label: string, requiresFreeText: bool}>
+     * @return array<int, array{value: string, label: string, requiresFreeText: bool}>
      */
     public static function sectorOptions(?Client $client = null): array
     {
@@ -98,7 +98,7 @@ final class ClientsPresenter
     /**
      * Active agents the admin can choose as owner of a new client (D-358).
      *
-     * @return list<array{value: string, label: string}>
+     * @return array<int, array{value: string, label: string}>
      */
     public static function ownerOptions(): array
     {
