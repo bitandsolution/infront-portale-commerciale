@@ -20,7 +20,8 @@
         "openspout/openspout": "^4.0",
         "sentry/sentry-laravel": "^4.0",
         "spatie/browsershot": "^5.4",
-        "symfony/mime": "^8.1.10"
+        "symfony/mime": "^8.1.10",
+        "symfony/serializer": "^8.1.11"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
