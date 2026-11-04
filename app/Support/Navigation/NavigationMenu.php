@@ -36,7 +36,10 @@ final class NavigationMenu
                 new NavigationItem('proposals_pending', 'FileText', $backOffice),
                 new NavigationItem('proposals_all', 'FileText', $backOffice),
             ]),
-            new NavigationItem('clients', 'Users', $backOffice),
+            new NavigationItem('clients_area', 'Users', $backOffice, [
+                new NavigationItem('clients', 'Users', $backOffice),
+                new NavigationItem('clients_sectors', 'Users', $admin),
+            ]),
             new NavigationItem('catalog', 'Tags', $backOffice, [
                 new NavigationItem('catalog_led', 'Tags', $backOffice),
                 new NavigationItem('catalog_partnership', 'Tags', $backOffice),

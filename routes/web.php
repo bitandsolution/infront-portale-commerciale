@@ -9,6 +9,7 @@ use App\Http\Controllers\Catalog\BenefitController;
 use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\OnTopAssetController;
 use App\Http\Controllers\Catalog\PriceListController;
+use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\PlaceholderPageController;
@@ -189,6 +190,15 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::put('anagrafiche/partite/{fixtureMatch}', [MatchController::class, 'update'])->whereNumber('fixtureMatch')->name('sports.matches.update');
             Route::post('anagrafiche/partite/{fixtureMatch}/annulla', [MatchController::class, 'cancel'])->whereNumber('fixtureMatch')->name('sports.matches.cancel');
             Route::post('anagrafiche/partite/{fixtureMatch}/ripristina', [MatchController::class, 'restore'])->whereNumber('fixtureMatch')->name('sports.matches.restore');
+        });
+
+        // Commodity sectors (M05 F-05; D-357): admin only. The list is the "clienti/settori" page
+        // above; sectors are deactivated, never deleted (RB-08).
+        Route::middleware('can:'.Ability::CommoditySectorsManage->value)->group(function (): void {
+            Route::get('clienti/settori/nuovo', [CommoditySectorController::class, 'create'])->name('clients.sectors.create');
+            Route::post('clienti/settori', [CommoditySectorController::class, 'store'])->name('clients.sectors.store');
+            Route::get('clienti/settori/{commoditySector}', [CommoditySectorController::class, 'edit'])->whereNumber('commoditySector')->name('clients.sectors.edit');
+            Route::put('clienti/settori/{commoditySector}', [CommoditySectorController::class, 'update'])->whereNumber('commoditySector')->name('clients.sectors.update');
         });
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.

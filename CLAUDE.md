@@ -188,7 +188,7 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Lettura delle impostazioni (predefinito se la riga manca) / modifica dall'admin | `Settings` (`App\Domain\Settings\Services`) / `UpdateSettings` (`App\Domain\Settings\Actions`) |
 | Metodo di calcolo della disponibilità | `AvailabilityMethod`: `seasonal` (Stagionale), `per_match` (Per partita, futuro) |
 | Dati di sistema (impostazioni, poi cataloghi) | `SystemDataSeeder`, idempotente, in ogni ambiente e a ogni deploy |
-| Settore merceologico | `CommoditySector` · `commodity_sectors` |
+| Settore merceologico | `CommoditySector` · `commodity_sectors` (`code` stabile; `requires_free_text` solo per ALTRO_VARIE = `CommoditySector::OTHER`, RB-04); 24 voci da `ClientsSystemDataSeeder` (D-357); pagina "Clienti › Settori" (`clients_sectors`, solo admin, `Ability::CommoditySectorsManage`), Action `CreateCommoditySector` (codice dal nome, `codeFor()`) e `UpdateCommoditySector` (nome, ordine, attivo; mai cancellato, RB-08); area di audit `clients`, eventi `commodity_sector.created` / `.updated` |
 | Cliente | `Client` · `clients` |
 | Ragione sociale | `company_name` (+ `company_name_normalized`) |
 | P.IVA | `vat_number` |

@@ -30,8 +30,10 @@ return [
         'proposals_pending' => 'Da approvare',
         'proposals_all' => 'Tutte',
 
-        'clients' => 'Clienti',
+        'clients_area' => 'Clienti',
+        'clients' => 'Elenco clienti',
         'clients_mine' => 'I miei clienti',
+        'clients_sectors' => 'Settori',
 
         'catalog' => 'Catalogo',
         'catalog_led' => 'Listini LED',
@@ -943,5 +945,41 @@ return [
         'forbidden_title' => 'Accesso non consentito',
         'forbidden' => 'Non hai i permessi per questa funzione',
         'too_many_requests' => 'Troppe richieste in poco tempo: attendi qualche minuto e riprova',
+    ],
+
+    'clients' => [
+        'active' => 'Attivo',
+        'inactive' => 'Non attivo',
+
+        'sectors' => [
+            'intro' => 'Settori merceologici dei clienti: servono per la classificazione e i report, non creano vincoli di esclusività. Un settore non si cancella: disattivato, non si sceglie più per i nuovi clienti.',
+            'new' => 'Nuovo settore',
+            'count' => ':count settori',
+            'empty_title' => 'Nessun settore',
+            'empty_message' => 'I settori iniziali arrivano con i dati di sistema: esegui il seeder dei dati di sistema.',
+            'search' => 'Cerca per nome o codice',
+            'open' => 'Apri il settore :sector',
+            'free_text' => 'Chiede un testo libero',
+            'columns' => [
+                'order' => 'Ordine',
+                'name' => 'Settore',
+                'code' => 'Codice',
+                'free_text' => 'Testo libero',
+                'status' => 'Stato',
+            ],
+            'fields' => [
+                'name' => 'Nome',
+                'sort_order' => 'Ordine',
+                'sort_order_help' => 'Posizione nell\'elenco dei settori, dal più piccolo.',
+                'is_active' => 'Settore attivo',
+                'is_active_help' => 'Un settore disattivato non si sceglie più per i nuovi clienti; i clienti che lo usano lo mantengono.',
+            ],
+            'code_help' => 'Il codice si ricava dal nome alla creazione e poi non cambia.',
+            'free_text_help' => 'Con questo settore il cliente deve indicare anche un testo libero.',
+            'create_title' => 'Nuovo settore',
+            'save' => 'Salva il settore',
+            'create' => 'Crea il settore',
+            'back' => 'Torna ai settori',
+        ],
     ],
 ];

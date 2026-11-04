@@ -15,6 +15,7 @@ return [
         'sports' => 'Anagrafiche sportive',
         'catalog' => 'Catalogo e listini',
         'inventory' => 'Magazzino',
+        'clients' => 'Clienti',
     ],
 
     'actions' => [
@@ -79,6 +80,8 @@ return [
         'pool_capacity_updated' => 'Capacità di un bacino LED modificata',
         'partnership_capacity_updated' => 'Capacità di un livello di partnership modificata',
         'hospitality_capacity_updated' => 'Capacità hospitality modificata',
+        'commodity_sector_created' => 'Settore merceologico creato',
+        'commodity_sector_updated' => 'Settore merceologico modificato',
     ],
 
     'reasons' => [

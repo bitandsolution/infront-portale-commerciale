@@ -175,6 +175,17 @@ export interface StadiumRow {
     url: string;
 }
 
+/** One row of the Sectors page (ClientsPresenter::sectorRow). */
+export interface CommoditySectorRow {
+    id: number;
+    code: string;
+    name: string;
+    requiresFreeText: boolean;
+    isActive: boolean;
+    sortOrder: number;
+    url: string;
+}
+
 /** One row of the Clubs page (SportsPresenter::clubRow). */
 export interface ClubRow {
     id: number;
