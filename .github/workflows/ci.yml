@@ -231,6 +231,8 @@ jobs:
                           .github/scripts/run.sh "composer resolve" composer update $missing --with-dependencies --no-interaction --no-progress --no-install --no-scripts
                       fi
                   fi
+                  composer audit --locked --no-interaction --format=json > /tmp/audit.json || true
+                  php -r '$a=json_decode(file_get_contents("/tmp/audit.json"),true)["advisories"]??[]; foreach($a as $pkg=>$list){ $v=[]; foreach($list as $x){$v[]=$x["advisoryId"]." [".$x["affectedVersions"]."]";} echo "::error::TEMP audit ".$pkg.": ".implode(" | ",array_map(fn($s)=>substr($s,-90),$v)).PHP_EOL; }'
                   .github/scripts/run.sh "composer audit" composer audit --locked --no-interaction
             - name: npm audit (high and critical)
               run: npm audit --audit-level=high
