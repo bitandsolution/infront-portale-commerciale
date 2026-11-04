@@ -4,6 +4,11 @@ updates:
       directory: /
       schedule:
           interval: weekly
+      ignore:
+          # OpenSpout 5 breaks the calendar import tests: stay on 4.x until a
+          # dedicated PR evaluates it (D-352). Minor and patch updates still arrive.
+          - dependency-name: openspout/openspout
+            update-types: ["version-update:semver-major"]
     - package-ecosystem: npm
       directory: /
       schedule:
