@@ -40,7 +40,7 @@ function clientsForm(array $overrides = []): array
         'vat_number' => '',
         'email' => 'Info@Rossi.example',
         'contact_name' => 'Mario Rossi',
-        'commodity_sector_id' => (string) CommoditySector::factory()->create(['name' => 'Abbigliamento'])->id,
+        'commodity_sector_id' => (string) CommoditySector::factory()->create()->id,
         'sector_free_text' => '',
         'logo' => clientsLogo(),
     ], $overrides);
