@@ -298,7 +298,11 @@ it('D-337: the admin sees the grid club × format of the season, with the compet
             ->has('page.rows', 2)
             ->where('page.rows.0.name', 'SS Lazio')
             ->where('page.rows.0.competitionIds', [$serieA->competition_id])
-            ->where("page.rows.0.prices.{$fila1}", ['value' => '3157.89', 'display' => '3.157,89'])
+            ->where("page.rows.0.prices.{$fila1}", [
+                'value' => '3157.89',
+                'display' => '3.157,89',
+                'seasonal' => ['display' => '59.999,91', 'matches' => 19, 'fromCalendar' => false],
+            ])
             ->where('page.rows.1.clubId', $bari->id)
             ->where("page.rows.1.prices.{$fila1}", null)
             ->where('page.withoutOffers', ['SSC Bari']));

@@ -150,7 +150,7 @@ it('D-335: the partnership page shows the tiers, the link to the benefits of eve
             ->where('page.kind', 'partnership')
             ->has('page.columns', 4)
             ->where('page.priceList.updateUrl', route('catalog.prices.update', [$priceList, 'partnership']))
-            ->where("page.rows.0.prices.{$top}", ['value' => '180000.00', 'display' => '180.000,00'])
+            ->where("page.rows.0.prices.{$top}", ['value' => '180000.00', 'display' => '180.000,00', 'seasonal' => null])
             ->where('page.rows.0.benefitsUrl', route('catalog.benefits.show', [$priceList, $club]))
             ->where('page.onTop.items', [])
             ->where('page.onTop.clubId', null)

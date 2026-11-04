@@ -33,6 +33,36 @@ final class CatalogActionNotAllowed extends RuntimeException
         return new self(Text::get('catalog.errors.already_published', ['season' => $season]));
     }
 
+    /** M03 RB-09: a proposal uses only the published price list of its season. */
+    public static function priceListNotPublished(string $season): self
+    {
+        return new self(Text::get('catalog.errors.price_list_not_published', ['season' => $season]));
+    }
+
+    /** D-190, M03-CA4: an empty cell of the grid is "not available" for the club. */
+    public static function priceNotAvailable(string $value, string $club, string $season): self
+    {
+        return new self(Text::get('catalog.errors.price_not_available', ['value' => $value, 'club' => $club, 'season' => $season]));
+    }
+
+    /** D-063: the LED minutes go in steps of the settings. */
+    public static function ledStep(string $club, string $step): self
+    {
+        return new self(Text::get('catalog.errors.led_step', ['club' => $club, 'step' => $step]));
+    }
+
+    /** D-147: at most the seats of the settings per club in a proposal. */
+    public static function tooManySeats(string $club, int $max): self
+    {
+        return new self(Text::get('catalog.errors.too_many_seats', ['club' => $club, 'max' => (string) $max]));
+    }
+
+    /** M06 §4, D-088: one row per club, one format per club, seats from 1, one line per variant. */
+    public static function invalidSelection(): self
+    {
+        return new self(Text::get('catalog.errors.invalid_selection'));
+    }
+
     /** D-337: the rows of the grid are the active Infront clubs enrolled in the season. */
     public static function clubNotInGrid(string $club, string $season): self
     {

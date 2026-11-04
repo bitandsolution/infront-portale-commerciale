@@ -30,6 +30,42 @@ const visibleRows = computed(() => {
 });
 
 const editing = ref<{ clubId: number; columnId: number; initial: string } | null>(null);
+// Cell of the indicative seasonal price under the LED grid (D-340): the last one edited or chosen.
+const selected = ref<{ clubId: number; columnId: number } | null>(null);
+const showsSeasonal = computed(() => props.kind === 'led');
+
+function isSelected(row: PriceRow, columnId: number): boolean {
+    return selected.value?.clubId === row.clubId && selected.value.columnId === columnId;
+}
+
+function select(row: PriceRow, columnId: number): void {
+    selected.value = { clubId: row.clubId, columnId };
+}
+
+const seasonalHint = computed(() => {
+    const cell = selected.value;
+    if (!showsSeasonal.value || cell === null) {
+        return t('catalog.price_list.seasonal_prompt');
+    }
+    const row = props.rows.find((item) => item.clubId === cell.clubId);
+    const column = props.columns.find((item) => item.id === cell.columnId);
+    const amount = row ? (row.prices[String(cell.columnId)] ?? null) : null;
+    if (!row || !column || amount === null) {
+        return t('catalog.price_list.seasonal_prompt');
+    }
+    if (!amount.seasonal) {
+        return t('catalog.price_list.seasonal_none', { club: row.name, value: column.name, unit: amount.display });
+    }
+
+    return t('catalog.price_list.seasonal_hint', {
+        club: row.name,
+        value: column.name,
+        unit: amount.display,
+        total: amount.seasonal.display,
+        matches: String(amount.seasonal.matches),
+        source: t(amount.seasonal.fromCalendar ? 'catalog.price_list.seasonal_calendar' : 'catalog.price_list.seasonal_standard'),
+    });
+});
 const draft = ref('');
 const cellError = ref<string | null>(null);
 const saving = ref(false);
@@ -48,6 +84,7 @@ async function startEditing(row: PriceRow, columnId: number): Promise<void> {
         return;
     }
     const initial = price(row, columnId)?.display ?? '';
+    select(row, columnId);
     editing.value = { clubId: row.clubId, columnId, initial };
     draft.value = initial;
     cellError.value = null;
@@ -246,11 +283,22 @@ function cellLabel(row: PriceRow, column: PriceColumn): string {
                                 v-else-if="editable"
                                 type="button"
                                 class="inline-flex min-h-11 w-full items-center justify-end rounded-lg px-2 hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
-                                :class="price(row, column.id) ? 'text-ink' : 'text-muted'"
+                                :class="[price(row, column.id) ? 'text-ink' : 'text-muted', showsSeasonal && isSelected(row, column.id) ? 'bg-accent-soft' : '']"
                                 :aria-label="cellLabel(row, column)"
                                 @click="startEditing(row, column.id)"
                             >
                                 {{ price(row, column.id)?.display ?? t('catalog.price_list.not_available') }}
+                            </button>
+                            <button
+                                v-else-if="showsSeasonal && price(row, column.id)"
+                                type="button"
+                                class="inline-flex min-h-11 w-full items-center justify-end rounded-lg px-2 text-ink hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
+                                :class="isSelected(row, column.id) ? 'bg-accent-soft' : ''"
+                                :aria-label="t('catalog.price_list.select_cell', { club: row.name, value: column.name })"
+                                :aria-pressed="isSelected(row, column.id)"
+                                @click="select(row, column.id)"
+                            >
+                                {{ price(row, column.id)?.display }}
                             </button>
                             <span
                                 v-else
@@ -265,5 +313,13 @@ function cellLabel(row: PriceRow, column: PriceColumn): string {
                 </tbody>
             </table>
         </div>
+
+        <p
+            v-if="showsSeasonal && columns.length > 0 && rows.length > 0"
+            class="text-[13px] text-muted"
+            aria-live="polite"
+        >
+            {{ seasonalHint }}
+        </p>
     </div>
 </template>
