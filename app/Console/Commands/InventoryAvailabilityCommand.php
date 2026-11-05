@@ -35,7 +35,6 @@ final class InventoryAvailabilityCommand extends Command
     public function handle(InventoryAvailability $availability, SellableOptions $sellable): int
     {
         $seasonCode = $this->argument('season');
-        $seasonCode = is_string($seasonCode) ? $seasonCode : '';
         $season = Season::query()->where('discipline_id', Discipline::default()->id)->where('code', $seasonCode)->first();
 
         if ($season === null) {
@@ -45,7 +44,6 @@ final class InventoryAvailabilityCommand extends Command
         }
 
         $clubCode = $this->argument('club');
-        $clubCode = is_string($clubCode) ? $clubCode : '';
         $club = Club::query()->where('code', mb_strtoupper($clubCode))->first();
 
         if ($club === null) {
