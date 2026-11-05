@@ -1,0 +1,17 @@
+# Fetta F3 — M05 Clienti: elenco delle PR
+
+Stato: ✅ approvato (D-356…D-361, 4/11/2026).
+Periodo previsto: 7/1 – 13/1/2027 (D-243), avviata in anticipo in parallelo al collaudo della milestone A (D-353). Riferimenti: pianificazione §6.1.3, `docs/specs/spec-M05-clienti.md`, `docs/specs/spec-M01-utenti-ruoli-notifiche.md` (§4 matrice, CA 4), progettazione-tecnica §5.3.4, ux-architettura (navigazione per ruolo, stati, dialog "Cliente duplicato").
+
+| PR | Contenuto | Criteri e decisioni | Dipende da |
+|---|---|---|---|
+| **F3-01** Settori merceologici | Tabella `commodity_sectors` (`code` stabile, `name`, `requires_free_text`, `is_active`, `sort_order`). Le 24 voci di M05 §6 dal `SystemDataSeeder` (`ClientsSystemDataSeeder`), con "Industria/Edilizia/Attività" corretta e ALTRO_VARIE con testo libero obbligatorio. Pagina **Clienti › Settori** (solo admin, `Ability::CommoditySectorsManage`, nuova voce di menu): nuovo settore (codice ricavato dal nome, poi fisso), nome, ordine, attivo; nessuna cancellazione. Area di audit `clients` | M05 F-05, RB-04, RB-08; D-075, D-357 | — |
+| **F3-02** Anagrafica clienti | Tabella `clients` (progettazione-tecnica §5.3.4: UQ `vat_number`, IDX `company_name_normalized` e `owner_id`, `merged_into_id`). Servizi `CompanyNameNormalizer` e `VatNumber` (D-361), controllo dei duplicati su tutta l'anagrafica con messaggio neutro (RB-02, RB-03, D-197). Action `CreateClient`, `UpdateClient` (nuovo logo = nuovo file, mai sovrascritto); logo con `FileStorage` (`client_logo`) e caso `client_logo` in `StoredFilePolicy`. Pagine **I miei clienti** (agente: elenco, nuovo, modifica dei propri), **Clienti** (admin: tutti, nuovo con agente proprietario obbligatorio, D-358; gestore in sola lettura). Scope `HasOwner` sul modello (si toglie l'eccezione di Larastan) | **M05-CA1, CA2, CA3, CA4, CA8**; CA5 per la parte F3; M05 F-01, F-03, F-04, RB-01…RB-04, §8; D-074…D-081, D-196, D-197, D-358, D-361 | F3-01 |
+| **F3-03** Assegnazione, unione, disattivazione | Action `ReassignClient` (a un agente attivo; le proposte restano all'agente originale, D-083), `MergeClients` (resta il cliente scelto con i suoi dati, l'altro diventa non attivo con `merged_into_id`; lo spostamento delle proposte si aggiunge in F5, D-359), `DeactivateClient` / `ReactivateClient`; nessuna rotta di cancellazione. Filtri dell'elenco admin: agente, stato, "di agenti disattivati" (D-360) | **M05-CA6**, **CA7** (parte F3); M05 F-07, F-08, F-09, RB-06; D-082, D-083, D-359 | F3-02 |
+| **F3-04** Agente disattivato | Il dialogo "Disattiva utente" della pagina Utenti mostra quanti clienti ha l'agente e propone di riassegnarli tutti a un agente attivo scelto, nella stessa transazione della disattivazione; la riassegnazione è facoltativa (D-360) | **M01-CA4**; D-082, D-282, D-360 | F3-03 |
+
+Note:
+- F3-01 e F3-02 si possono sviluppare in sequenza stretta; F3-04 tocca la pagina Utenti della PR-04.
+- Ogni nuova rotta entra nel test di matrice (D-215); ogni scrittura scrive il suo evento di audit nell'area `clients`.
+- Fuori da F3: ricerca dei clienti nel configuratore (F-02, FL-01) in F4; scheda cliente con le proposte collegate (F-06), spostamento delle proposte nell'unione e "cliente con proposte non cancellabile" sulle proposte reali in F5; logo congelato nei documenti già generati (M05-CA5) verificato in F7.
+- I clienti non hanno `code`: non sono esposti via API (D-217).

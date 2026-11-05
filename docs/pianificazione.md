@@ -67,7 +67,7 @@ flowchart LR
 | **F1** | M02 Anagrafiche sportive | Discipline, stagioni, competizioni, edizioni, iscrizioni, club con alias, stadi, giornate, partite; import Excel con anteprima e alias; calcolo partite (F-12) con RB-05 (D-187) e top match; script dei club dal dump (D-229). Elenco delle PR: `docs/dev/pr-f1.md` (D-315…D-322) | F0 | M02: 1–8 |
 | **F2** | M03 Catalogo e listini + M04 Capacità | Catalogo; listino per stagione bozza/pubblicato a griglia; prezzi; testi on top e benefit facoltativi; capacità con flag "gestito"; vista disponibilità e servizio residui. Elenco delle PR: `docs/dev/pr-f2.md` (D-330…D-338) | F1 | M03: 1–4, 7, 9 · M04: 3, 4, 10 |
 | **R0** | Rilascio interno (✅ D-235) | Produzione aperta al solo admin per caricare stagione 2027-28, club, stadi, iscrizioni, listino, capacità | F2 | — |
-| **F3** | M05 Clienti | Settori, anagrafica con controllo duplicati (D-080, D-197), proprietà, assegnazione e unione, disattivazione; completa **M01-CA4** (riassegnazione dei clienti dell'agente disattivato, conteggio dei clienti nel dialogo "Disattiva utente", D-282) | F0 (F2 per il configuratore) | M05: 1–8 · M01: 4 |
+| **F3** | M05 Clienti | Settori, anagrafica con controllo duplicati (D-080, D-197), proprietà, assegnazione e unione, disattivazione. Elenco delle PR: `docs/dev/pr-f3.md` (D-356…D-361); completa **M01-CA4** (riassegnazione dei clienti dell'agente disattivato, conteggio dei clienti nel dialogo "Disattiva utente", D-282) | F0 (F2 per il configuratore) | M05: 1–8 · M01: 4 |
 | **F4** | M06 Configuratore | Percorso a 5 passi tablet-first, totale sempre visibile, residui, copia su altri club, duplica, riepilogo con KPI di campagna, salvataggio automatico | F1, F2, F3 | M06: 1–8, 10 · M03: 6, 8 · M04: 5, 7 |
 | **F5** | M07 Ciclo di vita + notifiche | Invio, ritiro, coda, blocco di lavorazione, sconto, approvazione transazionale (D-216), forzatura, rifiuto e reinvio, versioni, annullamento, cronologia; e-mail di M01 §7 | F4 | M07: 1–8 · M04: 1, 2, 6, 8, 9 · M01: 4, 6 |
 | **F6** | M08 Contenuti e KPI | Sezioni, libreria slide con condizioni, slide dinamiche, KPI, avvisi; simulatore | F2 | M08: 1–5, 7, 8 |
@@ -103,7 +103,7 @@ flowchart LR
 | 10/12 – 23/12 | **F2** M03 + M04 | 2 | ✅ Completata il 4/11/2026 (F2-01…F2-06, PR #57…#66, D-330…D-351). Catalogo, listino bozza/pubblicato con prezzi LED, partnership e hospitality, benefit e testi on top, capacità con flag "gestito", impegni immutabili, servizi `InventoryAvailability`, `SellableOptions` e `PriceCalculator`, pagina Disponibilità |
 | 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | Anticipato in due tempi (D-353): **A1** sulla VM con dati fittizi da novembre 2026, **A2** con il calendario reale di Infront; checklist `docs/dev/collaudo-milestone-a.md` |
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
-| 7/1 – 13/1 | **F3** M05 | 1 | |
+| 7/1 – 13/1 | **F3** M05 | 1 | Avviata in anticipo il 4/11/2026, in parallelo alla milestone A: piano approvato (D-356…D-361, `docs/dev/pr-f3.md`) |
 | 14/1 – 3/2 | **F4** M06 | 3 | |
 | 4/2 – 24/2 | **F5** M07 + notifiche | 3 | |
 | 1/3 – 12/3 | Collaudo **milestone B** (agenti pilota, gestore) · **checkpoint di pianificazione** (D-247) | — | Verifica del margine sul go-live |
@@ -162,6 +162,7 @@ Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248). Con
 | `docs/dev/pr-f0.md` | Le 10 PR della fetta F0 |
 | `docs/dev/pr-f1.md` | Le 6 PR della fetta F1 (D-315) |
 | `docs/dev/pr-f2.md` | Le 6 PR della fetta F2 (D-330) |
+| `docs/dev/pr-f3.md` | Le 4 PR della fetta F3 (D-356) |
 | `docs/dev/collaudo-milestone-a.md` | Checklist della milestone A e traccia di R0 (D-353) |
 | `docs/registro-decisioni.md`, `pianificazione.md`, `progettazione-tecnica.md`, `ux-architettura.md`, `features-evolutive.md` | Copie dei documenti di progetto |
 

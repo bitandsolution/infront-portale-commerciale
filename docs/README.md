@@ -17,6 +17,7 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 | `dev/pr-f0.md` | Elenco delle PR della fetta F0 |
 | `dev/pr-f1.md` | Elenco delle PR della fetta F1 (D-315) |
 | `dev/pr-f2.md` | Elenco delle PR della fetta F2 (D-330) |
+| `dev/pr-f3.md` | Elenco delle PR della fetta F3 (D-356) |
 | `dev/collaudo-milestone-a.md` | Checklist del collaudo della milestone A e traccia del caricamento di R0 (D-353) |
 
 **Mockup UX**: canvas "Portale Infront – Configuratore", 13 tavole → https://claude.ai/artifact/WnoZA4zUgQMJBHLJvF4B3c (privato).
