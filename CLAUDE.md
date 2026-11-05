@@ -193,7 +193,11 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Ragione sociale | `company_name` (+ `company_name_normalized`) |
 | P.IVA | `vat_number` |
 | Referente | `contact_name` |
-| Agente proprietario del cliente | `owner_id` |
+| Agente proprietario del cliente | `owner_id` (sempre un agente attivo; l'admin lo sceglie quando crea un cliente, D-358) |
+| Ragione sociale normalizzata (maiuscole, senza accenti, spazi, punteggiatura e forma societaria finale) / P.IVA italiana (11 cifre, cifra di controllo; spazi e prefisso IT tolti) | `CompanyNameNormalizer` / `VatNumber`, regola `ItalianVatNumber` (`App\Domain\Clients`, D-361) |
+| Controllo dei duplicati su tutta l'anagrafica (stessa P.IVA, oppure stesso nome normalizzato salvo P.IVA entrambe presenti e diverse) | `DuplicateClients` → `DuplicateClient` (dialog bloccante; messaggio neutro all'agente, nome e agente all'admin); scritture sotto il lock `ClientRegistry` (RB-02, RB-03, D-197) |
+| Creazione e modifica di un cliente (logo nuovo = file nuovo) | `CreateClient`, `UpdateClient` (`App\Domain\Clients\Actions`); eventi `client.created`, `client.updated`; regola che rifiuta `ClientsActionNotAllowed` (toast) |
+| Pagine "I miei clienti" (agente; l'admin va all'elenco), "Elenco clienti" (admin e gestore, con l'agente), nuovo cliente e scheda (gestore in sola lettura) | `clients_mine`, `clients`, `ClientController`, rotte `clients.create` / `.store` / `.edit` / `.update`, `ClientPolicy`; pagine `Clients/Index`, `Clients/Form` |
 | Proposta | `Proposal` · `proposals` |
 | Versione (di lavoro / congelata) | `ProposalVersion` · `proposal_versions` (`number` nullo = di lavoro) |
 | Riga club della versione | `ProposalVersionClub` · `proposal_version_clubs` |

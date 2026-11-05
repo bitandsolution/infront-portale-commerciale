@@ -4,6 +4,7 @@ use App\Enums\AliasSource;
 use App\Enums\FilePurpose;
 use App\Models\BenefitCategory;
 use App\Models\CalendarImport;
+use App\Models\Client;
 use App\Models\Club;
 use App\Models\ClubAlias;
 use App\Models\ClubEnrollment;
@@ -115,9 +116,16 @@ function routeMatrix(): array
         'pages.proposals_pending' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.proposals_all' => ['method' => 'GET', 'expected' => $backOffice],
 
-        // M05 — own clients: agent and admin (D-076, D-078); all clients: manager and admin (D-082)
-        'pages.clients_mine' => ['method' => 'GET', 'expected' => $agentAndAdmin],
+        // M05 — own clients: agent and admin (D-076, D-078; the admin owns no client, D-358, and goes
+        // to the full list); all clients: manager and admin (D-082)
+        'pages.clients_mine' => ['method' => 'GET', 'expected' => ['login', 200, 403, 302, 'login', 'setup']],
         'pages.clients' => ['method' => 'GET', 'expected' => $backOffice],
+        // M05 F-01, F-04 — new client: agent and admin (D-358). Target of the client routes: a client
+        // of another agent, so the agent is refused (RB-01); the manager reads it, the admin changes it
+        'clients.create' => ['method' => 'GET', 'expected' => $agentAndAdmin],
+        'clients.store' => ['method' => 'POST', 'expected' => ['login', 302, 403, 302, 'login', 'setup']],
+        'clients.edit' => ['method' => 'GET', 'expected' => $backOffice],
+        'clients.update' => ['method' => 'PUT', 'expected' => $adminForm],
         // M05 F-05 — commodity sectors: admin only (D-357)
         'pages.clients_sectors' => ['method' => 'GET', 'expected' => $admin],
         'clients.sectors.create' => ['method' => 'GET', 'expected' => $admin],
@@ -257,8 +265,8 @@ function routeMatrix(): array
         'users.reset-two-factor' => ['method' => 'POST', 'expected' => $adminForm],
         'users.resend-link' => ['method' => 'POST', 'expected' => $adminForm],
 
-        // Stored files (D-218): until the slices that use them, only the admin (StoredFilePolicy).
-        // Target: a client logo stored by the system
+        // Stored files (D-218): each purpose follows its entity (StoredFilePolicy). Target: a client
+        // logo stored by the system and used by no client, so only the admin sees it (F3-02)
         'files.download' => ['method' => 'GET', 'expected' => $admin],
 
         // Queues panel (Horizon, progettazione-tecnica §5.2.7; PR-08): admin only, with the rules of
@@ -333,6 +341,9 @@ function matrixParameters(string $route): array
         ],
         $route === 'sports.clubs.aliases.destroy' => [
             'clubAlias' => ClubAlias::query()->create(['club_id' => ($club = Club::factory()->create())->id, 'discipline_id' => $club->discipline_id, 'alias' => 'Alias matrice', 'source' => AliasSource::Manual])->id,
+        ],
+        in_array($route, ['clients.edit', 'clients.update'], true) => [
+            'client' => Client::factory()->create()->id,
         ],
         in_array($route, ['clients.sectors.edit', 'clients.sectors.update'], true) => [
             'commoditySector' => CommoditySector::factory()->create()->id,

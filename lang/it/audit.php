@@ -82,6 +82,8 @@ return [
         'hospitality_capacity_updated' => 'Capacità hospitality modificata',
         'commodity_sector_created' => 'Settore merceologico creato',
         'commodity_sector_updated' => 'Settore merceologico modificato',
+        'client_created' => 'Cliente creato',
+        'client_updated' => 'Cliente modificato',
     ],
 
     'reasons' => [

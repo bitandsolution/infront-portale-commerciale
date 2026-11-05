@@ -97,6 +97,10 @@ enum AuditAction: string
     case CommoditySectorCreated = 'commodity_sector.created';
     case CommoditySectorUpdated = 'commodity_sector.updated';
 
+    // F3-02: clients (D-356): area "clients".
+    case ClientCreated = 'client.created';
+    case ClientUpdated = 'client.updated';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
@@ -105,7 +109,7 @@ enum AuditAction: string
             'season', 'competition', 'edition', 'stadium', 'club', 'club_alias', 'enrollment', 'match', 'calendar_import' => AuditArea::Sports,
             'led_format', 'partnership_tier', 'hospitality_variant', 'benefit_category', 'price_list', 'led_price', 'partnership_price', 'hospitality_price', 'partnership_benefit', 'on_top_asset' => AuditArea::Catalog,
             'pool_capacity', 'partnership_capacity', 'hospitality_capacity' => AuditArea::Inventory,
-            'commodity_sector' => AuditArea::Clients,
+            'commodity_sector', 'client' => AuditArea::Clients,
             default => AuditArea::Users,
         };
     }
