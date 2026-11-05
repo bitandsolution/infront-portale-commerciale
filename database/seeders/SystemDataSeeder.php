@@ -16,7 +16,7 @@ use Illuminate\Database\Seeder;
  *
  * Settings (D-191, PR-07); sports registry: discipline and competitions (F1-01, D-321); catalogue:
  * territories, visibility types, pools, LED formats, partnership tiers, hospitality variants and
- * benefit categories (F2-01, D-332).
+ * benefit categories (F2-01, D-332); commodity sectors of the clients (F3-01, D-357).
  */
 class SystemDataSeeder extends Seeder
 {
@@ -43,5 +43,6 @@ class SystemDataSeeder extends Seeder
 
         $this->call(SportsSystemDataSeeder::class);
         $this->call(CatalogSystemDataSeeder::class);
+        $this->call(ClientsSystemDataSeeder::class);
     }
 }

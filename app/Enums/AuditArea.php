@@ -8,7 +8,8 @@ namespace App\Enums;
  * write their events. "settings" (PR-07) covers the changes of the system settings by the admin;
  * "sports" (F1) the sports registry: seasons, competitions, editions, then clubs, stadiums,
  * enrollments, matches and calendar imports (D-321); "catalog" (F2) the catalogue and the price lists
- * (D-337); "inventory" (F2-04) the capacities of the inventory, then the commitments (D-337).
+ * (D-337); "inventory" (F2-04) the capacities of the inventory, then the commitments (D-337);
+ * "clients" (F3) the commodity sectors, then the clients (D-356).
  */
 enum AuditArea: string
 {
@@ -18,6 +19,7 @@ enum AuditArea: string
     case Sports = 'sports';
     case Catalog = 'catalog';
     case Inventory = 'inventory';
+    case Clients = 'clients';
 
     /**
      * Italian label (lang/it/audit.php).

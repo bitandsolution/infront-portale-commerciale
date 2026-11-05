@@ -6,6 +6,7 @@ use App\Enums\CatalogValueKind;
 use App\Enums\SettingKey;
 use App\Models\BenefitCategory;
 use App\Models\Club;
+use App\Models\CommoditySector;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\FixtureMatch;
@@ -83,6 +84,14 @@ final readonly class AuditSubject
     public static function match(FixtureMatch $match): self
     {
         return new self('match', $match->id, $match->label());
+    }
+
+    /**
+     * A commodity sector (F3-01), e.g. "Abbigliamento (ABBIGLIAMENTO)".
+     */
+    public static function commoditySector(CommoditySector $sector): self
+    {
+        return new self('commodity_sector', $sector->id, $sector->name.' ('.$sector->code.')');
     }
 
     public static function stadium(Stadium $stadium): self

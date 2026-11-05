@@ -5,6 +5,7 @@ namespace App\Support\Navigation;
 use App\Enums\Ability;
 use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\PriceListController;
+use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Inventory\AvailabilityController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\Settings\SettingsController;
@@ -45,6 +46,7 @@ final class PortalPages
 
         'clients_mine' => ['clienti/miei', Ability::ClientsOwn],
         'clients' => ['clienti', Ability::ClientsViewAll],
+        'clients_sectors' => ['clienti/settori', Ability::CommoditySectorsManage],
 
         'catalog_led' => ['catalogo/led', Ability::CatalogView],
         'catalog_partnership' => ['catalogo/partnership', Ability::CatalogView],
@@ -100,6 +102,7 @@ final class PortalPages
         'catalog_hospitality' => [PriceListController::class, 'hospitality'],
         'inventory_availability' => [AvailabilityController::class, 'index'],
         'inventory_capacity' => [CapacityController::class, 'index'],
+        'clients_sectors' => [CommoditySectorController::class, 'index'],
     ];
 
     /**

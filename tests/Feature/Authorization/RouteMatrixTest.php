@@ -7,6 +7,7 @@ use App\Models\CalendarImport;
 use App\Models\Club;
 use App\Models\ClubAlias;
 use App\Models\ClubEnrollment;
+use App\Models\CommoditySector;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\FixtureMatch;
@@ -117,6 +118,12 @@ function routeMatrix(): array
         // M05 — own clients: agent and admin (D-076, D-078); all clients: manager and admin (D-082)
         'pages.clients_mine' => ['method' => 'GET', 'expected' => $agentAndAdmin],
         'pages.clients' => ['method' => 'GET', 'expected' => $backOffice],
+        // M05 F-05 — commodity sectors: admin only (D-357)
+        'pages.clients_sectors' => ['method' => 'GET', 'expected' => $admin],
+        'clients.sectors.create' => ['method' => 'GET', 'expected' => $admin],
+        'clients.sectors.store' => ['method' => 'POST', 'expected' => $adminForm],
+        'clients.sectors.edit' => ['method' => 'GET', 'expected' => $admin],
+        'clients.sectors.update' => ['method' => 'PUT', 'expected' => $adminForm],
 
         // M03 — consultation (D-137)
         'pages.catalog_led' => ['method' => 'GET', 'expected' => $backOffice],
@@ -326,6 +333,9 @@ function matrixParameters(string $route): array
         ],
         $route === 'sports.clubs.aliases.destroy' => [
             'clubAlias' => ClubAlias::query()->create(['club_id' => ($club = Club::factory()->create())->id, 'discipline_id' => $club->discipline_id, 'alias' => 'Alias matrice', 'source' => AliasSource::Manual])->id,
+        ],
+        in_array($route, ['clients.sectors.edit', 'clients.sectors.update'], true) => [
+            'commoditySector' => CommoditySector::factory()->create()->id,
         ],
         in_array($route, ['sports.stadiums.edit', 'sports.stadiums.update'], true) => [
             'stadium' => Stadium::factory()->create()->id,
