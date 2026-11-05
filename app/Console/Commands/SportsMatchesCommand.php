@@ -32,7 +32,6 @@ final class SportsMatchesCommand extends Command
     public function handle(MatchCounter $counter): int
     {
         $code = $this->argument('season');
-        $code = is_string($code) ? $code : '';
         $season = Season::query()->where('discipline_id', Discipline::default()->id)->where('code', $code)->first();
 
         if ($season === null) {
@@ -44,7 +43,6 @@ final class SportsMatchesCommand extends Command
         $clubs = [];
 
         foreach ((array) $this->argument('clubs') as $clubCode) {
-            $clubCode = is_string($clubCode) ? $clubCode : '';
             $club = Club::query()->where('code', mb_strtoupper($clubCode))->first();
 
             if ($club === null) {

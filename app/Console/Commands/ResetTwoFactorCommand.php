@@ -26,8 +26,7 @@ class ResetTwoFactorCommand extends Command
 
     public function handle(ClearTwoFactor $clearTwoFactor): int
     {
-        $argument = $this->argument('email');
-        $email = mb_strtolower(trim(is_string($argument) ? $argument : ''));
+        $email = mb_strtolower(trim($this->argument('email')));
 
         $user = User::query()->where('email', $email)->first();
 

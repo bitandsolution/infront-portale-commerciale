@@ -48,7 +48,7 @@ final class SportsImportLegacyClubsCommand extends Command
         $path = $this->argument('file');
 
         try {
-            $rows = $file->read(is_string($path) ? $path : '');
+            $rows = $file->read($path);
 
             DB::beginTransaction();
 
