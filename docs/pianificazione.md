@@ -1,6 +1,6 @@
 # Pianificazione e MVP (Fase 6) — Portale Commerciale Infront
 
-Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1 e F1 completate** · ultimo aggiornamento 2026-11-02
+Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1, F1 e F2 completate** · ultimo aggiornamento 2026-11-04
 
 Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 
@@ -10,7 +10,7 @@ Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 | 6.1 | Perimetro MVP e ordine dei moduli | ✅ Approvato (D-234…D-239) |
 | 6.2 | Stime e milestone, data di avvio, uso del vecchio sistema dopo l'avvio | ✅ Approvato (D-243…D-247) |
 | 6.3 | Preparazione del repository (`CLAUDE.md`, `docs/`, CI, verifica layout D-226) | ✅ Approvato (D-249…D-254) |
-| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026; F2 in corso (piano D-330…D-338): F2-01 Catalogo (#57), F2-02 Listino e prezzi LED (#59) e F2-03 Partnership e hospitality (#61) unite il 3/11/2026 |
+| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352); prossimi passi: milestone A e R0, poi F3 |
 
 ---
 
@@ -100,8 +100,8 @@ flowchart LR
 | 2/11 – 18/11 | **F0** Fondamenta | 2,5 | ✅ Completata il 25/10/2026 (PR-00…PR-09) |
 | 19/11 – 25/11 | **S1** Prova pipeline PDF | 1 | ✅ Completata il 25/10/2026 (D-308…D-314). Sulla VM con Interstate: deck di 40 slide, **10,5 MB** (M09-CA4 ≤ 15 MB), **12,3 s** (composizione 2,9 · Chromium 1,8 · qpdf 0,2 · controlli 7,4); recap network con la grafica dell'originale (D-314). Da ripetere sullo staging |
 | 26/11 – 9/12 | **F1** M02 | 2 | ✅ Completata il 2/11/2026 (PR #31…#39, D-315…D-329). Import del calendario provato con file fittizi: il calendario reale di Infront è atteso entro il 30/11 |
-| 10/12 – 23/12 | **F2** M03 + M04 | 2 | Avviata in anticipo: F2-01, F2-02 e F2-03 unite il 3/11/2026 |
-| 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | |
+| 10/12 – 23/12 | **F2** M03 + M04 | 2 | ✅ Completata il 4/11/2026 (F2-01…F2-06, PR #57…#66, D-330…D-351). Catalogo, listino bozza/pubblicato con prezzi LED, partnership e hospitality, benefit e testi on top, capacità con flag "gestito", impegni immutabili, servizi `InventoryAvailability`, `SellableOptions` e `PriceCalculator`, pagina Disponibilità |
+| 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | Anticipato in due tempi (D-353): **A1** sulla VM con dati fittizi da novembre 2026, **A2** con il calendario reale di Infront; checklist `docs/dev/collaudo-milestone-a.md` |
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
 | 7/1 – 13/1 | **F3** M05 | 1 | |
 | 14/1 – 3/2 | **F4** M06 | 3 | |
@@ -118,7 +118,7 @@ flowchart LR
 | giugno 2027 | Apertura vendite 2027-28 (D-242) | — | ❓ Giorno esatto da comunicare: il margine reale dipende da quello |
 
 ⚠️ **Margine ridotto**: circa 23 settimane di sviluppo su 27 disponibili.
-✅ **Avanzamento al 2/11/2026**: F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, circa 4 settimane prima del calendario. Il calendario approvato (D-243) non cambia: l'anticipo resta margine sul go-live e si rivede al checkpoint del 12/3/2027.
+✅ **Avanzamento al 4/11/2026**: F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026, circa 7 settimane prima del calendario. Il calendario approvato (D-243) non cambia: l'anticipo resta margine sul go-live e si rivede al checkpoint del 12/3/2027.
 ✅ **Checkpoint al 12/3/2027** (D-247): se il ritardo supera 2 settimane si decide solo allora una delle leve:
 - report R-01…R-05 e R-07 in un rilascio 1.0.1 entro 3 settimane dal go-live (l'audit registra comunque dal primo giorno; R-06 resta nel 1.0);
 - spostamento del go-live, se l'apertura delle vendite lo consente.
@@ -162,6 +162,7 @@ Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248). Con
 | `docs/dev/pr-f0.md` | Le 10 PR della fetta F0 |
 | `docs/dev/pr-f1.md` | Le 6 PR della fetta F1 (D-315) |
 | `docs/dev/pr-f2.md` | Le 6 PR della fetta F2 (D-330) |
+| `docs/dev/collaudo-milestone-a.md` | Checklist della milestone A e traccia di R0 (D-353) |
 | `docs/registro-decisioni.md`, `pianificazione.md`, `progettazione-tecnica.md`, `ux-architettura.md`, `features-evolutive.md` | Copie dei documenti di progetto |
 
 ### 6.3.1 Esito della verifica dei layout (sintesi; dettaglio in `docs/layout-dinamici.md`)
