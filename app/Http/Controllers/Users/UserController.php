@@ -7,8 +7,12 @@ use App\Domain\Users\Actions\UpdateUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
+use App\Enums\Role;
+use App\Models\Client;
 use App\Models\User;
+use App\Support\Clients\ClientsPresenter;
 use App\Support\Navigation\LayoutProps;
+use App\Support\Navigation\PortalPages;
 use App\Support\Text;
 use App\Support\Toast;
 use App\Support\Users\UserPresenter;
@@ -97,9 +101,29 @@ class UserController extends Controller
                 'resetTwoFactor' => $active && $twoFactor && ! $isSelf ? route('users.reset-two-factor', $user) : null,
                 'resendLink' => $active && ! $twoFactor && ! $isSelf ? route('users.resend-link', $user) : null,
             ],
+            'clients' => $user->role === Role::Agent ? $this->agentClients($user) : null,
             'profileUrl' => $isSelf ? route('pages.profile') : null,
             'indexUrl' => route('pages.users'),
         ]);
+    }
+
+    /**
+     * Clients of an agent for the dialog "Disattiva utente" and for a deactivated agent (M01-CA4,
+     * D-360): how many are in his name (merged ones excluded, D-368), the active agents who can
+     * receive them all, and the client list filtered on the clients of deactivated agents.
+     *
+     * @return array{count: int, owners: array<int, array{value: string, label: string}>, listUrl: string}
+     */
+    private function agentClients(User $agent): array
+    {
+        return [
+            'count' => Client::query()->where('owner_id', $agent->id)->whereNull('merged_into_id')->count(),
+            'owners' => array_values(array_filter(
+                ClientsPresenter::ownerOptions(),
+                fn (array $option): bool => $option['value'] !== (string) $agent->id,
+            )),
+            'listUrl' => PortalPages::url('clients').'?agenti=disattivati',
+        ];
     }
 
     public function update(UpdateUserRequest $request, User $user, UpdateUser $updateUser): RedirectResponse
