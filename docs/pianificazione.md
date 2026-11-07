@@ -1,6 +1,6 @@
 # Pianificazione e MVP (Fase 6) — Portale Commerciale Infront
 
-Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1, F1 e F2 completate** · ultimo aggiornamento 2026-11-04
+Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1, F1, F2 e F3 completate** · ultimo aggiornamento 2026-11-07
 
 Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 
@@ -10,7 +10,7 @@ Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 | 6.1 | Perimetro MVP e ordine dei moduli | ✅ Approvato (D-234…D-239) |
 | 6.2 | Stime e milestone, data di avvio, uso del vecchio sistema dopo l'avvio | ✅ Approvato (D-243…D-247) |
 | 6.3 | Preparazione del repository (`CLAUDE.md`, `docs/`, CI, verifica layout D-226) | ✅ Approvato (D-249…D-254) |
-| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352); prossimi passi: milestone A e R0, poi F3 |
+| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352), F3 il 7/11/2026 (PR #70…#78, D-356…D-369); prossimi passi: milestone A (A1, A2) e R0, piano della fetta F4 |
 
 ---
 
@@ -103,7 +103,7 @@ flowchart LR
 | 10/12 – 23/12 | **F2** M03 + M04 | 2 | ✅ Completata il 4/11/2026 (F2-01…F2-06, PR #57…#66, D-330…D-351). Catalogo, listino bozza/pubblicato con prezzi LED, partnership e hospitality, benefit e testi on top, capacità con flag "gestito", impegni immutabili, servizi `InventoryAvailability`, `SellableOptions` e `PriceCalculator`, pagina Disponibilità |
 | 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | Anticipato in due tempi (D-353): **A1** sulla VM con dati fittizi da novembre 2026, **A2** con il calendario reale di Infront; checklist `docs/dev/collaudo-milestone-a.md` |
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
-| 7/1 – 13/1 | **F3** M05 | 1 | Avviata in anticipo il 4/11/2026, in parallelo alla milestone A: piano approvato (D-356…D-361, `docs/dev/pr-f3.md`) |
+| 7/1 – 13/1 | **F3** M05 | 1 | ✅ Completata il 7/11/2026 (F3-01…F3-04, PR #70, #71, #76, #78, D-356…D-369, `docs/dev/pr-f3.md`). Settori, anagrafica con controllo dei duplicati, riassegnazione, unione e disattivazione dei clienti, clienti dell'agente disattivato (M01-CA4) |
 | 14/1 – 3/2 | **F4** M06 | 3 | |
 | 4/2 – 24/2 | **F5** M07 + notifiche | 3 | |
 | 1/3 – 12/3 | Collaudo **milestone B** (agenti pilota, gestore) · **checkpoint di pianificazione** (D-247) | — | Verifica del margine sul go-live |
@@ -118,7 +118,7 @@ flowchart LR
 | giugno 2027 | Apertura vendite 2027-28 (D-242) | — | ❓ Giorno esatto da comunicare: il margine reale dipende da quello |
 
 ⚠️ **Margine ridotto**: circa 23 settimane di sviluppo su 27 disponibili.
-✅ **Avanzamento al 4/11/2026**: F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026, circa 7 settimane prima del calendario. Il calendario approvato (D-243) non cambia: l'anticipo resta margine sul go-live e si rivede al checkpoint del 12/3/2027.
+✅ **Avanzamento al 7/11/2026**: F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026, F3 il 7/11/2026, circa 9 settimane prima del calendario. Il calendario approvato (D-243) non cambia: l'anticipo resta margine sul go-live e si rivede al checkpoint del 12/3/2027.
 ✅ **Checkpoint al 12/3/2027** (D-247): se il ritardo supera 2 settimane si decide solo allora una delle leve:
 - report R-01…R-05 e R-07 in un rilascio 1.0.1 entro 3 settimane dal go-live (l'audit registra comunque dal primo giorno; R-06 resta nel 1.0);
 - spostamento del go-live, se l'apertura delle vendite lo consente.
@@ -162,7 +162,7 @@ Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248). Con
 | `docs/dev/pr-f0.md` | Le 10 PR della fetta F0 |
 | `docs/dev/pr-f1.md` | Le 6 PR della fetta F1 (D-315) |
 | `docs/dev/pr-f2.md` | Le 6 PR della fetta F2 (D-330) |
-| `docs/dev/pr-f3.md` | Le 4 PR della fetta F3 (D-356) |
+| `docs/dev/pr-f3.md` | Le 4 PR della fetta F3 (D-356), completata il 7/11/2026 |
 | `docs/dev/collaudo-milestone-a.md` | Checklist della milestone A e traccia di R0 (D-353) |
 | `docs/registro-decisioni.md`, `pianificazione.md`, `progettazione-tecnica.md`, `ux-architettura.md`, `features-evolutive.md` | Copie dei documenti di progetto |
 
