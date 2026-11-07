@@ -10,6 +10,7 @@ use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\OnTopAssetController;
 use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Clients\ClientController;
+use App\Http\Controllers\Clients\ClientManagementController;
 use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\Inventory\CapacityController;
@@ -211,6 +212,15 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
         });
         Route::get('clienti/{client}', [ClientController::class, 'edit'])->whereNumber('client')->name('clients.edit');
         Route::put('clienti/{client}', [ClientController::class, 'update'])->whereNumber('client')->name('clients.update');
+
+        // Reassignment, deactivation, reactivation and merge of a client (M05 F-07, F-08, F-09;
+        // D-082, D-359): admin only, from the page of the client.
+        Route::middleware('can:'.Ability::ClientsManageAll->value)->group(function (): void {
+            Route::post('clienti/{client}/riassegna', [ClientManagementController::class, 'reassign'])->whereNumber('client')->name('clients.reassign');
+            Route::post('clienti/{client}/disattiva', [ClientManagementController::class, 'deactivate'])->whereNumber('client')->name('clients.deactivate');
+            Route::post('clienti/{client}/riattiva', [ClientManagementController::class, 'reactivate'])->whereNumber('client')->name('clients.reactivate');
+            Route::post('clienti/{client}/unisci', [ClientManagementController::class, 'merge'])->whereNumber('client')->name('clients.merge');
+        });
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.
         Route::get('catalogo/listini/{priceList}/club/{club}/benefit', [BenefitController::class, 'show'])

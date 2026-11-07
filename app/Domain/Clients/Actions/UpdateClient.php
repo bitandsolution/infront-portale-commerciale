@@ -21,7 +21,8 @@ use Illuminate\Http\UploadedFile;
 
 /**
  * Change of a client (M05 F-04, FL-03; D-078): the agent changes his own clients, the admin every
- * client (ClientPolicy). The owner does not change here (reassignment with F3-03, D-082).
+ * client (ClientPolicy). The owner does not change here (ReassignClient, D-082); a merged client is
+ * read-only (D-359).
  *
  * - The duplicate check runs again on the new name and VAT number, without the client itself.
  * - A new logo is a new file: the previous one is never overwritten, so the documents already
@@ -42,6 +43,11 @@ final class UpdateClient
     {
         return $this->registry->write(function () use ($client, $data, $logo, $actor): bool {
             $client = Client::query()->lockForUpdate()->findOrFail($client->id);
+
+            if ($client->isMerged()) {
+                throw ClientsActionNotAllowed::merged($client->company_name);
+            }
+
             $before = ClientsAuditValues::client($client, $client->sector);
 
             $sector = CommoditySector::query()->findOrFail($data->sectorId);

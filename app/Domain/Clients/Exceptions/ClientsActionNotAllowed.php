@@ -25,6 +25,39 @@ final class ClientsActionNotAllowed extends RuntimeException
         return new self(Text::get('clients.errors.sector_not_active', ['sector' => $sector]));
     }
 
+    /** D-359: a merged client stays as it is; it is never changed, reassigned or reactivated. */
+    public static function merged(string $client): self
+    {
+        return new self(Text::get('clients.errors.merged', ['client' => $client]));
+    }
+
+    /** D-082: the chosen agent already owns the client. */
+    public static function alreadyOwner(string $client, string $owner): self
+    {
+        return new self(Text::get('clients.errors.already_owner', ['client' => $client, 'owner' => $owner]));
+    }
+
+    public static function alreadyInactive(string $client): self
+    {
+        return new self(Text::get('clients.errors.already_inactive', ['client' => $client]));
+    }
+
+    public static function alreadyActive(string $client): self
+    {
+        return new self(Text::get('clients.errors.already_active', ['client' => $client]));
+    }
+
+    public static function mergeIntoItself(): self
+    {
+        return new self(Text::get('clients.errors.merge_into_itself'));
+    }
+
+    /** D-359: the client that stays must be active and not merged itself. */
+    public static function mergeTargetNotActive(string $client): self
+    {
+        return new self(Text::get('clients.errors.merge_target_not_active', ['client' => $client]));
+    }
+
     public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));

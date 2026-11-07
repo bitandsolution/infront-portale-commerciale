@@ -28,7 +28,8 @@ use Inertia\Response;
  * - new client (agent and admin; the admin chooses the owner), page of a client (read-only for the
  *   manager), change (owner agent and admin).
  * Every write goes through an Action; a duplicate goes back to the form with a blocking dialog
- * (DuplicateClient).
+ * (DuplicateClient). The admin actions of F3-03 (reassignment, status, merge) are on the page of the
+ * client (ClientManagementController).
  */
 class ClientController extends Controller
 {
@@ -48,7 +49,7 @@ class ClientController extends Controller
     {
         Gate::authorize('viewAny', Client::class);
 
-        return $this->list($this->actor($request), 'clients', withOwner: true);
+        return $this->list($this->actor($request), 'clients', withOwner: true, filter: $this->listFilter($request));
     }
 
     public function create(Request $request): Response
@@ -63,6 +64,7 @@ class ClientController extends Controller
             'canEdit' => true,
             'sectors' => ClientsPresenter::sectorOptions(),
             'owners' => $isAdmin ? ClientsPresenter::ownerOptions() : null,
+            'management' => null,
             'saveUrl' => route('clients.store'),
             'indexUrl' => PortalPages::url($this->listPage($actor)),
             'scope' => $this->listPage($actor) === 'clients_mine' ? 'mine' : 'all',
@@ -84,13 +86,15 @@ class ClientController extends Controller
         Gate::authorize('view', $client);
         $actor = $this->actor($request);
         $canEdit = $actor->can('update', $client);
+        $backOffice = $actor->role !== Role::Agent;
 
         return Inertia::render('Clients/Form', [
             'layout' => LayoutProps::for($actor, $this->listPage($actor)),
-            'client' => ClientsPresenter::clientForm($client),
+            'client' => ClientsPresenter::clientForm($client, $backOffice),
             'canEdit' => $canEdit,
             'sectors' => ClientsPresenter::sectorOptions($client),
             'owners' => null,
+            'management' => $actor->can('manage', $client) ? ClientsPresenter::management($client) : null,
             'saveUrl' => $canEdit ? route('clients.update', $client) : null,
             'indexUrl' => PortalPages::url($this->listPage($actor)),
             'scope' => $this->listPage($actor) === 'clients_mine' ? 'mine' : 'all',
@@ -106,11 +110,16 @@ class ClientController extends Controller
             : Text::get('clients.toasts.nothing_changed')));
     }
 
-    private function list(User $actor, string $page, bool $withOwner): Response
+    /**
+     * @param  array{deactivatedOwners: bool}|null  $filter
+     */
+    private function list(User $actor, string $page, bool $withOwner, ?array $filter = null): Response
     {
         $clients = Client::query()
             ->visibleTo($actor)
-            ->with(['sector', 'owner'])
+            // The agent never sees a merged client in his list (D-359): it no longer exists for him.
+            ->when(! $withOwner, fn ($query) => $query->whereNull('merged_into_id'))
+            ->with(['sector', 'owner', 'mergedInto'])
             ->orderBy('company_name')
             ->get()
             ->map(fn (Client $client): array => ClientsPresenter::clientRow($client, $withOwner))
@@ -121,8 +130,20 @@ class ClientController extends Controller
             'layout' => LayoutProps::for($actor, $page),
             'clients' => $clients,
             'withOwner' => $withOwner,
+            'filter' => $filter,
             'createUrl' => $actor->can('create', Client::class) ? route('clients.create') : null,
         ]);
+    }
+
+    /**
+     * Initial filter of the back-office list, from the query string (D-360): "?agenti=disattivati"
+     * opens the clients of deactivated agents, e.g. from the page of a deactivated agent (F3-04).
+     *
+     * @return array{deactivatedOwners: bool}
+     */
+    private function listFilter(Request $request): array
+    {
+        return ['deactivatedOwners' => $request->query('agenti') === 'disattivati'];
     }
 
     /**

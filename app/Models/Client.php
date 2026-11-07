@@ -12,8 +12,8 @@ use Illuminate\Support\Carbon;
 /**
  * Client of the proposals (M05 F-01; D-074, D-196): one shared registry, each client owned by one
  * agent (D-076, D-082, D-358). The agent sees and changes only his own clients (RB-01): queries go
- * through visibleTo() (HasOwner) and ClientPolicy. Never deleted (C4, RB-06): deactivated or merged
- * into another client with F3-03 (D-359).
+ * through visibleTo() (HasOwner) and ClientPolicy. Never deleted (C4, RB-06): the admin deactivates
+ * it, or merges it into another client (F3-03, D-359), after which it stays read-only.
  *
  * @property int $id
  * @property int $owner_id
@@ -33,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property-read User $owner
  * @property-read CommoditySector $sector
  * @property-read StoredFile $logo
+ * @property-read Client|null $mergedInto
  */
 final class Client extends Model
 {
@@ -84,6 +85,12 @@ final class Client extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** Merged into another client (D-359): read-only for everyone, never reactivated. */
+    public function isMerged(): bool
+    {
+        return $this->merged_into_id !== null;
     }
 
     /**
