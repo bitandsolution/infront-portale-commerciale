@@ -106,7 +106,7 @@ Abbigliamento · Abitazione · Alimentari · Automobili · Betting · Bevande/Al
 | Caso | Gestione |
 |---|---|
 | Agente B prova a creare un cliente che appartiene all'agente A | Blocco; messaggio neutro; l'admin assegna il cliente (F-07, D-082) |
-| Ragioni sociali simili ma aziende diverse ("Rossi Srl" e "Rossi Spa") | ✅ Con P.IVA diverse inserite su entrambi il sistema **non blocca** (D-197). Senza P.IVA su uno dei due il blocco resta e il cliente lo crea l'admin |
+| Ragioni sociali simili ma aziende diverse ("Rossi Srl" e "Rossi Spa") | ✅ Con P.IVA diverse inserite su entrambi il sistema **non blocca** (D-197). Senza P.IVA su uno dei due il blocco resta, anche per l'admin (D-363): le due aziende si distinguono inserendo le P.IVA |
 | Cliente da disattivare con proposte in attesa | 💡 Avviso; le proposte restano valide |
 | Agente disattivato o uscito dall'azienda | 💡 L'admin riassegna i suoi clienti a un altro agente (F-07) |
 | ~~Duplicati nello storico~~ | Non applicabile: nessuna migrazione (D-227) |
@@ -126,7 +126,7 @@ Abbigliamento · Abitazione · Alimentari · Automobili · Betting · Bevande/Al
 5. L'agente A modifica il logo del proprio cliente; i documenti già generati mantengono il logo precedente.
 6. L'admin riassegna un cliente da A a B: B lo vede e lo usa, A non lo vede più, ma conserva le proposte già fatte.
 7. Un cliente con proposte non è cancellabile, solo disattivabile.
-8. *(D-197)* "Rossi Srl" con P.IVA 01234567897 e "Rossi Spa" con P.IVA 09876543210 si creano entrambi; "Rossi Spa" senza P.IVA, quando esiste "Rossi Srl", viene bloccato.
+8. *(D-197)* "Rossi Srl" con P.IVA 01234567897 e "Rossi Spa" con P.IVA 09876543217 (D-362) si creano entrambi; "Rossi Spa" senza P.IVA, quando esiste "Rossi Srl", viene bloccato.
 
 ## 12. Questioni aperte
 - ~~💡 P.IVA diverse non bloccano~~ → D-197.

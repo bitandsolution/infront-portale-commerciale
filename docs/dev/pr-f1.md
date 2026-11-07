@@ -1,6 +1,6 @@
 # Fetta F1 — M02 Anagrafiche sportive: elenco delle PR
 
-Stato: ✅ **fetta completata il 2/11/2026**. Approvata con D-315…D-322 (25/10/2026); decisioni emerse durante lo sviluppo D-323…D-329. Avanzamento: F1-01 (PR #31, D-323), F1-02 (PR #33, D-324), F1-03 (PR #34), F1-04 (PR #35, D-325; D-326 con la PR #36), F1-05 (PR #38, D-328), F1-06 (PR #39, D-329): tutte unite e collaudate. Fuori fetta: avviso di sicurezza su PHPUnit ignorato in `composer audit` (D-327, PR #37).
+Stato: ✅ **fetta completata il 2/11/2026**. Approvata con D-315…D-322 (25/10/2026); decisioni emerse durante lo sviluppo D-323…D-329. Avanzamento: F1-01 (PR #31, D-323), F1-02 (PR #33, D-324), F1-03 (PR #34), F1-04 (PR #35, D-325; D-326 con la PR #36), F1-05 (PR #38, D-328), F1-06 (PR #39, D-329): tutte unite e collaudate. Fuori fetta: avviso di sicurezza su PHPUnit ignorato in `composer audit` (D-327, PR #37); l'eccezione è stata tolta il 5/11/2026 con la PR #73 (Pest 5.3.5, PHPUnit 13.4.5), come previsto dalla decisione.
 Periodo previsto: 26/11 – 9/12/2026 (D-243), avviata in anticipo. Riferimenti: pianificazione §6.1.3, `docs/specs/spec-M02-anagrafiche-sportive.md`, progettazione-tecnica §5.3.2.
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |
