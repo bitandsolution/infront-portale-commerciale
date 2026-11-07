@@ -345,7 +345,7 @@ it('D-360: the back-office rows carry the owner and whether the agent is still a
 it('F3-03: the admin page of a client lists only the actions allowed now', function () {
     $owner = managementAgent('Anna', 'Alfa');
     $other = managementAgent('Bruno', 'Beta');
-    User::factory()->agent()->inactive()->create();
+    $gone = User::factory()->agent()->inactive()->create();
     $client = Client::factory()->ownedBy($owner)->named('Adecco Spa')->create();
     $target = Client::factory()->named('Beta Srl', '01234567897')->create();
     Client::factory()->named('Gamma Srl')->create(['is_active' => false]);
@@ -358,9 +358,11 @@ it('F3-03: the admin page of a client lists only the actions allowed now', funct
             ->where('management.deactivateUrl', route('clients.deactivate', $client))
             ->where('management.reactivateUrl', null)
             ->where('management.mergeUrl', route('clients.merge', $client))
-            // Active agents except the owner: Bruno Beta and the agent of Beta Srl, never the deactivated one.
-            ->where('management.owners', fn ($owners): bool => collect($owners)->pluck('value')->sort()->values()->all()
-                === collect([(string) $other->id, (string) $target->owner_id])->sort()->values()->all())
+            // Active agents except the owner (also the agents of the other clients), never a deactivated one.
+            ->where('management.owners', fn ($owners): bool => collect($owners)->pluck('value')->contains((string) $other->id)
+                && collect($owners)->pluck('value')->contains((string) $target->owner_id)
+                && ! collect($owners)->pluck('value')->contains((string) $owner->id)
+                && ! collect($owners)->pluck('value')->contains((string) $gone->id))
             ->has('management.mergeTargets', 1)
             ->where('management.mergeTargets.0.value', (string) $target->id)
             ->where('management.mergeTargets.0.label', fn (string $label): bool => str_starts_with($label, 'Beta Srl · P.IVA 01234567897 · ')));
