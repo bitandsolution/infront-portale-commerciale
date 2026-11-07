@@ -75,6 +75,13 @@ export interface UserRow {
     url: string;
 }
 
+/** Clients of an agent on the Users page (M01-CA4, D-360). */
+export interface AgentClients {
+    count: number;
+    owners: Option[];
+    listUrl: string;
+}
+
 export interface UserDetail extends UserRow {
     firstName: string;
     lastName: string;

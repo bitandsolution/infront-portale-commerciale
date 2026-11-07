@@ -1,6 +1,6 @@
 # Fetta F3 — M05 Clienti: elenco delle PR
 
-Stato: ✅ approvato (D-356…D-361, 4/11/2026; PR #69). Avanzamento: **F3-01** unita e collaudata il 5/11/2026 (PR #70); **F3-02** unita e collaudata il 5/11/2026 (PR #71; domande chiuse con D-362…D-364, PR #72); **F3-03** in revisione (PR da `main`, 7/11/2026); **F3-04** da fare da `main` dopo l'unione di F3-03 (nessuna PR impilata).
+Stato: ✅ approvato (D-356…D-361, 4/11/2026; PR #69). Avanzamento: **F3-01** unita e collaudata il 5/11/2026 (PR #70); **F3-02** unita e collaudata il 5/11/2026 (PR #71; domande chiuse con D-362…D-364, PR #72); **F3-03** unita e collaudata il 7/11/2026 (PR #76; domande chiuse con D-365…D-369, PR #77); **F3-04** in revisione (PR da `main`, 7/11/2026).
 Periodo previsto: 7/1 – 13/1/2027 (D-243), avviata in anticipo in parallelo al collaudo della milestone A (D-353). Riferimenti: pianificazione §6.1.3, `docs/specs/spec-M05-clienti.md`, `docs/specs/spec-M01-utenti-ruoli-notifiche.md` (§4 matrice, CA 4), progettazione-tecnica §5.3.4, ux-architettura (navigazione per ruolo, stati, dialog "Cliente duplicato").
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |

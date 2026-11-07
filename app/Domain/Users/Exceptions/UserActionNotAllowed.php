@@ -25,6 +25,12 @@ final class UserActionNotAllowed extends RuntimeException
         return new self(Text::get('users.errors.own_account'));
     }
 
+    /** D-360: the clients of a deactivated agent go only to another active agent. */
+    public static function invalidClientsOwner(): self
+    {
+        return new self(Text::get('users.errors.invalid_clients_owner'));
+    }
+
     public static function inactive(): self
     {
         return new self(Text::get('users.errors.inactive'));

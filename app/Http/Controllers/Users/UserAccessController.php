@@ -8,6 +8,7 @@ use App\Domain\Users\Actions\ResendAccessLink;
 use App\Domain\Users\Actions\ResetTwoFactor;
 use App\Domain\Users\Actions\StartPasswordReset;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Users\DeactivateUserRequest;
 use App\Models\User;
 use App\Support\Text;
 use App\Support\Toast;
@@ -23,13 +24,23 @@ use Illuminate\Support\Facades\Gate;
  */
 class UserAccessController extends Controller
 {
-    public function deactivate(Request $request, User $user, DeactivateUser $deactivate): RedirectResponse
+    /**
+     * For an agent the admin may hand all his clients to another active agent in the same step
+     * (M01-CA4, D-360).
+     */
+    public function deactivate(DeactivateUserRequest $request, User $user, DeactivateUser $deactivate): RedirectResponse
     {
-        Gate::authorize('deactivate', $user);
+        $done = $deactivate->handle($user, $request->actor(), $request->clientsOwner());
 
-        $deactivate->handle($user, $this->actor($request));
+        if ($done->clientsOwner === null) {
+            return $this->done('users.toasts.deactivated', $user);
+        }
 
-        return $this->done('users.toasts.deactivated', $user);
+        return back()->with('toast', Toast::success(Text::get('users.toasts.deactivated_with_clients', [
+            'name' => $user->fullName(),
+            'owner' => $done->clientsOwner->fullName(),
+            'count' => (string) $done->reassignedClients,
+        ])));
     }
 
     public function reactivate(Request $request, User $user, ReactivateUser $reactivate): RedirectResponse

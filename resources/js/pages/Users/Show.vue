@@ -9,13 +9,16 @@ import TextField from '@/components/forms/TextField.vue';
 import UserStatusBadge from '@/components/users/UserStatusBadge.vue';
 import { useTrans } from '@/composables/useTrans';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { LayoutData, Option, UserDetail } from '@/types';
+import type { AgentClients, LayoutData, Option, UserDetail } from '@/types';
 
 /**
  * One user, for the admin (M01 §5; D-139, D-140): data and role, access (resets of password and
  * second factor, new link), status (deactivation with confirmation, ux-architettura §4.5, and
  * reactivation). The server sends only the actions allowed now (never on the admin himself,
  * D-281); the rules are checked again on the server.
+ * For an agent (M01-CA4, D-360) the deactivation dialog shows how many clients he has and lets the
+ * admin hand them all to an active agent in the same step (optional); a deactivated agent with
+ * clients left links to the client list filtered on the clients of deactivated agents.
  */
 type AccessAction = 'deactivate' | 'reactivate' | 'resetPassword' | 'resetTwoFactor' | 'resendLink';
 
@@ -25,6 +28,7 @@ const props = defineProps<{
     roles: Option[];
     isSelf: boolean;
     actions: { update: string } & Record<AccessAction, string | null>;
+    clients: AgentClients | null;
     profileUrl: string | null;
     indexUrl: string;
 }>();
@@ -83,17 +87,30 @@ const confirmLabel = computed(() => {
     }
 });
 
+/** Agent who receives all the clients of the agent being deactivated ('' = not now). */
+const clientsOwner = ref('');
+
+function clientsText(prefix: 'clients' | 'clients_left', count: number): string {
+    if (count === 0) {
+        return t('users.show.clients_none');
+    }
+
+    return count === 1 ? t(`users.show.${prefix}_one`) : t(`users.show.${prefix}_many`, { count: String(count) });
+}
+
 function run(action: AccessAction): void {
     const url = props.actions[action];
     if (url === null) {
         return;
     }
     running.value = action;
-    router.post(url, {}, {
+    const data = action === 'deactivate' && clientsOwner.value !== '' ? { clients_owner_id: clientsOwner.value } : {};
+    router.post(url, data, {
         preserveScroll: true,
         onFinish: () => {
             running.value = null;
             confirming.value = null;
+            clientsOwner.value = '';
         },
     });
 }
@@ -346,6 +363,15 @@ const hasAccessActions = computed(
                         <p v-if="actions.reactivate">
                             {{ t('users.show.reactivate_help') }}
                         </p>
+                        <p v-if="actions.reactivate && clients && clients.count > 0">
+                            {{ clientsText('clients_left', clients.count) }}
+                            <Link
+                                :href="clients.listUrl"
+                                class="font-semibold text-ink underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-accent"
+                            >
+                                {{ t('users.show.clients_left_link') }}
+                            </Link>
+                        </p>
                     </div>
                     <button
                         v-if="actions.deactivate"
@@ -386,14 +412,33 @@ const hasAccessActions = computed(
             :title="confirmTitle"
             :confirm-label="confirmLabel"
             :processing="running !== null"
-            @cancel="confirming = null"
+            @cancel="confirming = null; clientsOwner = ''"
             @confirm="confirming && run(confirming)"
         >
             <template v-if="confirming === 'deactivate'">
                 <p>{{ t('users.show.deactivate_help') }}</p>
-                <p v-if="user.role === 'agent'">
-                    {{ t('users.show.deactivate_agent_help') }}
-                </p>
+                <template v-if="clients">
+                    <p>
+                        {{ t('users.show.deactivate_agent_help') }}
+                        {{ clientsText('clients', clients.count) }}
+                    </p>
+                    <template v-if="clients.count > 0">
+                        <template v-if="clients.owners.length > 0">
+                            <SelectField
+                                v-model="clientsOwner"
+                                :label="t('users.show.clients_owner')"
+                                :options="clients.owners"
+                                :placeholder="t('users.show.clients_owner_placeholder')"
+                            />
+                            <p class="text-[13px] text-muted">
+                                {{ t('users.show.clients_owner_help') }}
+                            </p>
+                        </template>
+                        <p v-else>
+                            {{ t('users.show.clients_no_owner') }}
+                        </p>
+                    </template>
+                </template>
             </template>
             <template v-else-if="confirming === 'resetPassword'">
                 <p>{{ t('users.show.reset_password_help') }}</p>

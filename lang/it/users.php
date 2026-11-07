@@ -36,10 +36,15 @@ return [
         'invalid' => "Il link non è più valido: chiedi all'amministratore di inviarne uno nuovo.",
     ],
 
+    'attributes' => [
+        'clients_owner_id' => 'agente che riceve i clienti',
+    ],
+
     'errors' => [
         'last_active_admin' => 'Operazione non consentita: deve restare almeno un admin attivo. Nomina prima un altro admin',
         'own_account' => 'Non puoi eseguire questa operazione sul tuo account: per i tuoi dati usa il profilo',
         'inactive' => "L'utente è disattivato: riattivalo prima di procedere",
+        'invalid_clients_owner' => 'I clienti si riassegnano solo a un altro agente attivo',
         'two_factor_not_configured' => "L'utente non ha ancora configurato la verifica in due passaggi: invia di nuovo il link di accesso",
         'already_configured' => "L'utente ha già configurato l'accesso: usa il reset della password o della verifica in due passaggi",
     ],
@@ -48,6 +53,7 @@ return [
         'created' => 'Utente creato: il link di attivazione è stato inviato a :email',
         'updated' => 'Dati dell\'utente salvati',
         'deactivated' => ':name è stato disattivato',
+        'deactivated_with_clients' => ':name è stato disattivato; clienti assegnati a :owner: :count',
         'reactivated' => ':name è stato riattivato',
         'two_factor_reset' => 'Verifica in due passaggi azzerata: il link per configurare di nuovo l\'accesso è stato inviato a :email',
         'password_reset' => 'Password azzerata: il link per sceglierne una nuova è stato inviato a :email',
