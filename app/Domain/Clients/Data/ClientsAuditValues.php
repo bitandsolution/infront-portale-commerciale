@@ -42,4 +42,33 @@ final class ClientsAuditValues
             'logo_file_id' => $client->logo_file_id,
         ];
     }
+
+    /**
+     * The owner of a client in the event client.reassigned (D-082): id and name, since the name of
+     * a deactivated agent is what the admin looks for in the audit.
+     *
+     * @return array{owner_id: int, owner_name: string}
+     */
+    public static function owner(Client $client): array
+    {
+        return [
+            'owner_id' => $client->owner_id,
+            'owner_name' => $client->owner->fullName(),
+        ];
+    }
+
+    /**
+     * Status of a client in the events client.deactivated, client.reactivated and client.merged
+     * (D-359): the client it was merged into by id and name.
+     *
+     * @return array{is_active: bool, merged_into_id: int|null, merged_into_name: string|null}
+     */
+    public static function status(Client $client): array
+    {
+        return [
+            'is_active' => $client->is_active,
+            'merged_into_id' => $client->merged_into_id,
+            'merged_into_name' => $client->mergedInto?->company_name,
+        ];
+    }
 }

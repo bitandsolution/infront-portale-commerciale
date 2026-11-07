@@ -3,21 +3,26 @@ import { Link } from '@inertiajs/vue3';
 import { Building2, ChevronRight, Plus, Search } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { buttonClasses } from '@/components/buttons';
+import CheckboxField from '@/components/forms/CheckboxField.vue';
+import SelectField from '@/components/forms/SelectField.vue';
 import EmptyState from '@/components/states/EmptyState.vue';
 import StatusPill from '@/components/StatusPill.vue';
 import { useTrans } from '@/composables/useTrans';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { ClientRow, LayoutData } from '@/types';
+import type { ClientRow, ClientStatus, LayoutData, Option, StatusTone } from '@/types';
 
 /**
  * Client lists (M05 F-01; D-076): "I miei clienti" for the agent (only his own clients, without the
- * owner column), "Elenco clienti" for admin and manager (every client, with its agent). The list
- * arrives from the server already filtered by the owner scope; the search works in the browser.
+ * owner column and without the merged ones), "Elenco clienti" for admin and manager (every client,
+ * with its agent). The list arrives from the server already filtered by the owner scope; search and
+ * filters work in the browser. Back-office filters (D-360): agent, status, clients of deactivated
+ * agents (also opened with "?agenti=disattivati").
  */
 const props = defineProps<{
     layout: LayoutData;
     clients: ClientRow[];
     withOwner: boolean;
+    filter: { deactivatedOwners: boolean } | null;
     createUrl: string | null;
 }>();
 
@@ -27,17 +32,58 @@ const search = ref('');
 
 const scope = computed(() => (props.withOwner ? 'all' : 'mine'));
 
+type StatusFilter = 'current' | 'active' | 'inactive' | 'merged';
+
+const ownerFilter = ref('');
+const statusFilter = ref<StatusFilter>('current');
+const deactivatedOwners = ref(props.filter?.deactivatedOwners ?? false);
+
+const statusOptions = computed<Option[]>(() =>
+    (['current', 'active', 'inactive', 'merged'] as const).map((value) => ({ value, label: t(`clients.list.filters.status_${value}`) })),
+);
+
+/** The agents that own at least one client, deactivated ones marked. */
+const ownerOptions = computed<Option[]>(() => {
+    const owners = new Map<number, Option>();
+    for (const client of props.clients) {
+        if (client.ownerId !== null && client.owner !== null && !owners.has(client.ownerId)) {
+            owners.set(client.ownerId, {
+                value: String(client.ownerId),
+                label: client.ownerActive === false ? t('clients.list.filters.owner_inactive', { owner: client.owner }) : client.owner,
+            });
+        }
+    }
+
+    return [...owners.values()].sort((a, b) => a.label.localeCompare(b.label, 'it'));
+});
+
+function matchesStatus(status: ClientStatus): boolean {
+    return statusFilter.value === 'current' ? status !== 'merged' : status === statusFilter.value;
+}
+
 const filtered = computed(() => {
     const term = search.value.trim().toLocaleLowerCase('it');
 
     return props.clients.filter(
         (client) =>
-            term === ''
+            (term === ''
             || client.companyName.toLocaleLowerCase('it').includes(term)
             || (client.vatNumber ?? '').includes(term)
-            || client.email.toLocaleLowerCase('it').includes(term),
+            || client.email.toLocaleLowerCase('it').includes(term))
+            && (!props.withOwner
+                || (matchesStatus(client.status)
+                    && (ownerFilter.value === '' || String(client.ownerId) === ownerFilter.value)
+                    && (!deactivatedOwners.value || client.ownerActive === false))),
     );
 });
+
+const filtersActive = computed(() => props.withOwner && (ownerFilter.value !== '' || statusFilter.value !== 'current' || deactivatedOwners.value));
+
+const statusTones: Record<ClientStatus, StatusTone> = { active: 'success', inactive: 'muted', merged: 'notice' };
+
+function statusLabel(status: ClientStatus): string {
+    return t(`clients.${status}`);
+}
 </script>
 
 <template>
@@ -89,6 +135,29 @@ const filtered = computed(() => {
                         class="min-h-11 w-full rounded-[10px] border border-line-strong bg-white pr-3.5 pl-10 text-[15px] text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
                     >
                 </div>
+                <div
+                    v-if="withOwner"
+                    class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2"
+                >
+                    <SelectField
+                        v-model="ownerFilter"
+                        :label="t('clients.list.filters.owner')"
+                        :options="ownerOptions"
+                        :placeholder="t('clients.list.filters.owner_all')"
+                    />
+                    <SelectField
+                        v-model="statusFilter"
+                        :label="t('clients.list.filters.status')"
+                        :options="statusOptions"
+                    />
+                    <div class="md:col-span-2">
+                        <CheckboxField
+                            v-model="deactivatedOwners"
+                            :label="t('clients.list.filters.deactivated_owners')"
+                            :help="t('clients.list.filters.deactivated_owners_help')"
+                        />
+                    </div>
+                </div>
             </div>
 
             <div class="overflow-hidden rounded-[14px] border border-line bg-white">
@@ -121,7 +190,7 @@ const filtered = computed(() => {
                     v-else-if="filtered.length === 0"
                     class="px-4 py-8 text-center text-sm text-muted"
                 >
-                    {{ t('clients.list.empty_search') }}
+                    {{ filtersActive ? t('clients.list.empty_filters') : t('clients.list.empty_search') }}
                 </p>
 
                 <table
@@ -211,12 +280,24 @@ const filtered = computed(() => {
                                 class="px-4 py-3"
                             >
                                 {{ client.owner }}
+                                <div
+                                    v-if="client.ownerActive === false"
+                                    class="text-[13px] text-muted"
+                                >
+                                    {{ t('clients.list.owner_inactive') }}
+                                </div>
                             </td>
                             <td class="px-4 py-3">
                                 <StatusPill
-                                    :label="client.isActive ? t('clients.active') : t('clients.inactive')"
-                                    :tone="client.isActive ? 'success' : 'muted'"
+                                    :label="statusLabel(client.status)"
+                                    :tone="statusTones[client.status]"
                                 />
+                                <div
+                                    v-if="client.mergedInto"
+                                    class="mt-1 text-[13px] text-muted"
+                                >
+                                    {{ t('clients.list.merged_into', { client: client.mergedInto }) }}
+                                </div>
                             </td>
                             <td class="px-2 py-3">
                                 <Link
@@ -259,12 +340,19 @@ const filtered = computed(() => {
                                 </div>
                                 <div class="truncate text-[13px] text-muted">
                                     {{ withOwner && client.owner ? `${client.sector} · ${client.owner}` : client.sector }}
+                                    <template v-if="client.ownerActive === false">
+                                        ({{ t('clients.list.owner_inactive') }})
+                                    </template>
                                 </div>
                                 <div class="mt-1.5 flex flex-wrap items-center gap-2">
                                     <StatusPill
-                                        :label="client.isActive ? t('clients.active') : t('clients.inactive')"
-                                        :tone="client.isActive ? 'success' : 'muted'"
+                                        :label="statusLabel(client.status)"
+                                        :tone="statusTones[client.status]"
                                     />
+                                    <span
+                                        v-if="client.mergedInto"
+                                        class="text-[13px] text-muted"
+                                    >{{ t('clients.list.merged_into', { client: client.mergedInto }) }}</span>
                                     <span
                                         v-if="client.vatNumber"
                                         class="font-mono text-[13px] text-muted"

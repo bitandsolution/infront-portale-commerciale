@@ -126,6 +126,12 @@ function routeMatrix(): array
         'clients.store' => ['method' => 'POST', 'expected' => ['login', 302, 403, 302, 'login', 'setup']],
         'clients.edit' => ['method' => 'GET', 'expected' => $backOffice],
         'clients.update' => ['method' => 'PUT', 'expected' => $adminForm],
+        // M05 F-07, F-08, F-09 — reassignment, deactivation, reactivation, merge: admin only (D-082,
+        // D-359). Target: an active client; empty bodies go back to the page (302)
+        'clients.reassign' => ['method' => 'POST', 'expected' => $adminForm],
+        'clients.deactivate' => ['method' => 'POST', 'expected' => $adminForm],
+        'clients.reactivate' => ['method' => 'POST', 'expected' => $adminForm],
+        'clients.merge' => ['method' => 'POST', 'expected' => $adminForm],
         // M05 F-05 — commodity sectors: admin only (D-357)
         'pages.clients_sectors' => ['method' => 'GET', 'expected' => $admin],
         'clients.sectors.create' => ['method' => 'GET', 'expected' => $admin],
@@ -342,7 +348,7 @@ function matrixParameters(string $route): array
         $route === 'sports.clubs.aliases.destroy' => [
             'clubAlias' => ClubAlias::query()->create(['club_id' => ($club = Club::factory()->create())->id, 'discipline_id' => $club->discipline_id, 'alias' => 'Alias matrice', 'source' => AliasSource::Manual])->id,
         ],
-        in_array($route, ['clients.edit', 'clients.update'], true) => [
+        in_array($route, ['clients.edit', 'clients.update', 'clients.reassign', 'clients.deactivate', 'clients.reactivate', 'clients.merge'], true) => [
             'client' => Client::factory()->create()->id,
         ],
         in_array($route, ['clients.sectors.edit', 'clients.sectors.update'], true) => [

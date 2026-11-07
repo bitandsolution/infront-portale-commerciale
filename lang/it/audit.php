@@ -84,6 +84,10 @@ return [
         'commodity_sector_updated' => 'Settore merceologico modificato',
         'client_created' => 'Cliente creato',
         'client_updated' => 'Cliente modificato',
+        'client_reassigned' => 'Cliente riassegnato a un altro agente',
+        'client_deactivated' => 'Cliente disattivato',
+        'client_reactivated' => 'Cliente riattivato',
+        'client_merged' => 'Cliente unito a un altro cliente',
     ],
 
     'reasons' => [

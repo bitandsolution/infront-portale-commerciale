@@ -101,6 +101,12 @@ enum AuditAction: string
     case ClientCreated = 'client.created';
     case ClientUpdated = 'client.updated';
 
+    // F3-03: reassignment, deactivation and merge of clients (D-082, D-359): area "clients".
+    case ClientReassigned = 'client.reassigned';
+    case ClientDeactivated = 'client.deactivated';
+    case ClientReactivated = 'client.reactivated';
+    case ClientMerged = 'client.merged';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {

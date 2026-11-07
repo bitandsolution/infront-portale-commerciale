@@ -195,9 +195,28 @@ export interface ClientRow {
     sector: string;
     contactName: string | null;
     owner: string | null;
+    /** Back office only (filters of D-360). */
+    ownerId: number | null;
+    ownerActive: boolean | null;
     isActive: boolean;
+    status: ClientStatus;
+    /** Back office only: the client a merged client went into (D-359). */
+    mergedInto: string | null;
     logoUrl: string;
     url: string;
+}
+
+/** Status of a client: active, not active, merged into another client (D-359). */
+export type ClientStatus = 'active' | 'inactive' | 'merged';
+
+/** Admin actions on a client (ClientsPresenter::management; D-082, D-359). */
+export interface ClientManagement {
+    reassignUrl: string | null;
+    deactivateUrl: string | null;
+    reactivateUrl: string | null;
+    mergeUrl: string | null;
+    owners: Option[];
+    mergeTargets: Option[];
 }
 
 /** The fields of the client form (ClientsPresenter::clientForm). */
@@ -210,7 +229,11 @@ export interface ClientForm {
     sectorFreeText: string;
     contactName: string;
     owner: string;
+    ownerActive: boolean;
     isActive: boolean;
+    status: ClientStatus;
+    /** Back office only (D-359). */
+    mergedInto: { name: string; url: string } | null;
     logoUrl: string;
 }
 
