@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Users;
 
 use App\Domain\Users\Actions\CreateUser;
 use App\Domain\Users\Actions\UpdateUser;
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
-use App\Enums\Role;
 use App\Models\Client;
 use App\Models\User;
 use App\Support\Clients\ClientsPresenter;
