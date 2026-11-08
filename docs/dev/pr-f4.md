@@ -29,7 +29,7 @@ Fuori da F4:
 | F4-01 | ✅ Unita e collaudata l'8/11/2026 (PR #82; D-377, D-378 con la #83) |
 | F4-02 | ✅ Unita e collaudata l'8/11/2026 (PR #84; D-379…D-381 con la #85) |
 | F4-03 | ✅ Unita e collaudata l'8/11/2026 (PR #86; D-382, D-383 con la #87) |
-| F4-04 | ✅ Unita e collaudata l'8/11/2026 (PR #89; D-384…D-387 con la #90) |
+| F4-04 | ✅ Unita e collaudata l'8/11/2026 (PR #89; D-384…D-387 con la #90, D-388 con la #92) |
 
 Da F4-03, da riusare:
 - **`DraftEvaluator`** (`App\Domain\Proposals\Services`) è l'unica valutazione dei club di una bozza: errori per campo (`club`, `tier`, `led_format`, `led_seconds`, `matches`, `seats`, `seats.<id variante>`, `elements`) e prezzi da `PriceCalculator`, un club alla volta. F4-04 la usa per il blocco del riepilogo (errore `elements`, D-373) e per gli avvisi; F4-05 per i club da saltare nella copia e nel duplica; F5 per la riverifica all'invio (RB-11).
@@ -42,4 +42,4 @@ Da F4-04, da riusare:
 - **KPI di campagna**: `DraftEvaluator` restituisce in `DraftEvaluation::$campaign` i `CampaignKpis` (club, partite, partite con LED, spot = secondi / 15 × partite, mesi, top match), calcolati con `MatchCounter` su tutti i club con un prezzo insieme; `SaveDraft` li salva sulla versione di lavoro (`campaign_starts_on`, `campaign_months`, `total_matches`, `total_spots`, `top_matches`) e nell'audit (D-386). "Partite con LED" non si salva (D-385). F5 li congela con la versione, F7 li usa nel documento (D-111).
 - **Riepilogo** (passo 5, `proposals/DraftSummary`): si apre solo con `DraftEvaluation::blocksSummary()` falso (almeno un club, nessuno senza elementi, D-373), anche lato server (`?passo=5` → passo 4). Gli avvisi (`ProposalsPresenter::warnings()`) segnalano numero standard, top match non disponibili ed errori delle scelte salvate (D-384). Al passo 5 il totale è nella tabella, senza colonna né barra (D-387). F5 aggiunge qui "Invia in approvazione".
 - **Ricalcolo alla riapertura**: `DraftRepricing::compare()` confronta le righe salvate con la valutazione corrente → prop `reopened` ("da € X a € Y" con il motivo), calcolata solo all'apertura della pagina; aprire la bozza non scrive nulla. F4-05 (duplica) può riusarlo per segnalare i prezzi ricalcolati della copia.
-- ❓ Aperta: la tabella del riepilogo sullo smartphone scorre in orizzontale (domanda 5 della #89).
+- Sullo smartphone la tabella del riepilogo scorre in orizzontale (D-388).
