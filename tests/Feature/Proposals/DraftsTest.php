@@ -183,11 +183,12 @@ it('D-375, D-317: the draft starts on the season of the top bar, never on a clos
     expect($proposal->season_id)->toBe($next->id);
 
     // The season chosen in the top bar…
-    $this->withSession([CurrentSeason::SESSION_KEY => $later->id]);
-    expect(draftsCreate($agent)->season_id)->toBe($later->id);
+    $this->actingAs($agent)->post(route('season.select'), ['season_id' => $later->id]);
+    expect(session(CurrentSeason::SESSION_KEY))->toBe($later->id)
+        ->and(draftsCreate($agent)->season_id)->toBe($later->id);
 
     // …unless it is closed: then the first season still running or to come.
-    $this->withSession([CurrentSeason::SESSION_KEY => $closed->id]);
+    $this->actingAs($agent)->post(route('season.select'), ['season_id' => $closed->id]);
     expect(draftsCreate($agent)->season_id)->toBe($next->id);
 });
 
