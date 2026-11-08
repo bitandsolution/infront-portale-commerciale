@@ -11,7 +11,8 @@ use Illuminate\Support\Collection;
 /**
  * Fields of a draft in the audit events of the area "proposals" (D-372): the header of the steps 1
  * and 2 and, from F4-03, one field per club ("club_<club code>", the configuration in one line) and
- * the list total. The season is written as season_code, because AuditLog drops the fields named
+ * the list total; from F4-04 the KPI of the campaign saved on the working version. The season is
+ * written as season_code, because AuditLog drops the fields named
  * "code"; a club removed from the draft is written as null.
  */
 final class ProposalsAuditValues
@@ -53,6 +54,24 @@ final class ProposalsAuditValues
         }
 
         return $values;
+    }
+
+    /**
+     * KPI of the campaign saved on the working version (M06 §6, D-093; F4-04); null when they cannot
+     * be calculated (no period, no club that can be priced) and top matches null when not available
+     * or not applicable (D-320).
+     *
+     * @return array<string, int|string|null>
+     */
+    public static function campaign(ProposalVersion $version): array
+    {
+        return [
+            'campaign_starts_on' => $version->campaign_starts_on?->toDateString(),
+            'campaign_months' => $version->campaign_months,
+            'total_matches' => $version->total_matches,
+            'total_spots' => $version->total_spots,
+            'top_matches' => $version->top_matches,
+        ];
     }
 
     public static function clubKey(string $clubCode): string

@@ -428,9 +428,15 @@ export interface ProposalDraft {
     seasonId: string;
     startsOn: string;
     endsOn: string;
+    /** "Dal 01/07/2027 al 30/06/2028", null without a period. */
+    periodLabel: string | null;
     listTotal: string;
     clubs: ProposalDraftClub[];
     hasErrors: boolean;
+    /** D-373: no club, or a club without elements: the summary (step 5) is not available. */
+    blocksSummary: boolean;
+    campaign: ProposalCampaign | null;
+    warnings: ProposalWarning[];
     saveUrl: string;
     deleteUrl: string;
     newClientUrl: string;
@@ -471,8 +477,39 @@ export interface ProposalDraftClub {
     matches: number | null;
     matchesLabel: string | null;
     spots: number | null;
+    spotsPerMatch: number | null;
+    tierName: string | null;
+    formatName: string | null;
+    ledLabel: string | null;
+    hospitalityLabel: string | null;
     price: string | null;
     errors: Record<string, string>;
+}
+
+/** KPI of the campaign calculated by the server (ProposalsPresenter::campaign; M06 §6, D-093). */
+export interface ProposalCampaign {
+    clubs: number;
+    totalMatches: number;
+    ledMatches: number;
+    totalSpots: number;
+    months: number;
+    range: string | null;
+    topMatchesApplicable: boolean;
+    /** A number, "n.d." when a calendar is missing, null when not applicable. */
+    topMatches: string | null;
+    fromCalendar: boolean;
+}
+
+/** A warning of the summary: an error of a saved choice, or information (standard number, top matches). */
+export interface ProposalWarning {
+    kind: 'error' | 'info';
+    text: string;
+}
+
+/** Prices recalculated at the reopening of a draft (ProposalsPresenter::repricing; RB-12). */
+export interface ProposalRepricing {
+    clubs: Array<{ name: string; text: string }>;
+    total: string;
 }
 
 /** A club of the draft as the agent edits it (sent with the automatic save). */
