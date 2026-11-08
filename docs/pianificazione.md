@@ -10,7 +10,7 @@ Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 | 6.1 | Perimetro MVP e ordine dei moduli | ✅ Approvato (D-234…D-239) |
 | 6.2 | Stime e milestone, data di avvio, uso del vecchio sistema dopo l'avvio | ✅ Approvato (D-243…D-247) |
 | 6.3 | Preparazione del repository (`CLAUDE.md`, `docs/`, CI, verifica layout D-226) | ✅ Approvato (D-249…D-254) |
-| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352), F3 il 7/11/2026 (PR #70…#78, D-356…D-369); **A1** della milestone A eseguito il 7/11/2026 sulla VM, tutto ✅ (`docs/dev/collaudo-milestone-a.md` §7); prossimi passi: A2 con il calendario reale, R0, piano della fetta F4 |
+| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352), F3 il 7/11/2026 (PR #70…#78, D-356…D-369); **A1** della milestone A eseguito il 7/11/2026 sulla VM, tutto ✅ (`docs/dev/collaudo-milestone-a.md` §7); fetta **F4** in corso: piano approvato l'8/11/2026 (D-370…D-376), F4-01, F4-02, F4-03 e F4-04 unite e collaudate l'8/11/2026 (PR #82, #84, #86, #89; D-377…D-387); prossimi passi: F4-05, A2 con il calendario reale, R0 |
 
 ---
 
@@ -104,7 +104,7 @@ flowchart LR
 | 7/1 – 15/1/2027 | Collaudo **milestone A** (Antonio) | — | Anticipato in due tempi (D-353): **A1** sulla VM con dati fittizi, ✅ eseguito il 7/11/2026 senza esiti negativi, **A2** con il calendario reale di Infront; checklist `docs/dev/collaudo-milestone-a.md` |
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
 | 7/1 – 13/1 | **F3** M05 | 1 | ✅ Completata il 7/11/2026 (F3-01…F3-04, PR #70, #71, #76, #78, D-356…D-369, `docs/dev/pr-f3.md`). Settori, anagrafica con controllo dei duplicati, riassegnazione, unione e disattivazione dei clienti, clienti dell'agente disattivato (M01-CA4) |
-| 14/1 – 3/2 | **F4** M06 | 3 | Piano approvato l'8/11/2026 (D-370…D-376, `docs/dev/pr-f4.md`): F4-01 Modello delle proposte, F4-02 Bozza e passi 1–2, F4-03 Club e configurazione, F4-04 Riepilogo, F4-05 Copia e Duplica; avviata in anticipo |
+| 14/1 – 3/2 | **F4** M06 | 3 | Piano approvato l'8/11/2026 (D-370…D-376, `docs/dev/pr-f4.md`): F4-01 Modello delle proposte, F4-02 Bozza e passi 1–2, F4-03 Club e configurazione, F4-04 Riepilogo (le quattro unite e collaudate l'8/11/2026), F4-05 Copia e Duplica; avviata in anticipo |
 | 4/2 – 24/2 | **F5** M07 + notifiche | 3 | |
 | 1/3 – 12/3 | Collaudo **milestone B** (agenti pilota, gestore) · **checkpoint di pianificazione** (D-247) | — | Verifica del margine sul go-live |
 | 25/2 – 10/3 | **F6** M08 | 2 | |
@@ -163,7 +163,7 @@ Repository: `github.com/bitandsolution/infront-portale-commerciale` (D-248). Con
 | `docs/dev/pr-f1.md` | Le 6 PR della fetta F1 (D-315) |
 | `docs/dev/pr-f2.md` | Le 6 PR della fetta F2 (D-330) |
 | `docs/dev/pr-f3.md` | Le 4 PR della fetta F3 (D-356), completata il 7/11/2026 |
-| `docs/dev/pr-f4.md` | Le 5 PR della fetta F4 (D-370), piano approvato l'8/11/2026 |
+| `docs/dev/pr-f4.md` | Le 5 PR della fetta F4 (D-370), piano approvato l'8/11/2026; avanzamento ed eredità di F4-03 e F4-04 per F4-05 e F5 |
 | `docs/dev/collaudo-milestone-a.md` | Checklist della milestone A e traccia di R0 (D-353) |
 | `docs/registro-decisioni.md`, `pianificazione.md`, `progettazione-tecnica.md`, `ux-architettura.md`, `features-evolutive.md` | Copie dei documenti di progetto |
 
