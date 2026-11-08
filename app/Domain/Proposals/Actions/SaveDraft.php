@@ -54,7 +54,8 @@ use RuntimeException;
  *   agent has just made (a new club, tier, format, more minutes or seats) must be sellable and within
  *   the residual (RB-10, M06-CA5), otherwise it is refused with the message of its field; a choice
  *   already saved that is no longer valid (residual, list or enrolments changed) stays in the draft
- *   with its error (M06 §9, D-373). Territory and visibility type are the only active ones (D-085).
+ *   with its error (M06 §9, D-373, D-382). Territory and visibility type are the only active ones
+ *   (D-085). A club removed from the draft is not confirmed: the removal stays in the audit (D-383).
  * - In the same request the server calculates and writes the matches, list prices and club price of
  *   every club and the list total of the version (CLAUDE.md §4; prices never come from the page).
  * - Nothing changed: nothing is written, no event. Otherwise lock_version + 1 and one audit event
@@ -238,7 +239,7 @@ final class SaveDraft
 
     /**
      * A choice just made must be sellable and within the residual (RB-10, D-064); one already saved
-     * that is no longer valid stays with its error (M06 §9).
+     * that is no longer valid stays with its error (M06 §9, D-382).
      *
      * @param  Collection<int, ProposalVersionClub>  $rows
      */

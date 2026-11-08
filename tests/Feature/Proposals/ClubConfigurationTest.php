@@ -365,7 +365,7 @@ it('RB-10: seats beyond the residual of the variant are refused', function () {
         ->assertSessionHasErrors(["clubs.{$this->lazio->id}.seats.".confVariant('BASE')->id]);
 });
 
-it('FL-02, D-071: a sold out tier or a hidden format cannot be chosen', function () {
+it('FL-02, D-071, D-382: a sold out tier or a hidden format cannot be chosen', function () {
     InventoryCommitment::factory()->forTier(confTierModel('TOP'))->create(['season_id' => $this->season->id, 'club_id' => $this->lazio->id]);
     $proposal = confDraft($this->agent);
 
@@ -408,7 +408,7 @@ it('M06-CA10, D-373: a club without elements is saved with the error "configure 
         ]);
 });
 
-it('M06 §9: choices already saved that are no longer valid stay in the draft with their errors, every club evaluated', function () {
+it('M06 §9, D-382: choices already saved that are no longer valid stay in the draft with their errors, every club evaluated', function () {
     // A league with the calendar loaded and no home match in the period: LED with zero matches.
     $empty = CompetitionSeason::factory()->create(['season_id' => $this->season->id, 'calendar_loaded_at' => now()]);
     $como = confClub($this, 'Como 1907', 'COMO', $empty);
@@ -482,7 +482,7 @@ it('M06 §4: changing season reports the clubs that are not selectable in the ne
 
 /* Rows, removal and audit (M06 §5 "Rimuovi club", D-372, D-085). */
 
-it('D-372: a save writes one event with the changed clubs and the list total; a removed club is written as null', function () {
+it('D-372, D-383: a save writes one event with the changed clubs and the list total; a removed club is written as null', function () {
     $proposal = confDraft($this->agent);
 
     confSave($this->agent, $proposal, [confRow($this->lazio, 'TOP', 'FILA_2', 60, ['PREMIUM' => 2])]);
