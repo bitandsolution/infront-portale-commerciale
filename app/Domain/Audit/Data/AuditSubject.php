@@ -16,10 +16,12 @@ use App\Models\LedFormat;
 use App\Models\OnTopAsset;
 use App\Models\PartnershipTier;
 use App\Models\PriceList;
+use App\Models\Proposal;
 use App\Models\Season;
 use App\Models\Setting;
 use App\Models\Stadium;
 use App\Models\User;
+use App\Support\Text;
 
 /**
  * Object an audit event talks about (M10 §4.2: type and identifier, e.g. "proposal n. 192").
@@ -104,6 +106,14 @@ final readonly class AuditSubject
         $reference = $client->vat_number !== null ? 'P.IVA '.$client->vat_number : 'cliente '.$client->id;
 
         return new self('client', $client->id, $client->company_name.' ('.$reference.')');
+    }
+
+    /**
+     * A proposal (F4-02), by its number, which never changes (D-371): e.g. "Proposta n. 204".
+     */
+    public static function proposal(Proposal $proposal): self
+    {
+        return new self('proposal', $proposal->id, Text::get('proposals.label', ['number' => (string) $proposal->number]));
     }
 
     public static function stadium(Stadium $stadium): self

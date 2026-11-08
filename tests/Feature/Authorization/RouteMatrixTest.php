@@ -17,6 +17,7 @@ use App\Models\LedFormat;
 use App\Models\OnTopAsset;
 use App\Models\PartnershipTier;
 use App\Models\PriceList;
+use App\Models\Proposal;
 use App\Models\Season;
 use App\Models\Stadium;
 use App\Models\StoredFile;
@@ -71,6 +72,8 @@ function routeMatrix(): array
     $adminForm = ['login', 403, 403, 302, 'login', 'setup'];
     $backOfficeForm = ['login', 403, 302, 302, 'login', 'setup'];
     $adminAllowed = ['login', 403, 403, 'allowed', 'login', 'setup'];
+    $agentForm = ['login', 302, 403, 403, 'login', 'setup'];
+    $nobody = ['login', 403, 403, 403, 'login', 'setup'];
 
     return [
         // Internal health (PR-09, D-179): public for the uptime service, same answer for everybody
@@ -112,6 +115,16 @@ function routeMatrix(): array
         // M06 — the agent's own proposals (D-069)
         'pages.proposals_new' => ['method' => 'GET', 'expected' => $agent],
         'pages.proposals_mine' => ['method' => 'GET', 'expected' => $agent],
+        // M06 — drafts of the configurator (F4-02, D-374): the agent only. A new draft or a new client
+        // with an empty body goes back to the form (302); the target of the draft routes is a draft of
+        // another agent, so every role is refused (RB-14; admin and manager have no proposal pages
+        // until F5)
+        'proposals.store' => ['method' => 'POST', 'expected' => $agentForm],
+        'proposals.clients.store' => ['method' => 'POST', 'expected' => $agentForm],
+        'proposals.edit' => ['method' => 'GET', 'expected' => $nobody],
+        'proposals.update' => ['method' => 'PUT', 'expected' => $nobody],
+        'proposals.clients.update' => ['method' => 'POST', 'expected' => $nobody],
+        'proposals.destroy' => ['method' => 'DELETE', 'expected' => $nobody],
         // M07 — review and every proposal (D-068)
         'pages.proposals_pending' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.proposals_all' => ['method' => 'GET', 'expected' => $backOffice],
@@ -350,6 +363,9 @@ function matrixParameters(string $route): array
         ],
         in_array($route, ['clients.edit', 'clients.update', 'clients.reassign', 'clients.deactivate', 'clients.reactivate', 'clients.merge'], true) => [
             'client' => Client::factory()->create()->id,
+        ],
+        in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy'], true) => [
+            'proposal' => Proposal::factory()->withWorkingVersion()->create()->id,
         ],
         in_array($route, ['clients.sectors.edit', 'clients.sectors.update'], true) => [
             'commoditySector' => CommoditySector::factory()->create()->id,

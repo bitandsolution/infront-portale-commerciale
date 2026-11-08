@@ -107,6 +107,12 @@ enum AuditAction: string
     case ClientReactivated = 'client.reactivated';
     case ClientMerged = 'client.merged';
 
+    // F4-02: drafts of the configurator (D-372): area "proposals". The automatic save writes one
+    // event with the changed fields only; F4-05 adds the duplication.
+    case ProposalDraftCreated = 'proposal.draft_created';
+    case ProposalDraftUpdated = 'proposal.draft_updated';
+    case ProposalDraftDeleted = 'proposal.draft_deleted';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {

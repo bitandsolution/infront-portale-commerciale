@@ -6,6 +6,7 @@ use App\Domain\Audit\Services\AuditLog;
 use App\Enums\AccessReason;
 use App\Enums\AuditAction;
 use App\Models\User;
+use App\Support\Navigation\ReturnAfterLogin;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,8 +57,9 @@ class EnforceIdleTimeout
                 'message' => __('ui.auth.session_expired'),
             ];
 
-            // Only a page can be reopened after the login, not a form submission.
-            $response = $request->isMethod('GET') ? redirect()->guest(route('login')) : redirect()->route('login');
+            // Only a page can be reopened after the login, not a form submission: after a submission
+            // (e.g. the automatic save of a draft, D-375) the page it came from.
+            $response = $request->isMethod('GET') ? redirect()->guest(route('login')) : ReturnAfterLogin::toLogin($request);
 
             return $response->with('toast', $toast);
         }
