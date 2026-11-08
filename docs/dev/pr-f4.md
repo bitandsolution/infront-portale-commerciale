@@ -1,6 +1,6 @@
 # Fetta F4 — M06 Configuratore: elenco delle PR
 
-Stato: ✅ approvato (D-370…D-376, 8/11/2026).
+Stato: ✅ approvato (D-370…D-376, 8/11/2026). Avanzamento: F4-01 (#82), F4-02 (#84) e F4-03 (#86) unite e collaudate l'8/11/2026; prossime F4-04 e F4-05.
 Periodo previsto: 14/1 – 3/2/2027 (D-243), avviata in anticipo. Riferimenti: pianificazione §6.1.3, `docs/specs/spec-M06-configuratore.md` (e le parti di M03, M04 e M05 usate dal configuratore), progettazione-tecnica §5.3.4 e §5.4.4, ux-architettura (principi, §4.5), mockup "Periodo e club", "Configurazione per club" e "Riepilogo" (D-162).
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |
@@ -21,3 +21,18 @@ Note:
 Fuori da F4:
 - **F5**: invio in approvazione con la riverifica di listino e residui (RB-11), ritiro, coda, blocco di lavorazione, sconto, approvazione, versioni congelate, annullamento; consultazione delle proposte da parte di admin e gestore (M06 §3); FK degli impegni verso le proposte (D-334); `notification_logs.proposal_id` (D-299); spostamento delle proposte nell'unione dei clienti (D-359); M03-CA6 per la parte delle proposte approvate.
 - **F7**: M06-CA9 (nessun documento da bozze o proposte in attesa).
+
+## Avanzamento ed eredità per F4-04 e F4-05
+
+| PR | Esito |
+|---|---|
+| F4-01 | ✅ Unita e collaudata l'8/11/2026 (PR #82; D-377, D-378 con la #83) |
+| F4-02 | ✅ Unita e collaudata l'8/11/2026 (PR #84; D-379…D-381 con la #85) |
+| F4-03 | ✅ Unita e collaudata l'8/11/2026 (PR #86; D-382, D-383 con la #87) |
+
+Da F4-03, da riusare:
+- **`DraftEvaluator`** (`App\Domain\Proposals\Services`) è l'unica valutazione dei club di una bozza: errori per campo (`club`, `tier`, `led_format`, `led_seconds`, `matches`, `seats`, `seats.<id variante>`, `elements`) e prezzi da `PriceCalculator`, un club alla volta. F4-04 la usa per il blocco del riepilogo (errore `elements`, D-373) e per gli avvisi; F4-05 per i club da saltare nella copia e nel duplica; F5 per la riverifica all'invio (RB-11).
+- **`SaveDraft`** scrive righe e posti con partite, fonte (`matches_source`), listino, prezzi e totale nella stessa richiesta; con `DraftData::$clubs` nullo ricalcola i club salvati sul nuovo periodo. Una scelta nuova non valida è rifiutata (`clubs.<id club>.<campo>`), una salvata resta con l'errore (D-382). La rimozione di un club non chiede conferma (D-383). Una stagione scelta non si toglie più (M06 §8, D-381).
+- **Pagina**: il configuratore mostra la valutazione **dal vivo** (prezzi ed errori sui listini e residui correnti); le righe salvate si aggiornano al primo salvataggio. Il confronto "da € X a € Y" con i prezzi salvati sulle righe (RB-12) è di F4-04. `SaveDraft::rows()` e `SaveDraft::fromRows()` danno i club salvati.
+- **Spot**: spot a partita = minuti × 4 = secondi / 15 (M06 §6), calcolati dal presenter; i KPI di campagna (club, partite, spot, mesi, top match) e il loro salvataggio sulla versione sono di F4-04 (`MatchCounter` su tutti i club insieme).
+- ⚠️ **Inertia 3**: `router.post`, `put`, `patch` e `delete` mantengono per impostazione lo stato del componente (`preserveState: true`). Una visita che porta a un'altra bozza o a una pagina con props nuove da cui la pagina legge i campi locali va fatta con `preserveState: false` (difetto trovato nel collaudo di F4-03: la bozza nata da "Nuova proposta" perdeva stagione e date).
