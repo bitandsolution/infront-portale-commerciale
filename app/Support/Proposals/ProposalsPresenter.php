@@ -4,13 +4,20 @@ namespace App\Support\Proposals;
 
 use App\Domain\Inventory\Data\ClubSellability;
 use App\Domain\Inventory\Data\SellableOption;
+use App\Domain\Proposals\Data\CampaignKpis;
 use App\Domain\Proposals\Data\ClubEvaluation;
+use App\Domain\Proposals\Data\ClubPriceChange;
 use App\Domain\Proposals\Data\DraftEvaluation;
+use App\Domain\Proposals\Data\DraftPriceChanges;
 use App\Domain\Proposals\Services\ProposalPeriod;
+use App\Domain\Sports\Data\MatchCount;
 use App\Enums\CompetitionType;
 use App\Models\Client;
 use App\Models\Club;
 use App\Models\ClubEnrollment;
+use App\Models\HospitalityVariant;
+use App\Models\LedFormat;
+use App\Models\PartnershipTier;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Season;
@@ -22,7 +29,7 @@ use App\Support\Text;
 use Illuminate\Support\Carbon;
 
 /**
- * Props of the configurator pages (F4-02, F4-03): "Nuova proposta", a draft (steps 1–4) and
+ * Props of the configurator pages (F4-02, F4-03, F4-04): "Nuova proposta", a draft (steps 1–5) and
  * "Le mie proposte". Prices, totals, matches, residuals and errors are always the server's
  * (CLAUDE.md §4): the page only shows them; dates of the period are sent both as "Y-m-d" (fields)
  * and in Italian (texts); system timestamps in Europe/Rome (C7).
@@ -158,19 +165,27 @@ final class ProposalsPresenter
 
     /**
      * One club of the draft (steps 3 and 4): what the agent chose, the matches, the club price and the
-     * errors found by the server (DraftEvaluator), by field.
+     * errors found by the server (DraftEvaluator), by field; for the summary (step 5) also the names
+     * of package, format and hospitality and the spots per match.
      *
+     * @param  array{tiers: array<int, string>, formats: array<int, string>, variants: array<int, string>}  $names
      * @return array<string, mixed>
      */
-    private static function draftClub(ClubEvaluation $evaluation): array
+    private static function draftClub(ClubEvaluation $evaluation, array $names): array
     {
         $quote = $evaluation->quote;
         $data = $evaluation->data;
         $matches = $quote?->matches;
         $seats = [];
 
+        $hospitality = [];
+
         foreach ($data->seats as $variantId => $count) {
             $seats[] = ['variantId' => $variantId, 'seats' => $count];
+
+            if ($count > 0) {
+                $hospitality[] = Text::get('ui.proposals.summary.seats', ['variant' => $names['variants'][$variantId] ?? '', 'count' => (string) $count]);
+            }
         }
 
         return [
@@ -189,15 +204,20 @@ final class ProposalsPresenter
                 ['count' => (string) $matches->matches],
             ),
             // Spots per match = minutes × 4 (M06 §6): one every 15 seconds.
-            'spots' => $matches !== null && $data->ledFormatId !== null ? intdiv($data->ledSeconds, 15) * $matches->matches : null,
+            'spots' => $matches !== null && $data->ledFormatId !== null ? CampaignKpis::spotsPerMatch($data->ledSeconds) * $matches->matches : null,
+            'spotsPerMatch' => $data->ledFormatId !== null ? CampaignKpis::spotsPerMatch($data->ledSeconds) : null,
+            'tierName' => $data->tierId !== null ? ($names['tiers'][$data->tierId] ?? null) : null,
+            'formatName' => $data->ledFormatId !== null ? ($names['formats'][$data->ledFormatId] ?? null) : null,
+            'ledLabel' => $data->ledFormatId !== null ? LedDuration::format($data->ledSeconds) : null,
+            'hospitalityLabel' => $hospitality !== [] ? implode(', ', $hospitality) : null,
             'price' => $quote !== null ? Amounts::italian($quote->total) : null,
             'errors' => $evaluation->errors,
         ];
     }
 
     /**
-     * A draft open in the configurator; the clubs and the total come from the evaluation of the
-     * server, made on the current list and residuals.
+     * A draft open in the configurator; the clubs, the total, the KPI of the campaign and the warnings
+     * of the summary come from the evaluation of the server, made on the current list and residuals.
      *
      * @return array<string, mixed>
      */
@@ -206,6 +226,7 @@ final class ProposalsPresenter
         /** @var ProposalVersion $version */
         $version = $proposal->workingVersion;
         $client = $proposal->client;
+        $names = $evaluation !== null && $evaluation->clubs !== [] ? self::names() : ['tiers' => [], 'formats' => [], 'variants' => []];
 
         return [
             'id' => $proposal->id,
@@ -224,14 +245,146 @@ final class ProposalsPresenter
             'seasonId' => $proposal->season_id !== null ? (string) $proposal->season_id : '',
             'startsOn' => $version->starts_on?->toDateString() ?? '',
             'endsOn' => $version->ends_on?->toDateString() ?? '',
+            'periodLabel' => $version->starts_on !== null && $version->ends_on !== null
+                ? Text::get('ui.proposals.mine.period', ['from' => $version->starts_on->format('d/m/Y'), 'to' => $version->ends_on->format('d/m/Y')])
+                : null,
             'listTotal' => Amounts::italian($evaluation !== null ? $evaluation->listTotal : $version->list_total),
             'clubs' => $evaluation !== null
-                ? array_map(fn (ClubEvaluation $club): array => self::draftClub($club), $evaluation->clubs)
+                ? array_map(fn (ClubEvaluation $club): array => self::draftClub($club, $names), $evaluation->clubs)
                 : [],
             'hasErrors' => $evaluation?->hasErrors() ?? false,
+            // D-373: a club without elements (or no club) blocks the summary.
+            'blocksSummary' => $evaluation?->blocksSummary() ?? true,
+            'campaign' => $evaluation?->campaign !== null ? self::campaign($evaluation->campaign) : null,
+            'warnings' => $evaluation !== null ? self::warnings($evaluation) : [],
             'saveUrl' => route('proposals.update', $proposal),
             'deleteUrl' => route('proposals.destroy', $proposal),
             'newClientUrl' => route('proposals.clients.update', $proposal),
+        ];
+    }
+
+    /**
+     * Names of the values of the catalogue by id, for the summary.
+     *
+     * @return array{tiers: array<int, string>, formats: array<int, string>, variants: array<int, string>}
+     */
+    private static function names(): array
+    {
+        /** @var array<int, string> $tiers */
+        $tiers = PartnershipTier::query()->pluck('name', 'id')->all();
+        /** @var array<int, string> $formats */
+        $formats = LedFormat::query()->pluck('name', 'id')->all();
+        /** @var array<int, string> $variants */
+        $variants = HospitalityVariant::query()->pluck('name', 'id')->all();
+
+        return ['tiers' => $tiers, 'formats' => $formats, 'variants' => $variants];
+    }
+
+    /**
+     * KPI of the campaign for the summary (M06 §6, D-093): numbers, months with their range ("Luglio
+     * 2027 – Giugno 2028") and top matches: a number, "n.d." when a calendar is missing (D-320), absent
+     * when no club plays a competition with the KPI (D-036).
+     *
+     * @return array<string, mixed>
+     */
+    public static function campaign(CampaignKpis $campaign): array
+    {
+        return [
+            'clubs' => $campaign->clubs,
+            'totalMatches' => $campaign->totalMatches,
+            'ledMatches' => $campaign->ledMatches,
+            'totalSpots' => $campaign->totalSpots,
+            'months' => $campaign->campaignMonths,
+            'range' => $campaign->campaignStart !== null && $campaign->campaignEnd !== null
+                ? Text::get('ui.proposals.summary.kpi.range', ['from' => self::month($campaign->campaignStart), 'to' => self::month($campaign->campaignEnd)])
+                : null,
+            'topMatchesApplicable' => $campaign->topMatchesApplicable(),
+            'topMatches' => match ($campaign->topMatchesStatus) {
+                MatchCount::TOP_AVAILABLE => (string) $campaign->topMatches,
+                MatchCount::TOP_NOT_AVAILABLE => Text::get('ui.proposals.summary.kpi.not_available'),
+                default => null,
+            },
+            'fromCalendar' => $campaign->fromCalendar,
+        ];
+    }
+
+    private static function month(Carbon $date): string
+    {
+        return Text::get('ui.proposals.summary.months.'.$date->format('n')).' '.$date->format('Y');
+    }
+
+    /**
+     * Warnings of the summary (M06 §6, §9; ux-architettura §4.5), from the current evaluation: clubs
+     * counted on the standard number (RB-03, D-187), top matches not available (D-320), and the errors
+     * of the saved choices that are no longer valid: club no longer on sale, sold out, beyond the
+     * residual (D-382). The club without elements is not a warning: it blocks the summary (D-373).
+     *
+     * @return list<array{kind: string, text: string}>
+     */
+    public static function warnings(DraftEvaluation $evaluation): array
+    {
+        $warnings = [];
+
+        foreach ($evaluation->clubs as $club) {
+            foreach ($club->errors as $field => $message) {
+                if ($field === 'elements') {
+                    continue;
+                }
+
+                $warnings[] = ['kind' => 'error', 'text' => $field === 'club'
+                    ? $message
+                    : Text::get('ui.proposals.summary.warnings.club_error', ['club' => $club->club->name, 'message' => $message])];
+            }
+        }
+
+        foreach ($evaluation->clubs as $club) {
+            $matches = $club->quote?->matches;
+
+            if ($matches !== null && ! $matches->fromCalendar) {
+                $warnings[] = ['kind' => 'info', 'text' => Text::get(
+                    $matches->prorated ? 'ui.proposals.summary.warnings.standard_prorated' : 'ui.proposals.summary.warnings.standard',
+                    ['club' => $club->club->name, 'matches' => (string) $matches->matches, 'standard' => (string) $matches->edition->standard_home_matches],
+                )];
+            }
+        }
+
+        if ($evaluation->campaign?->topMatchesStatus === MatchCount::TOP_NOT_AVAILABLE) {
+            $warnings[] = ['kind' => 'info', 'text' => Text::get('ui.proposals.summary.warnings.top_not_available')];
+        }
+
+        return $warnings;
+    }
+
+    /**
+     * Prices recalculated at the reopening of a draft (M06 RB-12, M03-CA6; ux-architettura §4.5): "da
+     * € X a € Y" for every club whose price changed, with the reason, and for the list total.
+     *
+     * @return array{clubs: list<array{name: string, text: string}>, total: string}|null
+     */
+    public static function repricing(?DraftPriceChanges $changes): ?array
+    {
+        if ($changes === null) {
+            return null;
+        }
+
+        return [
+            'clubs' => array_map(fn (ClubPriceChange $club): array => [
+                'name' => $club->club->name,
+                'text' => Text::get('ui.proposals.reopened.club', [
+                    'club' => $club->club->name,
+                    'from' => Amounts::italian($club->saved),
+                    'to' => Amounts::italian($club->current),
+                    'reason' => Text::get(match (true) {
+                        $club->listChanged && $club->matchesChanged => 'ui.proposals.reopened.reason_both',
+                        $club->matchesChanged => 'ui.proposals.reopened.reason_matches',
+                        default => 'ui.proposals.reopened.reason_list',
+                    }),
+                ]),
+            ], $changes->clubs),
+            'total' => Text::get('ui.proposals.reopened.total', [
+                'from' => Amounts::italian($changes->savedListTotal),
+                'to' => Amounts::italian($changes->currentListTotal),
+            ]),
         ];
     }
 

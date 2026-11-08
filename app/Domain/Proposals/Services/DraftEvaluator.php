@@ -8,11 +8,13 @@ use App\Domain\Catalog\Services\PriceCalculator;
 use App\Domain\Inventory\Data\ClubSellability;
 use App\Domain\Inventory\Data\SellableOption;
 use App\Domain\Inventory\Services\SellableOptions;
+use App\Domain\Proposals\Data\CampaignKpis;
 use App\Domain\Proposals\Data\ClubEvaluation;
 use App\Domain\Proposals\Data\DraftClubData;
 use App\Domain\Proposals\Data\DraftEvaluation;
 use App\Domain\Settings\Services\Settings;
 use App\Domain\Sports\Exceptions\SportsActionNotAllowed;
+use App\Domain\Sports\Services\MatchCounter;
 use App\Enums\SellableStatus;
 use App\Models\Club;
 use App\Models\HospitalityVariant;
@@ -44,6 +46,9 @@ use Illuminate\Support\Carbon;
  *   others; the options with a price in the published list are priced also when sold out or beyond
  *   the residual, so the agent sees what they would cost. Without a price the club price is not
  *   calculated. The list total is the sum of the club prices (RB-07).
+ * - KPI of the campaign (M06 §6, D-093; F4-04): MatchCounter on all the priced clubs together, so the
+ *   campaign starts with the first home match of any of them (RB-02) and the top matches count only
+ *   in the competitions with the KPI (D-036); spots from the LED of the priced clubs.
  */
 final class DraftEvaluator
 {
@@ -51,6 +56,7 @@ final class DraftEvaluator
         private readonly SellableOptions $sellable,
         private readonly PriceCalculator $calculator,
         private readonly Settings $settings,
+        private readonly MatchCounter $matchCounter,
     ) {}
 
     /**
@@ -77,7 +83,62 @@ final class DraftEvaluator
             $total = $total->plus($evaluation->total());
         }
 
-        return new DraftEvaluation($evaluations, (string) $total->toScale(2));
+        return new DraftEvaluation(
+            $evaluations,
+            (string) $total->toScale(2),
+            $season !== null && $startsOn !== null ? $this->campaign($season, $startsOn, $endsOn, $evaluations) : null,
+        );
+    }
+
+    /**
+     * KPI of the campaign on the clubs that can be priced (the others have an error and are not
+     * counted); null without any of them.
+     *
+     * @param  list<ClubEvaluation>  $evaluations
+     */
+    private function campaign(Season $season, string $startsOn, ?string $endsOn, array $evaluations): ?CampaignKpis
+    {
+        $priced = array_values(array_filter($evaluations, fn (ClubEvaluation $club): bool => $club->quote !== null));
+
+        if ($priced === []) {
+            return null;
+        }
+
+        try {
+            $count = $this->matchCounter->count(
+                $season,
+                array_map(fn (ClubEvaluation $club): Club => $club->club, $priced),
+                Carbon::parse($startsOn),
+                $endsOn !== null ? Carbon::parse($endsOn) : null,
+            );
+        } catch (SportsActionNotAllowed) {
+            return null;
+        }
+
+        $ledMatches = 0;
+        $spots = 0;
+
+        foreach ($priced as $club) {
+            $quote = $club->quote;
+
+            if ($quote !== null && $quote->ledFormat !== null) {
+                $ledMatches += $quote->matches->matches;
+                $spots += CampaignKpis::spotsPerMatch($quote->ledSeconds) * $quote->matches->matches;
+            }
+        }
+
+        return new CampaignKpis(
+            clubs: count($evaluations),
+            totalMatches: $count->totalMatches,
+            ledMatches: $ledMatches,
+            totalSpots: $spots,
+            campaignStart: $count->campaignStart,
+            campaignEnd: $count->campaignEnd,
+            campaignMonths: $count->campaignMonths,
+            topMatches: $count->topMatches,
+            topMatchesStatus: $count->topMatchesStatus,
+            fromCalendar: $count->fromCalendar(),
+        );
     }
 
     private function club(Season $season, Carbon $startsOn, ?Carbon $endsOn, Club $club, DraftClubData $data): ClubEvaluation

@@ -7,7 +7,9 @@ use App\Domain\Proposals\Actions\CreateDraft;
 use App\Domain\Proposals\Actions\DeleteDraft;
 use App\Domain\Proposals\Actions\SaveDraft;
 use App\Domain\Proposals\Data\DraftEvaluation;
+use App\Domain\Proposals\Data\DraftPriceChanges;
 use App\Domain\Proposals\Services\DraftEvaluator;
+use App\Domain\Proposals\Services\DraftRepricing;
 use App\Domain\Proposals\Services\ProposalPeriod;
 use App\Domain\Settings\Services\Settings;
 use App\Enums\ProposalStatus;
@@ -31,21 +33,26 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Configurator pages of the agent (M06 §4; D-372…D-375; slices F4-02, F4-03):
+ * Configurator pages of the agent (M06 §4; D-372…D-375; slices F4-02, F4-03, F4-04):
  * - "Nuova proposta" (proposals_new): step 1 without a draft; the draft is born when the agent
  *   chooses the client (store), never empty;
- * - a draft (edit) at step 1 (client), 2 (season and period), 3 (clubs) or 4 (configuration by
- *   club), saved automatically (update) with its lock version; the server evaluates the clubs and
+ * - a draft (edit) at step 1 (client), 2 (season and period), 3 (clubs), 4 (configuration by club)
+ *   or 5 (summary: only without clubs lacking elements, D-373), saved automatically (update) with its lock version; the server evaluates the clubs and
  *   calculates prices and total in the same request; the step is in the address (?passo=2), so after
  *   an expired session the agent comes back to the same draft and step (D-375);
  * - "Le mie proposte" (proposals_mine): the agent's drafts, reopened or deleted with confirmation
  *   (D-374); the back office has no proposal pages until F5.
+ * - At the reopening of a draft the prices saved on its rows are compared with those calculated now
+ *   (M06 RB-12, M03-CA6): the prop "reopened" is calculated only when the page is opened, so it stays
+ *   while the agent works (the automatic save reloads only "draft" and "clubOptions").
  * Every write goes through an Action with its audit event (D-372).
  */
 class ProposalController extends Controller
 {
-    /** Steps built so far: 1 Cliente, 2 Stagione e periodo, 3 Club, 4 Configurazione (F4-04 adds the 5th). */
-    public const LAST_STEP = 4;
+    /** Steps: 1 Cliente, 2 Stagione e periodo, 3 Club, 4 Configurazione, 5 Riepilogo (F4-04). */
+    public const LAST_STEP = 5;
+
+    public const SUMMARY_STEP = 5;
 
     public function mine(Request $request): Response
     {
@@ -96,8 +103,14 @@ class ProposalController extends Controller
     {
         Gate::authorize('update', $proposal);
         $step = max(1, min(self::LAST_STEP, $request->integer('passo', 1)));
+        $evaluation = self::evaluation($proposal);
 
-        return $this->configurator($this->actor($request), $proposal, $step);
+        // D-373: without clubs, or with a club without elements, the summary is not available.
+        if ($step === self::SUMMARY_STEP && $evaluation->blocksSummary()) {
+            $step = self::SUMMARY_STEP - 1;
+        }
+
+        return $this->configurator($this->actor($request), $proposal, $step, $evaluation);
     }
 
     public function update(SaveDraftRequest $request, Proposal $proposal, SaveDraft $saveDraft): RedirectResponse
@@ -118,7 +131,7 @@ class ProposalController extends Controller
         ));
     }
 
-    private function configurator(User $actor, ?Proposal $proposal, int $step): Response
+    private function configurator(User $actor, ?Proposal $proposal, int $step, ?DraftEvaluation $evaluation = null): Response
     {
         $period = app(ProposalPeriod::class);
         $settings = app(Settings::class);
@@ -130,7 +143,9 @@ class ProposalController extends Controller
             'layout' => LayoutProps::for($actor, $proposal === null ? 'proposals_new' : 'proposals_mine'),
             'step' => $step,
             'lastStep' => self::LAST_STEP,
-            'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $actor, self::evaluation($proposal)) : null,
+            'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $actor, $evaluation ?? self::evaluation($proposal)) : null,
+            // Prices recalculated since the last save (RB-12): only when the page is opened.
+            'reopened' => fn (): ?array => $proposal !== null ? ProposalsPresenter::repricing(self::repricing($proposal, $evaluation ?? self::evaluation($proposal))) : null,
             // Selectable clubs of the season of the draft with their options (step 3 and 4).
             'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season) : []),
             'ledStepSeconds' => $settings->ledStepSeconds(),
@@ -159,6 +174,14 @@ class ProposalController extends Controller
             $version->ends_on?->toDateString(),
             SaveDraft::fromRows(SaveDraft::rows($version)),
         );
+    }
+
+    private static function repricing(Proposal $proposal, DraftEvaluation $evaluation): ?DraftPriceChanges
+    {
+        /** @var ProposalVersion $version */
+        $version = $proposal->workingVersion;
+
+        return app(DraftRepricing::class)->compare(SaveDraft::rows($version), $version->list_total, $evaluation);
     }
 
     private function actor(Request $request): User

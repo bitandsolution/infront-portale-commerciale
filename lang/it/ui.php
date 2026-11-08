@@ -1102,7 +1102,8 @@ return [
         ],
     ],
 
-    // Configurator (M06 §4; D-372…D-375; F4-02: steps 1 and 2, "Le mie proposte").
+    // Configurator (M06 §4; D-372…D-375; F4-02: steps 1 and 2, "Le mie proposte"; F4-03: steps 3 and 4;
+    // F4-04: step 5, summary).
     'proposals' => [
         'steps' => [
             'label' => 'Passi della proposta',
@@ -1136,7 +1137,7 @@ return [
         'nav' => [
             'back' => 'Indietro',
             'next' => 'Avanti',
-            'next_disabled' => 'Il passo Riepilogo non è ancora disponibile: la bozza resta salvata con la configurazione dei club.',
+            'summary_blocked' => 'Per il riepilogo configura almeno un elemento in ogni club, oppure rimuovi il club.',
             'choose_client_first' => 'Scegli il cliente per continuare.',
             'choose_season_first' => 'Scegli la stagione per continuare.',
             'choose_clubs_first' => 'Scegli almeno un club per continuare.',
@@ -1225,6 +1226,69 @@ return [
             'spots' => ':count spot',
             'remove' => 'Rimuovi',
             'remove_club' => 'Rimuovi :club dalla proposta',
+        ],
+        // Step 5 (M06 §6, D-093, D-373; mockup "Riepilogo").
+        'summary' => [
+            'title' => 'Riepilogo',
+            'intro' => 'Prezzi di listino, partite e disponibilità calcolati ora dal server sul listino e sui residui correnti.',
+            'document_club' => 'Proposta club',
+            'document_network' => 'Proposta network',
+            'sector' => 'Settore: :sector',
+            'kpi' => [
+                'label' => 'KPI di campagna',
+                'clubs' => 'Club',
+                'matches' => 'Partite in casa',
+                'led_matches' => 'Partite con LED',
+                'spots' => 'Spot totali',
+                'spots_help' => 'Uno ogni 15 secondi di LED a partita',
+                'months' => 'Mesi di campagna',
+                'top_matches' => 'Top match',
+                'top_help' => 'Solo Serie A',
+                'range' => ':from – :to',
+                'not_available' => 'n.d.',
+                'empty' => 'I KPI si calcolano quando almeno un club ha un prezzo nel periodo.',
+            ],
+            'table' => [
+                'label' => 'Dettaglio per club',
+                'club' => 'Club',
+                'package' => 'Pacchetto',
+                'format' => 'Format LED',
+                'minutes' => 'Min. a partita',
+                'matches' => 'Partite',
+                'spots' => 'Spot a partita',
+                'hospitality' => 'Hospitality',
+                'price' => 'Listino',
+                'total' => 'Totale di listino',
+                'vat' => 'IVA esclusa',
+                'not_priced' => 'Non calcolabile',
+            ],
+            'seats' => ':variant :count',
+            'months' => [
+                1 => 'Gennaio', 2 => 'Febbraio', 3 => 'Marzo', 4 => 'Aprile', 5 => 'Maggio', 6 => 'Giugno',
+                7 => 'Luglio', 8 => 'Agosto', 9 => 'Settembre', 10 => 'Ottobre', 11 => 'Novembre', 12 => 'Dicembre',
+            ],
+            'warnings' => [
+                'title' => 'Avvisi',
+                'errors_title' => 'Da correggere al passo 4',
+                'club_error' => ':club: :message',
+                'standard' => ':club: calendario non caricato, :matches partite in casa dal numero standard della competizione.',
+                'standard_prorated' => ':club: calendario non caricato, :matches partite in casa stimate riproporzionando sul periodo il numero standard (:standard a stagione).',
+                'top_not_available' => 'Top match non disponibili: manca il calendario di un club di Serie A.',
+                'fix' => 'Correggi la configurazione',
+            ],
+            'blocked' => 'Il riepilogo non è disponibile: un club non ha elementi configurati.',
+            'note' => 'Lo sconto, se previsto, si applica in approvazione. Il documento sarà scaricabile dopo l\'approvazione.',
+        ],
+        // Prices recalculated at the reopening of a draft (M06 RB-12, M03-CA6; ux-architettura §4.5).
+        'reopened' => [
+            'title' => 'Prezzi ricalcolati dall\'ultimo salvataggio',
+            'club' => ':club: prezzo ricalcolato da € :from a € :to (:reason).',
+            'reason_list' => 'listino aggiornato',
+            'reason_matches' => 'partite nel periodo cambiate',
+            'reason_both' => 'listino aggiornato e partite nel periodo cambiate',
+            'total' => 'Totale di listino ricalcolato da € :from a € :to.',
+            'help' => 'La bozza si aggiorna con i nuovi prezzi al prossimo salvataggio.',
+            'close' => 'Chiudi l\'avviso',
         ],
         'delete' => [
             'action' => 'Elimina la bozza',

@@ -38,4 +38,12 @@ final readonly class ClubEvaluation
     {
         return $this->errors !== [];
     }
+
+    /**
+     * RB-08, D-373: no element configured; blocks the summary and, with F5, the submission.
+     */
+    public function lacksElements(): bool
+    {
+        return isset($this->errors['elements']);
+    }
 }

@@ -210,7 +210,7 @@ it('M06-CA1: step 3 offers only the Infront clubs with a published list and a pr
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('step', 3)
-            ->where('lastStep', 4)
+            ->where('lastStep', 5)
             ->has('clubOptions', 2)
             ->where('clubOptions.0.name', 'SS Lazio')
             ->where('clubOptions.1.name', 'Udinese Calcio')
@@ -491,7 +491,19 @@ it('D-372, D-383: a save writes one event with the changed clubs and the list to
     expect($event->new_values)->toBe([
         'club_LAZIO' => 'TOP | FILA_2 1′00″ | PREMIUM 2',
         'list_total' => '202000.00',
-    ])->and($event->old_values)->toBe(['club_LAZIO' => null, 'list_total' => '0.00']);
+        // KPI of the campaign (F4-04, D-093): standard number, whole season, 4 spots per match.
+        'campaign_starts_on' => '2027-07-01',
+        'campaign_months' => 12,
+        'total_matches' => 19,
+        'total_spots' => 76,
+    ])->and($event->old_values)->toBe([
+        'club_LAZIO' => null,
+        'list_total' => '0.00',
+        'campaign_starts_on' => null,
+        'campaign_months' => null,
+        'total_matches' => null,
+        'total_spots' => null,
+    ]);
 
     confSave($this->agent, $proposal, [confRow($this->udinese, null, 'FILA_1', 30)]);
 

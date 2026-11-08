@@ -58,7 +58,8 @@ use RuntimeException;
  *   with its error (M06 §9, D-373, D-382). Territory and visibility type are the only active ones
  *   (D-085). A club removed from the draft is not confirmed: the removal stays in the audit (D-383).
  * - In the same request the server calculates and writes the matches, list prices and club price of
- *   every club and the list total of the version (CLAUDE.md §4; prices never come from the page).
+ *   every club, the list total of the version and, from F4-04, the KPI of the campaign (MatchCounter on
+ *   all the clubs together, D-093) (CLAUDE.md §4; prices never come from the page).
  * - Nothing changed: nothing is written, no event. Otherwise lock_version + 1 and one audit event
  *   proposal.draft_updated with the changed fields only (D-372).
  */
@@ -91,6 +92,7 @@ final class SaveDraft
                 ...ProposalsAuditValues::draft($locked, $version),
                 ...ProposalsAuditValues::clubRows($rows),
                 'list_total' => $version->list_total,
+                ...ProposalsAuditValues::campaign($version),
             ];
 
             $client = $this->client($locked, $data->clientId);
@@ -115,7 +117,17 @@ final class SaveDraft
 
             $locked->fill(['client_id' => $client->id, 'season_id' => $season?->id]);
             $locked->setRelation('client', $client)->setRelation('season', $season);
-            $version->fill(['starts_on' => $startsOn, 'ends_on' => $endsOn, 'list_total' => $evaluation->listTotal]);
+            $campaign = $evaluation->campaign;
+            $version->fill([
+                'starts_on' => $startsOn,
+                'ends_on' => $endsOn,
+                'list_total' => $evaluation->listTotal,
+                'campaign_starts_on' => $campaign?->campaignStart?->toDateString(),
+                'campaign_months' => $campaign?->campaignMonths,
+                'total_matches' => $campaign?->totalMatches,
+                'total_spots' => $campaign?->totalSpots,
+                'top_matches' => $campaign?->topMatches,
+            ]);
 
             $after = [
                 ...ProposalsAuditValues::draft($locked, $version),
@@ -129,6 +141,7 @@ final class SaveDraft
             }
 
             $after['list_total'] = $evaluation->listTotal;
+            $after = [...$after, ...ProposalsAuditValues::campaign($version)];
 
             [$old, $new] = AuditLog::changes($before, $after);
 

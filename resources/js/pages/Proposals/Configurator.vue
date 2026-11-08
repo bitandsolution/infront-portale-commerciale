@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, Plus, Search, Trash2 } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, Plus, RefreshCw, Search, Trash2, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -9,6 +9,7 @@ import TextField from '@/components/forms/TextField.vue';
 import NoticeDialog from '@/components/NoticeDialog.vue';
 import ClubConfiguration from '@/components/proposals/ClubConfiguration.vue';
 import ClubPicker from '@/components/proposals/ClubPicker.vue';
+import DraftSummary from '@/components/proposals/DraftSummary.vue';
 import NewClientDialog from '@/components/proposals/NewClientDialog.vue';
 import EmptyState from '@/components/states/EmptyState.vue';
 import StatusPill from '@/components/StatusPill.vue';
@@ -20,14 +21,16 @@ import type {
     ProposalClubFields,
     ProposalClubOption,
     ProposalDraft,
+    ProposalRepricing,
     ProposalSeasonOption,
     SectorOption,
 } from '@/types';
 
 /**
  * Configurator of a proposal (M06 §4, §5; D-165, D-372…D-375; mockups "Periodo e club" and
- * "Configurazione per club"). F4-02 built steps 1 (Cliente) and 2 (Stagione e periodo), F4-03 steps 3
- * (Club) and 4 (Configurazione per club); step 5 is shown but not available yet.
+ * "Configurazione per club", "Riepilogo"). F4-02 built steps 1 (Cliente) and 2 (Stagione e periodo),
+ * F4-03 steps 3 (Club) and 4 (Configurazione per club), F4-04 step 5 (Riepilogo, DraftSummary): it
+ * opens only when every club has at least one element (D-373).
  *
  * - "Nuova proposta" has no draft: the draft is born when the agent chooses (or creates) the client.
  * - Automatic save (D-372): 2 seconds after the last change and at every change of step, with the lock
@@ -39,12 +42,16 @@ import type {
  * - The step is in the address (?passo=2): after an expired session the login brings the agent back
  *   to the same draft and step (D-375).
  * - Total always visible: fixed bar at the bottom below 1280 px, column on the right from 1280 px.
+ * - Reopened draft (M06 RB-12, M03-CA6): the prices recalculated since the last save are shown in a
+ *   banner ("da € X a € Y"); the prop comes only with the page, so the banner stays while the agent
+ *   works, until it is closed.
  */
 const props = defineProps<{
     layout: LayoutData;
     step: number;
     lastStep: number;
     draft: ProposalDraft | null;
+    reopened: ProposalRepricing | null;
     clients: ProposalClientOption[];
     sectors: SectorOption[];
     seasons: ProposalSeasonOption[];
@@ -260,7 +267,25 @@ function canOpen(step: number): boolean {
         return false;
     }
 
-    return step < 4 || fields.clubs.length > 0;
+    if (step >= 4 && fields.clubs.length === 0) {
+        return false;
+    }
+
+    // D-373: the summary needs at least one element in every club (the server checks it again).
+    return step < 5 || fields.clubs.every(clubHasElements);
+}
+
+/** RB-08, D-373: a package other than "Libera", the LED or at least one hospitality seat. */
+function clubHasElements(club: ProposalClubFields): boolean {
+    if (club.led_format_id !== null || club.seats.some((item) => item.seats > 0)) {
+        return true;
+    }
+    if (club.partnership_tier_id === null) {
+        return false;
+    }
+    const tier = optionsById.value.get(club.club_id)?.tiers.find((option) => option.id === club.partnership_tier_id);
+
+    return tier === undefined || !tier.isFree;
 }
 
 function goTo(step: number): void {
@@ -288,7 +313,7 @@ const nextHint = computed(() => {
         return t('proposals.nav.choose_clubs_first');
     }
 
-    return t('proposals.nav.next_disabled');
+    return t('proposals.nav.summary_blocked');
 });
 
 // Step 1: client (M05 F-02, FL-01, FL-02).
@@ -418,6 +443,12 @@ function deleteDraft(): void {
     });
 }
 
+// Step 5 shows the total in its table: no separate total column or bar there.
+const summaryStep = computed(() => currentStep.value === 5);
+
+// Prices recalculated since the last save (RB-12), until the agent closes the banner.
+const showReopened = ref(props.reopened !== null);
+
 const totalStale = computed(() => !online.value && saveState.value === 'pending');
 const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
 </script>
@@ -425,7 +456,10 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
 <template>
     <AppLayout :layout="layout">
         <div class="flex min-h-full flex-col">
-            <div class="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-5 p-4 md:p-6 xl:grid-cols-[minmax(0,1fr)_300px] xl:gap-6">
+            <div
+                class="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-5 p-4 md:p-6 xl:gap-6"
+                :class="{ 'xl:grid-cols-[minmax(0,1fr)_300px]': !summaryStep }"
+            >
                 <div class="flex min-w-0 flex-col gap-5">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <Link
@@ -440,7 +474,8 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             {{ t('proposals.back_mine') }}
                         </Link>
                         <p
-                            class="text-sm text-muted xl:hidden"
+                            class="text-sm text-muted"
+                            :class="{ 'xl:hidden': !summaryStep }"
                             aria-live="polite"
                         >
                             {{ saveText }}
@@ -470,6 +505,50 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             aria-hidden="true"
                         />
                         <p>{{ t('proposals.offline') }}</p>
+                    </div>
+
+                    <div
+                        v-if="reopened && showReopened"
+                        class="flex items-start gap-2.5 rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
+                        role="status"
+                    >
+                        <RefreshCw
+                            :size="18"
+                            :stroke-width="2"
+                            class="mt-0.5 shrink-0 text-notice"
+                            aria-hidden="true"
+                        />
+                        <div class="flex min-w-0 flex-1 flex-col gap-1">
+                            <p class="font-semibold">
+                                {{ t('proposals.reopened.title') }}
+                            </p>
+                            <ul class="flex flex-col gap-0.5">
+                                <li
+                                    v-for="club in reopened.clubs"
+                                    :key="club.name"
+                                >
+                                    {{ club.text }}
+                                </li>
+                                <li class="font-medium">
+                                    {{ reopened.total }}
+                                </li>
+                            </ul>
+                            <p class="text-[13px] text-muted">
+                                {{ t('proposals.reopened.help') }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            class="-m-2 flex size-11 shrink-0 items-center justify-center rounded-[10px] text-ink-soft hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-accent"
+                            :aria-label="t('proposals.reopened.close')"
+                            @click="showReopened = false"
+                        >
+                            <X
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                        </button>
                     </div>
 
                     <!-- Steps (M06 §4) -->
@@ -829,6 +908,15 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         </button>
                     </section>
 
+                    <!-- Step 5: summary -->
+                    <DraftSummary
+                        v-if="currentStep === 5 && draft"
+                        :draft="draft"
+                        :client-name="chosenClient?.name ?? null"
+                        :sector="chosenClient?.sector ?? null"
+                        @fix="goTo(4)"
+                    />
+
                     <!-- Navigation between the steps -->
                     <div
                         v-if="draft"
@@ -862,6 +950,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                     {{ t('proposals.nav.back') }}
                                 </button>
                                 <button
+                                    v-if="currentStep < lastStep"
                                     type="button"
                                     :class="buttonClasses.primary"
                                     :disabled="nextDisabled"
@@ -878,7 +967,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             </div>
                         </div>
                         <p
-                            v-if="nextHint"
+                            v-if="nextHint && currentStep < lastStep"
                             id="proposal-next-hint"
                             class="text-right text-[13px] text-muted"
                         >
@@ -888,7 +977,10 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                 </div>
 
                 <!-- Desktop ≥ 1280 px: total in the right column -->
-                <aside class="hidden xl:block">
+                <aside
+                    v-if="!summaryStep"
+                    class="hidden xl:block"
+                >
                     <div class="sticky top-6 flex flex-col gap-3 rounded-[14px] border border-line bg-white p-5">
                         <p class="text-sm font-medium text-ink-soft">
                             {{ t('proposals.total.label') }}
@@ -922,7 +1014,10 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
             </div>
 
             <!-- Tablet and smartphone: fixed total bar -->
-            <div class="sticky bottom-0 z-10 border-t border-line bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] md:px-6 xl:hidden">
+            <div
+                v-if="!summaryStep"
+                class="sticky bottom-0 z-10 border-t border-line bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.04)] md:px-6 xl:hidden"
+            >
                 <div class="mx-auto flex max-w-6xl items-center justify-between gap-3">
                     <div class="min-w-0">
                         <p class="text-[13px] text-muted">
