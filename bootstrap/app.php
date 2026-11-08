@@ -100,7 +100,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ]),
                 // 419, the session has expired (its cookie is gone, so the CSRF token no longer matches):
                 // back to the login with a message; after the login the page the request came from,
-                // e.g. the draft being saved automatically (ux-architettura §4.5, D-375).
+                // e.g. the draft being saved automatically (ux-architettura §4.5, D-375, D-379).
                 419 => auth()->check() ? $response : ReturnAfterLogin::toLogin($request)->with('toast', [
                     'id' => (string) Str::uuid(),
                     'type' => 'info',

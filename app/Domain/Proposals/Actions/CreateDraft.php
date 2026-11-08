@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\DB;
  * - Number from the sequence (D-371), assigned now and never reused.
  * - Working version with the defaults of the period (D-375): season of the top bar, start = start of
  *   the season or today, end = end of the season. Without a season to choose, season and dates stay
- *   empty and the agent picks them at step 2.
+ *   empty and the agent picks them at step 2 (D-381).
  * - History "created" (D-199) and audit proposal.draft_created with the header (D-372).
  */
 final class CreateDraft

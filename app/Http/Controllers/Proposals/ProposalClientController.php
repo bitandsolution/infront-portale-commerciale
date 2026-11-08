@@ -20,7 +20,7 @@ use Illuminate\Http\RedirectResponse;
  * - on "Nuova proposta" the draft is born with it (CreateDraft) and the page moves to step 2;
  * - on a draft it replaces the current client (SaveDraft, with the lock version of the page).
  * The client is written in its own transaction under the registry lock (ClientRegistry): if the draft
- * cannot be written afterwards, the client stays, as if it had been created from "I miei clienti".
+ * cannot be written afterwards, the client stays, as if it had been created from "I miei clienti" (D-380).
  */
 class ProposalClientController extends Controller
 {
