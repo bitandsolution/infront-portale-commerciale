@@ -48,7 +48,8 @@ use RuntimeException;
  *   draft changed in the meantime (another window or device): DraftConflict, nothing is written.
  * - A new client must be an active, not merged client of the agent (D-366, D-368); the current one
  *   stays even if it was deactivated later. A new season must not be closed (D-317).
- * - The period is checked against the season (M06 §8, ProposalPeriod): errors by field.
+ * - The period is checked against the season (M06 §8, ProposalPeriod): errors by field. A season
+ *   already chosen is never removed (M06 §8, D-381).
  * - Clubs: minutes in steps of the settings (D-063) and at most the seats of the settings per club
  *   (D-147, M06-CA5) are refused by field. Then DraftEvaluator evaluates every club; a choice the
  *   agent has just made (a new club, tier, format, more minutes or seats) must be sellable and within
@@ -445,6 +446,12 @@ final class SaveDraft
 
     private function season(Proposal $proposal, ?int $seasonId): ?Season
     {
+        // M06 §8: the season is required; a draft is without one only while none can be chosen
+        // (D-381). Once chosen it is changed, never removed.
+        if ($seasonId === null && $proposal->season_id !== null) {
+            throw ValidationException::withMessages(['season_id' => Text::get('proposals.validation.season_required')]);
+        }
+
         if ($seasonId === null) {
             return null;
         }

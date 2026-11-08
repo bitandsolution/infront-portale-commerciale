@@ -504,3 +504,18 @@ it('D-375: after an expired session only a page of the portal is reopened, never
         ->assertRedirect(route('login'))
         ->assertSessionMissing('url.intended');
 });
+
+it('M06 §8, D-381: a season already chosen is never removed by a save', function () {
+    $agent = User::factory()->agent()->create();
+    $proposal = draftsCreate($agent);
+    $seasonId = $proposal->season_id;
+
+    $this->actingAs($agent)
+        ->put(route('proposals.update', $proposal), draftsPayload($proposal, ['season_id' => '', 'starts_on' => '', 'ends_on' => '']))
+        ->assertSessionHasErrors(['season_id' => 'Scegli la stagione.']);
+
+    expect($proposal->refresh()->season_id)->toBe($seasonId)
+        ->and($proposal->lock_version)->toBe(0)
+        ->and($proposal->workingVersion?->starts_on?->toDateString())->toBe('2027-07-01')
+        ->and(auditEventsOf(AuditAction::ProposalDraftUpdated))->toHaveCount(0);
+});

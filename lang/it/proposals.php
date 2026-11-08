@@ -25,6 +25,7 @@ return [
     // Errors under the fields of step 2 (M06 §8) and dialog of a draft changed elsewhere (D-165).
     'validation' => [
         'conflict' => 'La bozza è stata modificata in un\'altra finestra o su un altro dispositivo. Ricarica la pagina per vedere l\'ultima versione.',
+        'season_required' => 'Scegli la stagione.',
         'starts_on_required' => 'Indica la data di inizio.',
         'starts_on_outside' => 'La data di inizio deve essere nella stagione, dal :from al :to.',
         'ends_on_required' => 'Indica la data di fine.',

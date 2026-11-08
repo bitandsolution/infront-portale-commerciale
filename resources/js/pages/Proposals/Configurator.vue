@@ -322,7 +322,14 @@ const chosenClient = computed(() => {
 function chooseClient(client: ProposalClientOption): void {
     if (props.draft === null) {
         creatingDraft.value = true;
-        router.post(props.createUrl, { client_id: client.value }, { onFinish: () => (creatingDraft.value = false) });
+        // A new draft is a new page: Inertia 3 keeps the state of the component after a POST by
+        // default, which would leave the fields of "Nuova proposta" (no client, no season) on the
+        // draft and send them with the first automatic save. preserveState: false remounts the page
+        // with the fields of the draft (bug found in the test of F4-03).
+        router.post(props.createUrl, { client_id: client.value }, {
+            preserveState: false,
+            onFinish: () => (creatingDraft.value = false),
+        });
 
         return;
     }
