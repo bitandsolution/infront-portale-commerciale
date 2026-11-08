@@ -50,6 +50,14 @@ it('D-283: lists the latest events, newest first, with user, action, object, cha
     expect(AuditEvent::query()->count())->toBe(2);
 });
 
+it('D-372: shows the old values of a deletion, with nothing after', function () {
+    $agent = User::factory()->agent()->create();
+
+    app(AuditLog::class)->record(AuditAction::UserDeactivated, $agent, AuditSubject::user($agent), ['number' => 204, 'season_code' => '2027-28'], []);
+
+    expect(auditList()[1])->toContain('number: 204 → ∅; season_code: 2027-28 → ∅');
+});
+
 it('D-283: filters by area, action and user, and refuses unknown values', function () {
     $admin = User::factory()->admin()->create();
     $agent = User::factory()->agent()->create(['email' => 'luca.rossi@example.test']);
