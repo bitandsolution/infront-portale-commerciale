@@ -41,10 +41,12 @@ function draftsSeason(int $year = 2027): Season
 }
 
 /**
- * A draft of the agent made through the configurator, on the season of the top bar.
+ * A draft of the agent made through the configurator, on the season of the top bar (2027-28 unless
+ * the test chose another one).
  */
 function draftsCreate(User $agent, ?Client $client = null): Proposal
 {
+    draftsSeason();
     $client ??= Client::factory()->ownedBy($agent)->create();
     test()->actingAs($agent)->post(route('proposals.store'), ['client_id' => $client->id]);
 
