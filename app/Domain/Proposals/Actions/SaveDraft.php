@@ -268,7 +268,7 @@ final class SaveDraft
             if ($row?->led_format_id !== $data->ledFormatId) {
                 $refuse('led_format');
                 $refuse('led_seconds');
-            } elseif ($data->ledSeconds > ($row?->led_seconds_per_match ?? 0)) {
+            } elseif ($data->ledSeconds > ($row !== null ? ($row->led_seconds_per_match ?? 0) : 0)) {
                 $refuse('led_seconds');
             }
 
