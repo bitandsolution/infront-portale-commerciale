@@ -168,6 +168,50 @@ Comandi utili:
 
 Utenti di prova creati da `migrate:fresh --seed` (dati fittizi, solo in locale): 2 gestori (`gestore1@`, `gestore2@example.test`) e 3 agenti (`agente1@`…`agente3@example.test`, il terzo disattivato). L'admin non è tra questi: lo crei tu con `users:create-admin`. Password e verifica in due passaggi: vedi §3, "Utenti di prova con password e chiave note".
 
+### Ora della VM: da controllare prima di ogni collaudo
+
+I codici dell'app di autenticazione dipendono dall'ora: se l'orologio della VM è avanti o indietro di più di circa 30 secondi, il codice viene **rifiutato** anche se è giusto. Succede soprattutto dopo un ripristino da "Salva lo stato". Prima di entrare nel portale, nel **terminale della VM**:
+
+1. **Controllo** (confronta con l'ora di Windows):
+
+   ```bash
+   date
+   timedatectl | grep -E "Time zone|synchronized"
+   ```
+
+   La VM deve essere su `Europe/Rome`; se non lo è, una volta sola: `sudo timedatectl set-timezone Europe/Rome`.
+2. **Correzione immediata** con chrony:
+
+   ```bash
+   sudo systemctl enable --now chrony
+   sudo chronyc -a makestep
+   sleep 5
+   date
+   chronyc tracking | grep -E "System time|Leap status"
+   ```
+
+   Esito atteso: `date` coincide con l'ora di Windows (al secondo) e `Leap status : Normal`.
+3. **Se l'ora è ancora sbagliata** (`Leap status : Not synchronised`, oppure `chronyc sources` mostra solo righe con `?`: i server dell'ora non rispondono, tipicamente perché la rete blocca la porta UDP 123), si prende l'ora da un sito web, che passa dalla porta HTTPS:
+
+   ```bash
+   sudo date -s "$(curl -sI https://www.google.com | grep -i '^date:' | cut -d' ' -f2- | tr -d '\r')"
+   date
+   ```
+
+   Ultima possibilità, a mano, con l'ora di Windows (fuso `Europe/Rome`): `sudo date -s "2026-11-08 12:40:00"`.
+4. **Una volta sola, perché non si ripeta**: chrony deve poter correggere con un salto anche dopo un ripristino. Controlla con `grep '^makestep' /etc/chrony/chrony.conf`: deve rispondere `makestep 1 -1`. Se risponde altro:
+
+   ```bash
+   sudo sed -i 's/^makestep .*/makestep 1 -1/' /etc/chrony/chrony.conf
+   echo 'pool ntp.ubuntu.com iburst maxpoll 6 maxsources 2' | sudo tee /etc/chrony/sources.d/vm-fast.sources
+   sudo systemctl restart chrony
+   ```
+
+5. **Smartphone**: data e ora devono essere automatiche (Impostazioni → Data e ora → "Imposta automaticamente"). Se l'app è Google Authenticator: menu → Impostazioni → "Correzione ora per codici" → "Sincronizza ora".
+6. **Se il login ora dice "Troppi tentativi"** (i codici rifiutati contano come tentativi falliti): `sail artisan cache:clear` e accedi di nuovo.
+
+Il container di Sail usa l'orologio della VM: non serve riavviarlo dopo la correzione.
+
 ### Strumenti dei documenti PDF (dalla fetta S1)
 
 Dalla PR **S1-01** il container dell'applicazione non viene più da Sail così com'è: il suo Dockerfile sta nel repository (`docker/8.4/`) e aggiunge `qpdf`, `poppler-utils` (`pdffonts`, `pdfinfo`) e il font libero DejaVu (D-308, D-311). Chromium è il **chrome-headless-shell di Chrome for Testing**, che `sail npx puppeteer browsers install chrome-headless-shell` scarica in `.cache/puppeteer` dentro il progetto (non va mai nel repository; `npm ci` non lo scarica, perché il `.npmrc` del repository blocca gli script di installazione). Nel container la sandbox di Chromium è spenta da `compose.yaml` (`DOCUMENT_CHROMIUM_NO_SANDBOX`), perché Docker non la consente; fuori dagli ambienti `local` e `testing` il portale si rifiuta di spegnerla.
@@ -211,7 +255,7 @@ Poi nel `.env` della VM: `DOCUMENT_FONTS_PATH=/var/www/html/storage/app/document
 | La VM è molto lenta (tartaruga verde in basso) | Hyper-V attivo su Windows | Vedi §1, punto 2 |
 | `sail artisan migrate` si ferma con `The users table contains rows` | La PR-02 rifà la tabella `users` e nel database c'è ancora l'utente di prova dello scheletro | `sail artisan migrate:fresh --seed`, poi `sail artisan users:create-admin` |
 | L'admin creato prima della PR-03 non riesce più ad accedere | Dalla PR-03 le password sono in Argon2id (D-214) e quelle salvate prima non sono più accettate | `sail artisan migrate:fresh --seed`, poi `sail artisan users:create-admin` |
-| Il codice dell'app viene sempre rifiutato | L'orologio della VM non è sincronizzato: i codici dipendono dall'ora | `timedatectl` deve mostrare `System clock synchronized: yes`; altrimenti vedi la riga `Release file … is not valid yet` |
+| Il codice dell'app viene sempre rifiutato | L'orologio della VM (o dello smartphone) non è giusto: i codici dipendono dall'ora | Procedura completa al §4, "Ora della VM: da controllare prima di ogni collaudo" |
 | `sail artisan test` riporta 3 test falliti in `tests/Database/AuditUsersScriptTest.php` (righe 72 e 100, `DROP USER`) invece che saltati | Sulla VM l'utente di Sail non può creare né cancellare utenti MariaDB, e il test provava a cancellarli anche dopo aver deciso di saltare | Corretto con la PR-07: da quel branch i 3 test risultano *skipped*, come previsto (`docs/dev/database-utenti.md` §4) |
 | `DEV_USERS_TOTP_SECRET must be a base32 key…` durante il seed | La chiave contiene caratteri diversi da A-Z e 2-7 o è più corta di 16 | Rigenera la chiave come al §3 |
 | Dopo 2 ore di inattività il portale torna al login | Scadenza della sessione per ruolo (D-214): 2 ore per admin e gestore, 8 ore per l'agente | Comportamento previsto: accedi di nuovo |
