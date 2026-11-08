@@ -276,6 +276,7 @@ it('RB-03: a club without calendar shows the warning of the standard number, pro
 
     expect(summPage($this->agent, $proposal)['draft']['warnings'])->toBe([
         ['kind' => 'info', 'text' => 'Bologna FC: calendario non caricato, 19 partite in casa dal numero standard della competizione.'],
+        ['kind' => 'info', 'text' => 'Top match non disponibili: manca il calendario di un club di Serie A.'],
     ]);
 
     // 01/10/2027 – 30/06/2028: 274 days of 366, 19 × 274 / 366 = 14,22 → 14 (D-187).
@@ -283,6 +284,7 @@ it('RB-03: a club without calendar shows the warning of the standard number, pro
 
     expect(summPage($this->agent, $proposal)['draft']['warnings'])->toBe([
         ['kind' => 'info', 'text' => 'Bologna FC: calendario non caricato, 14 partite in casa stimate riproporzionando sul periodo il numero standard (19 a stagione).'],
+        ['kind' => 'info', 'text' => 'Top match non disponibili: manca il calendario di un club di Serie A.'],
     ]);
 });
 
