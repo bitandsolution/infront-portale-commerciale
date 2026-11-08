@@ -9,7 +9,8 @@ namespace App\Enums;
  * "sports" (F1) the sports registry: seasons, competitions, editions, then clubs, stadiums,
  * enrollments, matches and calendar imports (D-321); "catalog" (F2) the catalogue and the price lists
  * (D-337); "inventory" (F2-04) the capacities of the inventory, then the commitments (D-337);
- * "clients" (F3) the commodity sectors, then the clients (D-356).
+ * "clients" (F3) the commodity sectors, then the clients (D-356); "proposals" (F4) the drafts of the
+ * configurator, then the life cycle of F5 (D-372, D-376).
  */
 enum AuditArea: string
 {
@@ -20,6 +21,7 @@ enum AuditArea: string
     case Catalog = 'catalog';
     case Inventory = 'inventory';
     case Clients = 'clients';
+    case Proposals = 'proposals';
 
     /**
      * Italian label (lang/it/audit.php).

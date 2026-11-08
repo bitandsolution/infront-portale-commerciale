@@ -68,6 +68,6 @@ it('D-283: filters by area, action and user, and refuses unknown values', functi
 
     expect(auditList(['--action' => 'access.logout'])[1])->toContain('Nessun evento di audit con questi filtri.');
 
-    [$status, $output] = auditList(['--area' => 'proposals']);
-    expect($status)->toBe(1)->and($output)->toContain('Area sconosciuta: proposals. Valori ammessi: access, users, settings, sports, catalog, inventory, clients.');
+    [$status, $output] = auditList(['--area' => 'documents']);
+    expect($status)->toBe(1)->and($output)->toContain('Area sconosciuta: documents. Valori ammessi: access, users, settings, sports, catalog, inventory, clients, proposals.');
 });
