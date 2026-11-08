@@ -429,9 +429,59 @@ export interface ProposalDraft {
     startsOn: string;
     endsOn: string;
     listTotal: string;
+    clubs: ProposalDraftClub[];
+    hasErrors: boolean;
     saveUrl: string;
     deleteUrl: string;
     newClientUrl: string;
+}
+
+/** An option of a club at step 4 (ProposalsPresenter::clubOptions): shown only when available or sold out. */
+export interface ProposalClubOptionValue {
+    id: number;
+    name: string;
+    status: 'available' | 'sold_out';
+    statusLabel: string;
+    /** Residual of the server: seconds per match, contracts or seats; null for "Libera". */
+    remaining: number | null;
+}
+
+/** A selectable club of the season (step 3) with the options of step 4. */
+export interface ProposalClubOption {
+    id: number;
+    name: string;
+    initials: string;
+    competition: string | null;
+    tiers: Array<ProposalClubOptionValue & { isFree: boolean; price: string | null }>;
+    formats: Array<ProposalClubOptionValue & { remainingLabel: string | null }>;
+    variants: Array<ProposalClubOptionValue & { price: string | null }>;
+}
+
+/** A club of the draft as evaluated by the server (DraftEvaluator), with its errors by field. */
+export interface ProposalDraftClub {
+    clubId: number;
+    name: string;
+    initials: string;
+    competition: string | null;
+    selectable: boolean;
+    tierId: number | null;
+    ledFormatId: number | null;
+    ledSeconds: number;
+    seats: Array<{ variantId: number; seats: number }>;
+    matches: number | null;
+    matchesLabel: string | null;
+    spots: number | null;
+    price: string | null;
+    errors: Record<string, string>;
+}
+
+/** A club of the draft as the agent edits it (sent with the automatic save). */
+export interface ProposalClubFields {
+    club_id: number;
+    partnership_tier_id: number | null;
+    led_format_id: number | null;
+    led_seconds: number;
+    seats: Array<{ variant_id: number; seats: number }>;
 }
 
 /** One draft of "Le mie proposte" (ProposalsPresenter::draftRow). */

@@ -104,7 +104,7 @@ it('D-375: "Nuova proposta" opens step 1 without creating an empty draft', funct
             ->component('Proposals/Configurator')
             ->where('draft', null)
             ->where('step', 1)
-            ->where('lastStep', 2)
+            ->where('lastStep', 4)
             ->where('createUrl', route('proposals.store')));
 
     expect(Proposal::query()->count())->toBe(0);
@@ -365,7 +365,7 @@ it('D-375: the draft opens at the step of the address, steps not built yet go ba
 
     $this->actingAs($agent)
         ->get(route('proposals.edit', ['proposal' => $proposal, 'passo' => 5]))
-        ->assertInertia(fn (Assert $page) => $page->where('step', 2));
+        ->assertInertia(fn (Assert $page) => $page->where('step', 4));
 });
 
 it('RB-14: the agent opens, saves and deletes only his own drafts', function () {
