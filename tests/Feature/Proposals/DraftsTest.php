@@ -104,7 +104,7 @@ it('D-375: "Nuova proposta" opens step 1 without creating an empty draft', funct
             ->component('Proposals/Configurator')
             ->where('draft', null)
             ->where('step', 1)
-            ->where('lastStep', 2)
+            ->where('lastStep', 4)
             ->where('createUrl', route('proposals.store')));
 
     expect(Proposal::query()->count())->toBe(0);
@@ -365,7 +365,7 @@ it('D-375: the draft opens at the step of the address, steps not built yet go ba
 
     $this->actingAs($agent)
         ->get(route('proposals.edit', ['proposal' => $proposal, 'passo' => 5]))
-        ->assertInertia(fn (Assert $page) => $page->where('step', 2));
+        ->assertInertia(fn (Assert $page) => $page->where('step', 4));
 });
 
 it('RB-14: the agent opens, saves and deletes only his own drafts', function () {
@@ -503,4 +503,19 @@ it('D-375: after an expired session only a page of the portal is reopened, never
         ->put(route('proposals.update', $proposal), draftsPayload($proposal))
         ->assertRedirect(route('login'))
         ->assertSessionMissing('url.intended');
+});
+
+it('M06 §8, D-381: a season already chosen is never removed by a save', function () {
+    $agent = User::factory()->agent()->create();
+    $proposal = draftsCreate($agent);
+    $seasonId = $proposal->season_id;
+
+    $this->actingAs($agent)
+        ->put(route('proposals.update', $proposal), draftsPayload($proposal, ['season_id' => '', 'starts_on' => '', 'ends_on' => '']))
+        ->assertSessionHasErrors(['season_id' => 'Scegli la stagione.']);
+
+    expect($proposal->refresh()->season_id)->toBe($seasonId)
+        ->and($proposal->lock_version)->toBe(0)
+        ->and($proposal->workingVersion?->starts_on?->toDateString())->toBe('2027-07-01')
+        ->and(auditEventsOf(AuditAction::ProposalDraftUpdated))->toHaveCount(0);
 });

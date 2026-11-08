@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers\Proposals;
 
+use App\Domain\Inventory\Services\SellableOptions;
 use App\Domain\Proposals\Actions\CreateDraft;
 use App\Domain\Proposals\Actions\DeleteDraft;
 use App\Domain\Proposals\Actions\SaveDraft;
+use App\Domain\Proposals\Data\DraftEvaluation;
+use App\Domain\Proposals\Services\DraftEvaluator;
 use App\Domain\Proposals\Services\ProposalPeriod;
+use App\Domain\Settings\Services\Settings;
 use App\Enums\ProposalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Proposals\CreateDraftRequest;
 use App\Http\Requests\Proposals\SaveDraftRequest;
 use App\Models\Client;
 use App\Models\Proposal;
+use App\Models\ProposalVersion;
 use App\Models\User;
 use App\Support\Clients\ClientsPresenter;
 use App\Support\Navigation\LayoutProps;
@@ -26,20 +31,21 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Configurator pages of the agent (M06 §4; D-372…D-375; slice F4-02):
+ * Configurator pages of the agent (M06 §4; D-372…D-375; slices F4-02, F4-03):
  * - "Nuova proposta" (proposals_new): step 1 without a draft; the draft is born when the agent
  *   chooses the client (store), never empty;
- * - a draft (edit) at step 1 (client) or 2 (season and period), saved automatically (update) with
- *   its lock version; the step is in the address (?passo=2), so after an expired session the agent
- *   comes back to the same draft and step (D-375);
+ * - a draft (edit) at step 1 (client), 2 (season and period), 3 (clubs) or 4 (configuration by
+ *   club), saved automatically (update) with its lock version; the server evaluates the clubs and
+ *   calculates prices and total in the same request; the step is in the address (?passo=2), so after
+ *   an expired session the agent comes back to the same draft and step (D-375);
  * - "Le mie proposte" (proposals_mine): the agent's drafts, reopened or deleted with confirmation
  *   (D-374); the back office has no proposal pages until F5.
  * Every write goes through an Action with its audit event (D-372).
  */
 class ProposalController extends Controller
 {
-    /** Steps built so far: 1 Cliente, 2 Stagione e periodo (F4-03 adds 3 and 4, F4-04 the 5th). */
-    public const LAST_STEP = 2;
+    /** Steps built so far: 1 Cliente, 2 Stagione e periodo, 3 Club, 4 Configurazione (F4-04 adds the 5th). */
+    public const LAST_STEP = 4;
 
     public function mine(Request $request): Response
     {
@@ -65,12 +71,12 @@ class ProposalController extends Controller
         ]);
     }
 
-    public function create(Request $request, ProposalPeriod $period): Response
+    public function create(Request $request): Response
     {
         Gate::authorize('create', Proposal::class);
         $actor = $this->actor($request);
 
-        return $this->configurator($actor, $period, null, 1);
+        return $this->configurator($actor, null, 1);
     }
 
     public function store(CreateDraftRequest $request, CreateDraft $createDraft): RedirectResponse
@@ -86,12 +92,12 @@ class ProposalController extends Controller
         return redirect()->route('proposals.edit', ['proposal' => $proposal, 'passo' => 2]);
     }
 
-    public function edit(Request $request, Proposal $proposal, ProposalPeriod $period): Response
+    public function edit(Request $request, Proposal $proposal): Response
     {
         Gate::authorize('update', $proposal);
         $step = max(1, min(self::LAST_STEP, $request->integer('passo', 1)));
 
-        return $this->configurator($this->actor($request), $period, $proposal, $step);
+        return $this->configurator($this->actor($request), $proposal, $step);
     }
 
     public function update(SaveDraftRequest $request, Proposal $proposal, SaveDraft $saveDraft): RedirectResponse
@@ -112,16 +118,23 @@ class ProposalController extends Controller
         ));
     }
 
-    private function configurator(User $actor, ProposalPeriod $period, ?Proposal $proposal, int $step): Response
+    private function configurator(User $actor, ?Proposal $proposal, int $step): Response
     {
-        $proposal?->loadMissing(['client.sector', 'workingVersion']);
+        $period = app(ProposalPeriod::class);
+        $settings = app(Settings::class);
+        $proposal?->loadMissing(['client.sector', 'season', 'workingVersion']);
         $defaultSeason = $period->defaultSeason();
+        $season = $proposal?->season;
 
         return Inertia::render('Proposals/Configurator', [
             'layout' => LayoutProps::for($actor, $proposal === null ? 'proposals_new' : 'proposals_mine'),
             'step' => $step,
             'lastStep' => self::LAST_STEP,
-            'draft' => $proposal !== null ? ProposalsPresenter::draft($proposal, $actor) : null,
+            'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $actor, self::evaluation($proposal)) : null,
+            // Selectable clubs of the season of the draft with their options (step 3 and 4).
+            'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season) : []),
+            'ledStepSeconds' => $settings->ledStepSeconds(),
+            'hospitalityMaxSeats' => $settings->hospitalityMaxSeats(),
             'clients' => ProposalsPresenter::clientOptions($actor),
             'sectors' => ClientsPresenter::sectorOptions(),
             'seasons' => ProposalsPresenter::seasonOptions($period),
@@ -130,6 +143,22 @@ class ProposalController extends Controller
             'newClientUrl' => route('proposals.clients.store'),
             'mineUrl' => PortalPages::url('proposals_mine'),
         ]);
+    }
+
+    /**
+     * The clubs of the draft evaluated on the current list and residuals (DraftEvaluator).
+     */
+    private static function evaluation(Proposal $proposal): DraftEvaluation
+    {
+        /** @var ProposalVersion $version */
+        $version = $proposal->workingVersion;
+
+        return app(DraftEvaluator::class)->evaluate(
+            $proposal->season,
+            $version->starts_on?->toDateString(),
+            $version->ends_on?->toDateString(),
+            SaveDraft::fromRows(SaveDraft::rows($version)),
+        );
     }
 
     private function actor(Request $request): User

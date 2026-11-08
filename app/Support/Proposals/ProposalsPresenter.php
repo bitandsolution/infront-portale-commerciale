@@ -2,21 +2,30 @@
 
 namespace App\Support\Proposals;
 
+use App\Domain\Inventory\Data\ClubSellability;
+use App\Domain\Inventory\Data\SellableOption;
+use App\Domain\Proposals\Data\ClubEvaluation;
+use App\Domain\Proposals\Data\DraftEvaluation;
 use App\Domain\Proposals\Services\ProposalPeriod;
+use App\Enums\CompetitionType;
 use App\Models\Client;
+use App\Models\Club;
+use App\Models\ClubEnrollment;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Season;
 use App\Models\User;
 use App\Support\Amounts;
 use App\Support\Clients\ClientsPresenter;
+use App\Support\LedDuration;
 use App\Support\Text;
 use Illuminate\Support\Carbon;
 
 /**
- * Props of the configurator pages (F4-02): "Nuova proposta", a draft (steps 1 and 2) and
- * "Le mie proposte". Prices and totals are always the server's (CLAUDE.md §4); dates of the period are
- * sent both as "Y-m-d" (fields) and in Italian (texts); system timestamps in Europe/Rome (C7).
+ * Props of the configurator pages (F4-02, F4-03): "Nuova proposta", a draft (steps 1–4) and
+ * "Le mie proposte". Prices, totals, matches, residuals and errors are always the server's
+ * (CLAUDE.md §4): the page only shows them; dates of the period are sent both as "Y-m-d" (fields)
+ * and in Italian (texts); system timestamps in Europe/Rome (C7).
  */
 final class ProposalsPresenter
 {
@@ -73,11 +82,126 @@ final class ProposalsPresenter
     }
 
     /**
-     * A draft open in the configurator.
+     * Clubs of step 3 (M06 RB-09, D-085): the selectable clubs of the season with their league and
+     * the options shown at step 4 (available, or sold out and not selectable; "not managed" and "not
+     * available" are hidden, FL-02, ux-architettura §4.5), with residuals and list prices.
+     *
+     * @param  list<ClubSellability>  $clubs
+     * @return array<int, array<string, mixed>>
+     */
+    public static function clubOptions(?Season $season, array $clubs): array
+    {
+        $leagues = $season !== null ? self::leagues($season) : [];
+        $options = [];
+
+        foreach ($clubs as $sellability) {
+            $club = $sellability->club;
+            $options[] = [
+                'id' => $club->id,
+                'name' => $club->name,
+                'initials' => self::initials($club),
+                'competition' => $leagues[$club->id] ?? null,
+                'tiers' => array_map(fn (SellableOption $option): array => [
+                    ...self::option($option),
+                    'isFree' => $option->isFreePackage,
+                    'price' => $option->listPrice !== null ? Amounts::italian($option->listPrice) : null,
+                ], ClubSellability::visible($sellability->partnership)),
+                'formats' => array_map(fn (SellableOption $option): array => [
+                    ...self::option($option),
+                    'remainingLabel' => $option->remaining !== null ? LedDuration::format($option->remaining) : null,
+                ], ClubSellability::visible($sellability->led)),
+                'variants' => array_map(fn (SellableOption $option): array => [
+                    ...self::option($option),
+                    'price' => $option->listPrice !== null ? Amounts::italian($option->listPrice) : null,
+                ], ClubSellability::visible($sellability->hospitality)),
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return array{id: int, name: string, status: string, statusLabel: string, remaining: int|null}
+     */
+    private static function option(SellableOption $option): array
+    {
+        return [
+            'id' => $option->valueId,
+            'name' => $option->name,
+            'status' => $option->status->value,
+            'statusLabel' => $option->status->label(),
+            'remaining' => $option->remaining,
+        ];
+    }
+
+    /**
+     * League of each club in the season (D-185: one per club), by club id.
+     *
+     * @return array<int, string>
+     */
+    private static function leagues(Season $season): array
+    {
+        return ClubEnrollment::query()
+            ->whereHas('competitionSeason', fn ($query) => $query
+                ->where('season_id', $season->id)
+                ->whereHas('competition', fn ($competition) => $competition->where('type', CompetitionType::League->value)))
+            ->with('competitionSeason.competition')
+            ->get()
+            ->mapWithKeys(fn (ClubEnrollment $enrollment): array => [$enrollment->club_id => $enrollment->competitionSeason->competition->name])
+            ->all();
+    }
+
+    private static function initials(Club $club): string
+    {
+        return mb_strtoupper(mb_substr($club->short_name !== '' ? $club->short_name : $club->name, 0, 3));
+    }
+
+    /**
+     * One club of the draft (steps 3 and 4): what the agent chose, the matches, the club price and the
+     * errors found by the server (DraftEvaluator), by field.
      *
      * @return array<string, mixed>
      */
-    public static function draft(Proposal $proposal, User $agent): array
+    private static function draftClub(ClubEvaluation $evaluation): array
+    {
+        $quote = $evaluation->quote;
+        $data = $evaluation->data;
+        $matches = $quote?->matches;
+        $seats = [];
+
+        foreach ($data->seats as $variantId => $count) {
+            $seats[] = ['variantId' => $variantId, 'seats' => $count];
+        }
+
+        return [
+            'clubId' => $evaluation->club->id,
+            'name' => $evaluation->club->name,
+            'initials' => self::initials($evaluation->club),
+            'competition' => $matches?->edition->competition->name,
+            'selectable' => $evaluation->sellability?->isSelectable() ?? false,
+            'tierId' => $data->tierId,
+            'ledFormatId' => $data->ledFormatId,
+            'ledSeconds' => $data->ledSeconds,
+            'seats' => $seats,
+            'matches' => $matches?->matches,
+            'matchesLabel' => $matches === null ? null : Text::get(
+                $matches->fromCalendar ? 'ui.proposals.configuration.matches_calendar' : 'ui.proposals.configuration.matches_standard',
+                ['count' => (string) $matches->matches],
+            ),
+            // Spots per match = minutes × 4 (M06 §6): one every 15 seconds.
+            'spots' => $matches !== null && $data->ledFormatId !== null ? intdiv($data->ledSeconds, 15) * $matches->matches : null,
+            'price' => $quote !== null ? Amounts::italian($quote->total) : null,
+            'errors' => $evaluation->errors,
+        ];
+    }
+
+    /**
+     * A draft open in the configurator; the clubs and the total come from the evaluation of the
+     * server, made on the current list and residuals.
+     *
+     * @return array<string, mixed>
+     */
+    public static function draft(Proposal $proposal, User $agent, ?DraftEvaluation $evaluation = null): array
     {
         /** @var ProposalVersion $version */
         $version = $proposal->workingVersion;
@@ -100,7 +224,11 @@ final class ProposalsPresenter
             'seasonId' => $proposal->season_id !== null ? (string) $proposal->season_id : '',
             'startsOn' => $version->starts_on?->toDateString() ?? '',
             'endsOn' => $version->ends_on?->toDateString() ?? '',
-            'listTotal' => Amounts::italian($version->list_total),
+            'listTotal' => Amounts::italian($evaluation !== null ? $evaluation->listTotal : $version->list_total),
+            'clubs' => $evaluation !== null
+                ? array_map(fn (ClubEvaluation $club): array => self::draftClub($club), $evaluation->clubs)
+                : [],
+            'hasErrors' => $evaluation?->hasErrors() ?? false,
             'saveUrl' => route('proposals.update', $proposal),
             'deleteUrl' => route('proposals.destroy', $proposal),
             'newClientUrl' => route('proposals.clients.update', $proposal),

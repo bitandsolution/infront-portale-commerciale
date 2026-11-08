@@ -7,21 +7,33 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import SelectField from '@/components/forms/SelectField.vue';
 import TextField from '@/components/forms/TextField.vue';
 import NoticeDialog from '@/components/NoticeDialog.vue';
+import ClubConfiguration from '@/components/proposals/ClubConfiguration.vue';
+import ClubPicker from '@/components/proposals/ClubPicker.vue';
 import NewClientDialog from '@/components/proposals/NewClientDialog.vue';
 import EmptyState from '@/components/states/EmptyState.vue';
 import StatusPill from '@/components/StatusPill.vue';
 import { useTrans } from '@/composables/useTrans';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { LayoutData, ProposalClientOption, ProposalDraft, ProposalSeasonOption, SectorOption } from '@/types';
+import type {
+    LayoutData,
+    ProposalClientOption,
+    ProposalClubFields,
+    ProposalClubOption,
+    ProposalDraft,
+    ProposalSeasonOption,
+    SectorOption,
+} from '@/types';
 
 /**
- * Configurator of a proposal (M06 §4; D-165, D-372…D-375; mockup "Periodo e club"). F4-02 builds
- * steps 1 (Cliente) and 2 (Stagione e periodo); steps 3–5 are shown but not available yet.
+ * Configurator of a proposal (M06 §4, §5; D-165, D-372…D-375; mockups "Periodo e club" and
+ * "Configurazione per club"). F4-02 built steps 1 (Cliente) and 2 (Stagione e periodo), F4-03 steps 3
+ * (Club) and 4 (Configurazione per club); step 5 is shown but not available yet.
  *
  * - "Nuova proposta" has no draft: the draft is born when the agent chooses (or creates) the client.
  * - Automatic save (D-372): 2 seconds after the last change and at every change of step, with the lock
- *   version read from the server (D-216). The server checks client, season and period (M06 §8) and
- *   answers with the errors under the fields; it also calculates the total (CLAUDE.md §4).
+ *   version read from the server (D-216). The server checks client, season, period and clubs (M06 §8)
+ *   and answers with the errors under the fields; in the same request it evaluates every club and
+ *   calculates matches, club prices and total (CLAUDE.md §4): the page never calculates them.
  * - Offline (D-375): the changes stay in the page and are sent again when the network comes back;
  *   the banner says so and the total is marked "non aggiornato". Nothing is stored in the browser.
  * - The step is in the address (?passo=2): after an expired session the login brings the agent back
@@ -37,6 +49,9 @@ const props = defineProps<{
     sectors: SectorOption[];
     seasons: ProposalSeasonOption[];
     defaultSeasonId: string;
+    clubOptions: ProposalClubOption[];
+    ledStepSeconds: number;
+    hospitalityMaxSeats: number;
     createUrl: string;
     newClientUrl: string;
     mineUrl: string;
@@ -59,6 +74,13 @@ const fields = reactive({
     season_id: props.draft?.seasonId ?? '',
     starts_on: props.draft?.startsOn ?? '',
     ends_on: props.draft?.endsOn ?? '',
+    clubs: (props.draft?.clubs ?? []).map((club): ProposalClubFields => ({
+        club_id: club.clubId,
+        partnership_tier_id: club.tierId,
+        led_format_id: club.ledFormatId,
+        led_seconds: club.ledSeconds,
+        seats: club.seats.map((item) => ({ variant_id: item.variantId, seats: item.seats })),
+    })),
 });
 const lockVersion = ref(props.draft?.lockVersion ?? 0);
 const savedAt = ref(props.draft?.savedAt ?? '');
@@ -115,7 +137,7 @@ function save(after?: () => void): void {
     router.put(props.draft.saveUrl, { ...fields, lock_version: lockVersion.value }, {
         preserveState: true,
         preserveScroll: true,
-        only: ['draft'],
+        only: ['draft', 'clubOptions'],
         onSuccess: (response) => {
             const draft = response.props.draft as ProposalDraft | null;
             if (draft) {
@@ -231,7 +253,14 @@ function stepUrl(step: number): string {
 }
 
 function canOpen(step: number): boolean {
-    return step <= props.lastStep && (step === 1 || (props.draft !== null && fields.client_id !== ''));
+    if (step > props.lastStep || (step > 1 && (props.draft === null || fields.client_id === ''))) {
+        return false;
+    }
+    if (step >= 3 && fields.season_id === '') {
+        return false;
+    }
+
+    return step < 4 || fields.clubs.length > 0;
 }
 
 function goTo(step: number): void {
@@ -249,7 +278,17 @@ const nextHint = computed(() => {
         return '';
     }
 
-    return currentStep.value === 1 ? t('proposals.nav.choose_client_first') : t('proposals.nav.next_disabled');
+    if (currentStep.value === 1) {
+        return t('proposals.nav.choose_client_first');
+    }
+    if (currentStep.value === 2) {
+        return t('proposals.nav.choose_season_first');
+    }
+    if (currentStep.value === 3) {
+        return t('proposals.nav.choose_clubs_first');
+    }
+
+    return t('proposals.nav.next_disabled');
 });
 
 // Step 1: client (M05 F-02, FL-01, FL-02).
@@ -283,7 +322,14 @@ const chosenClient = computed(() => {
 function chooseClient(client: ProposalClientOption): void {
     if (props.draft === null) {
         creatingDraft.value = true;
-        router.post(props.createUrl, { client_id: client.value }, { onFinish: () => (creatingDraft.value = false) });
+        // A new draft is a new page: Inertia 3 keeps the state of the component after a POST by
+        // default, which would leave the fields of "Nuova proposta" (no client, no season) on the
+        // draft and send them with the first automatic save. preserveState: false remounts the page
+        // with the fields of the draft (bug found in the test of F4-03).
+        router.post(props.createUrl, { client_id: client.value }, {
+            preserveState: false,
+            onFinish: () => (creatingDraft.value = false),
+        });
 
         return;
     }
@@ -299,6 +345,48 @@ function clientCreated(): void {
 
 // Step 2: season and period (M06 §4, §8; D-375).
 const chosenSeason = computed(() => props.seasons.find((season) => season.value === fields.season_id) ?? null);
+
+// Steps 3 and 4: clubs and their configuration (M06 §4, §5). Options, matches, prices and errors
+// come from the server; the page keeps the choices of the agent.
+const optionsById = computed(() => new Map(props.clubOptions.map((option) => [option.id, option])));
+const serverClubs = computed(() => new Map((props.draft?.clubs ?? []).map((club) => [club.clubId, club])));
+const selectedClubIds = computed(() => fields.clubs.map((club) => club.club_id));
+const openClubs = ref<number[]>(fields.clubs.length > 0 ? [fields.clubs[0]?.club_id ?? 0] : []);
+
+function toggleClub(clubId: number): void {
+    const index = fields.clubs.findIndex((club) => club.club_id === clubId);
+    if (index >= 0) {
+        fields.clubs.splice(index, 1);
+        openClubs.value = openClubs.value.filter((id) => id !== clubId);
+
+        return;
+    }
+    fields.clubs.push({ club_id: clubId, partnership_tier_id: null, led_format_id: null, led_seconds: 0, seats: [] });
+    openClubs.value = [...openClubs.value, clubId];
+}
+
+function updateClub(index: number, club: ProposalClubFields): void {
+    fields.clubs.splice(index, 1, club);
+}
+
+function toggleOpen(clubId: number): void {
+    openClubs.value = openClubs.value.includes(clubId)
+        ? openClubs.value.filter((id) => id !== clubId)
+        : [...openClubs.value, clubId];
+}
+
+/** Errors of a club: those of the refused save first (the field just changed), then the server's. */
+function clubErrors(clubId: number): Record<string, string> {
+    const result: Record<string, string> = { ...(serverClubs.value.get(clubId)?.errors ?? {}) };
+    const prefix = `clubs.${clubId}.`;
+    for (const [key, message] of Object.entries(errors.value)) {
+        if (key.startsWith(prefix) && message !== undefined) {
+            result[key.slice(prefix.length)] = message;
+        }
+    }
+
+    return result;
+}
 
 // Draft changed elsewhere (lock version): reload instead of overwriting the other change.
 const conflictMessage = computed(() => errors.value.conflict);
@@ -679,6 +767,68 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         </template>
                     </section>
 
+                    <!-- Step 3: clubs -->
+                    <ClubPicker
+                        v-if="currentStep === 3"
+                        :options="clubOptions"
+                        :selected="selectedClubIds"
+                        :draft-clubs="draft?.clubs ?? []"
+                        @toggle="toggleClub"
+                    />
+
+                    <!-- Step 4: configuration by club -->
+                    <section
+                        v-if="currentStep === 4"
+                        class="flex flex-col gap-3"
+                        aria-labelledby="step-configuration"
+                    >
+                        <div>
+                            <h3
+                                id="step-configuration"
+                                class="text-base font-semibold"
+                            >
+                                {{ t('proposals.configuration.title') }}
+                            </h3>
+                            <p class="mt-1 text-sm leading-relaxed text-muted">
+                                {{ t('proposals.configuration.intro') }}
+                            </p>
+                        </div>
+                        <p
+                            v-if="errors.clubs"
+                            class="rounded-[10px] bg-accent-soft px-3.5 py-3 text-sm text-ink"
+                            role="alert"
+                        >
+                            {{ errors.clubs }}
+                        </p>
+                        <ClubConfiguration
+                            v-for="(club, index) in fields.clubs"
+                            :key="club.club_id"
+                            :fields="club"
+                            :option="optionsById.get(club.club_id) ?? null"
+                            :server="serverClubs.get(club.club_id)"
+                            :errors="clubErrors(club.club_id)"
+                            :open="openClubs.includes(club.club_id)"
+                            :led-step-seconds="ledStepSeconds"
+                            :hospitality-max-seats="hospitalityMaxSeats"
+                            @update="(value: ProposalClubFields) => updateClub(index, value)"
+                            @toggle="toggleOpen(club.club_id)"
+                            @remove="toggleClub(club.club_id)"
+                        />
+                        <button
+                            type="button"
+                            :class="buttonClasses.secondary"
+                            class="self-start"
+                            @click="goTo(3)"
+                        >
+                            <Plus
+                                :size="18"
+                                :stroke-width="2.2"
+                                aria-hidden="true"
+                            />
+                            {{ t('proposals.configuration.add_clubs') }}
+                        </button>
+                    </section>
+
                     <!-- Navigation between the steps -->
                     <div
                         v-if="draft"
@@ -752,6 +902,12 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         >
                             {{ t('proposals.total.not_updated') }}
                         </p>
+                        <p
+                            v-if="fields.clubs.length > 0"
+                            class="text-sm text-ink-soft"
+                        >
+                            {{ t('proposals.total.clubs', { count: String(fields.clubs.length) }) }}
+                        </p>
                         <p class="text-[13px] leading-relaxed text-muted">
                             {{ t('proposals.total.help') }}
                         </p>
@@ -771,6 +927,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                     <div class="min-w-0">
                         <p class="text-[13px] text-muted">
                             {{ t('proposals.total.label') }}
+                            <span v-if="fields.clubs.length > 0">· {{ t('proposals.total.clubs', { count: String(fields.clubs.length) }) }}</span>
                             <span
                                 v-if="totalStale"
                                 class="font-medium text-accent"

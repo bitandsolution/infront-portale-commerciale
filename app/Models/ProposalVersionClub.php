@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Domain\Proposals\Exceptions\ProposalImmutable;
 use App\Enums\MatchesSource;
 use Database\Factories\ProposalVersionClubFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,6 +40,10 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property-read ProposalVersion $version
  * @property-read Club $club
+ * @property-read CompetitionSeason|null $edition
+ * @property-read PartnershipTier|null $partnershipTier
+ * @property-read LedFormat|null $ledFormat
+ * @property-read Collection<int, ProposalVersionClubSeat> $seats
  */
 final class ProposalVersionClub extends Model
 {
