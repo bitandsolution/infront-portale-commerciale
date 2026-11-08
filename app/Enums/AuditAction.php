@@ -116,6 +116,7 @@ enum AuditAction: string
             'led_format', 'partnership_tier', 'hospitality_variant', 'benefit_category', 'price_list', 'led_price', 'partnership_price', 'hospitality_price', 'partnership_benefit', 'on_top_asset' => AuditArea::Catalog,
             'pool_capacity', 'partnership_capacity', 'hospitality_capacity' => AuditArea::Inventory,
             'commodity_sector', 'client' => AuditArea::Clients,
+            'proposal' => AuditArea::Proposals,
             default => AuditArea::Users,
         };
     }

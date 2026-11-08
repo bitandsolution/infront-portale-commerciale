@@ -11,10 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Owner scope for the agent (RB-03, D-076, D-215): second line of defence after the Policies.
  *
- * For models with an `owner_id` column (clients, proposals, documents from the next slices):
+ * For models owned by an agent (clients, proposals, documents from the next slices):
  * `Client::query()->visibleTo($user)` returns only the agent's own rows, all rows for
  * manager and admin, and nothing for a deactivated user. A mistake in a controller cannot expose
  * the data of another agent.
+ *
+ * The owner column is `owner_id` (clients); a model with another column declares its own
+ * ownerColumn(): the proposals keep `agent_id` of the data model (D-376).
  *
  * @phpstan-require-extends Model
  */
@@ -25,7 +28,15 @@ trait HasOwner
      */
     public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'owner_id');
+        return $this->belongsTo(User::class, $this->ownerColumn());
+    }
+
+    /**
+     * Column with the id of the owning agent.
+     */
+    public function ownerColumn(): string
+    {
+        return 'owner_id';
     }
 
     /**
@@ -40,12 +51,12 @@ trait HasOwner
         }
 
         if ($user->role === Role::Agent) {
-            $query->where($this->qualifyColumn('owner_id'), $user->id);
+            $query->where($this->qualifyColumn($this->ownerColumn()), $user->id);
         }
     }
 
     public function isOwnedBy(User $user): bool
     {
-        return $this->getAttribute('owner_id') === $user->id;
+        return $this->getAttribute($this->ownerColumn()) === $user->id;
     }
 }

@@ -203,13 +203,16 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Unione di un duplicato nel cliente che resta (attivo e non unito; il duplicato diventa non attivo con `merged_into_id`, in sola lettura, mai riattivato; i clienti già uniti al duplicato passano a quello che resta) | `MergeClients` (D-359), `Client::isMerged()`, evento `client.merged` (`merged_into_id`, `merged_into_name`); stato nelle pagine `ClientStatus` (`active`, `inactive`, `merged`) |
 | Azioni dell'admin sul cliente (scheda, sezione "Gestione del cliente") e filtri dell'elenco (agente, stato, "solo clienti di agenti disattivati", anche con `?agenti=disattivati`, D-360) | `ClientManagementController`, rotte `clients.reassign` / `.deactivate` / `.reactivate` / `.merge`, `ClientPolicy::manage()` (`Ability::ClientsManageAll`); `ClientsPresenter::management()` |
 | Clienti dell'agente disattivato (dialogo "Disattiva utente": numero dei clienti e agente attivo facoltativo che li riceve tutti, nella stessa transazione; i clienti uniti restano) | `DeactivateUser::handle($user, $actor, $clientsOwner)` → `Deactivation` (`reassignedClients`, `clientsOwner`), campo `clients_owner_id` (`DeactivateUserRequest`); prop `clients` della pagina Utenti (`AgentClients`; M01-CA4, D-360) |
-| Proposta | `Proposal` · `proposals` |
-| Versione (di lavoro / congelata) | `ProposalVersion` · `proposal_versions` (`number` nullo = di lavoro) |
-| Riga club della versione | `ProposalVersionClub` · `proposal_version_clubs` |
+| Proposta | `Proposal` · `proposals` (agente proprietario `agent_id`, D-376; si cancella solo la bozza senza versioni congelate, in cascata, trigger `proposals_before_delete`, M07 RB-08) |
+| Numero della proposta (progressivo dalla 204, mai riusato, assegnato alla nascita della bozza) | `number`, dalla sequenza MariaDB `proposal_numbers` con `ProposalNumbers::next()` (`App\Domain\Proposals\Services`, D-371); `migrate:fresh` non cancella le sequenze: la migrazione usa `CREATE OR REPLACE` |
+| Versione (di lavoro / congelata) | `ProposalVersion` · `proposal_versions` (`number` nullo = di lavoro, una sola per proposta con la colonna generata `working_slot`; congelata = `number`, `frozen_at`, `frozen_by`, immutabile: modello e trigger, D-198) |
+| Modifica di una versione congelata, delle sue righe o della cronologia (errore di programmazione) | `ProposalImmutable` (`App\Domain\Proposals\Exceptions`) |
+| Riga club della versione | `ProposalVersionClub` · `proposal_version_clubs` (fonte delle partite `matches_source`: `MatchesSource` calendar / standard) |
 | Posti hospitality della riga | `ProposalVersionClubSeat` · `proposal_version_club_seats` |
-| Cronologia della proposta | `ProposalEvent` · `proposal_events` |
-| Stati della proposta | `ProposalStatus`: `draft` (Bozza), `submitted` (In approvazione), `approved` (Approvata), `rejected` (Rifiutata), `cancelled` (Annullata) |
-| Sconto | `discount_type` (percent / amount), `discount_value`, `discount_amount` |
+| Cronologia della proposta | `ProposalEvent` · `proposal_events` (solo inserimenti, trigger; `type`: `ProposalEventType`, D-199) |
+| Stati della proposta | `ProposalStatus`: `draft` (Bozza), `submitted` (In approvazione), `approved` (Approvata), `rejected` (Rifiutata), `cancelled` (Annullata); nessun `historical` (D-376) |
+| Permessi sulle proposte (l'agente solo sulle proprie, modifica ed eliminazione solo in bozza; admin e gestore in consultazione) | `ProposalPolicy` (`viewAny`, `view`, `create`, `update`, `delete`, `duplicate`); area di audit `proposals` (D-372, D-376) |
+| Sconto | `discount_type` (`DiscountType`: percent / amount), `discount_value`, `discount_amount` |
 | Totale di listino / finale | `list_total` / `final_total` |
 | Blocco di lavorazione | `review_locked_by`, `review_locked_at` |
 | Sezione delle slide | `SlideSection` · `slide_sections` |
@@ -232,7 +235,7 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Ruoli | `Role`: `admin`, `manager` (Gestore), `agent` (Agente) |
 | Permesso d'area (riga della matrice M01 §4) | `Ability` (enum; ogni caso è un Gate) |
 | Utente disattivato | `is_active` = false, `deactivated_at`, `deactivated_by` |
-| Visibile all'utente (scope per proprietario) | `visibleTo($user)` (trait `HasOwner`) |
+| Visibile all'utente (scope per proprietario) | `visibleTo($user)` (trait `HasOwner`; colonna `owner_id`, oppure quella di `ownerColumn()`: `agent_id` per le proposte, D-376) |
 | Verifica in due passaggi (2FA) | `two_factor_*` su `users` (Fortify); configurata = `two_factor_confirmed_at` valorizzato |
 | Codici di recupero | `recoveryCodes()` (8, monouso) |
 | Blocco dopo i tentativi falliti | `LoginRateLimiter` (`App\Domain\Users\Auth`) |

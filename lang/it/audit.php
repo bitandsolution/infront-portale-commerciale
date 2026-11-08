@@ -16,6 +16,7 @@ return [
         'catalog' => 'Catalogo e listini',
         'inventory' => 'Magazzino',
         'clients' => 'Clienti',
+        'proposals' => 'Proposte',
     ],
 
     'actions' => [
