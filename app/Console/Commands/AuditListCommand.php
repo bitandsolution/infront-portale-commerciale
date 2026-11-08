@@ -138,10 +138,19 @@ class AuditListCommand extends Command
         $parts = [];
         $old = $event->old_values ?? [];
 
-        foreach ($event->new_values ?? [] as $field => $value) {
+        $new = $event->new_values ?? [];
+
+        foreach ($new as $field => $value) {
             $parts[] = array_key_exists($field, $old)
                 ? $field.': '.self::scalar($old[$field]).' → '.self::scalar($value)
                 : $field.': '.self::scalar($value);
+        }
+
+        // Fields with an old value only: a deletion (e.g. proposal.draft_deleted) or a removed text.
+        foreach ($old as $field => $value) {
+            if (! array_key_exists($field, $new)) {
+                $parts[] = $field.': '.self::scalar($value).' → ∅';
+            }
         }
 
         return implode('; ', $parts);

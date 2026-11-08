@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureTwoFactorIsUnchanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Support\Navigation\PortalPages;
+use App\Support\Navigation\ReturnAfterLogin;
 use App\Support\SupportCode;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
@@ -96,6 +97,14 @@ return Application::configure(basePath: dirname(__DIR__))
                     'type' => 'error',
                     'message' => __('ui.errors.system'),
                     'code' => app(SupportCode::class)->value(),
+                ]),
+                // 419, the session has expired (its cookie is gone, so the CSRF token no longer matches):
+                // back to the login with a message; after the login the page the request came from,
+                // e.g. the draft being saved automatically (ux-architettura §4.5, D-375, D-379).
+                419 => auth()->check() ? $response : ReturnAfterLogin::toLogin($request)->with('toast', [
+                    'id' => (string) Str::uuid(),
+                    'type' => 'info',
+                    'message' => __('ui.auth.session_expired'),
                 ]),
                 // 429, too many requests from the same address (e.g. "Password dimenticata?", PR-08)
                 429 => back()->with('toast', [

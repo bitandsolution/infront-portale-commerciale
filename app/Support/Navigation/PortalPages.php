@@ -9,6 +9,7 @@ use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Inventory\AvailabilityController;
 use App\Http\Controllers\Inventory\CapacityController;
+use App\Http\Controllers\Proposals\ProposalController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -106,6 +107,8 @@ final class PortalPages
         'clients_sectors' => [CommoditySectorController::class, 'index'],
         'clients_mine' => [ClientController::class, 'mine'],
         'clients' => [ClientController::class, 'index'],
+        'proposals_new' => [ProposalController::class, 'create'],
+        'proposals_mine' => [ProposalController::class, 'mine'],
     ];
 
     /**

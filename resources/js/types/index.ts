@@ -395,3 +395,54 @@ export interface OnTopData {
     createUrl: string;
     clubId: number | null;
 }
+
+/** A client the agent can choose at step 1 of the configurator (ProposalsPresenter::clientOptions). */
+export interface ProposalClientOption extends Option {
+    vatNumber: string | null;
+    sector: string;
+}
+
+/** A season of step 2 with its limits and the defaults of the period, "Y-m-d" (D-375). */
+export interface ProposalSeasonOption extends Option {
+    startsOn: string;
+    endsOn: string;
+    range: string;
+    defaultStartsOn: string;
+    defaultEndsOn: string;
+}
+
+/** A draft open in the configurator (ProposalsPresenter::draft). */
+export interface ProposalDraft {
+    id: number;
+    number: number;
+    title: string;
+    lockVersion: number;
+    savedAt: string;
+    clientId: string;
+    client: {
+        name: string;
+        vatNumber: string | null;
+        sector: string;
+        selectable: boolean;
+    } | null;
+    seasonId: string;
+    startsOn: string;
+    endsOn: string;
+    listTotal: string;
+    saveUrl: string;
+    deleteUrl: string;
+    newClientUrl: string;
+}
+
+/** One draft of "Le mie proposte" (ProposalsPresenter::draftRow). */
+export interface ProposalDraftRow {
+    id: number;
+    number: number;
+    client: string | null;
+    season: string | null;
+    period: string | null;
+    listTotal: string;
+    updatedAt: string;
+    editUrl: string;
+    deleteUrl: string;
+}

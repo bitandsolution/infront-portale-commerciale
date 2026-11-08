@@ -185,7 +185,11 @@ final class ClientsPresenter
         ]));
     }
 
-    private static function sectorLabel(Client $client): string
+    /**
+     * Sector of a client, with its free text when the sector asks for one (RB-04); also used by the
+     * configurator (F4-02).
+     */
+    public static function sectorLabel(Client $client): string
     {
         return $client->sector_free_text !== null
             ? $client->sector->name.': '.$client->sector_free_text

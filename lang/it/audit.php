@@ -89,6 +89,9 @@ return [
         'client_deactivated' => 'Cliente disattivato',
         'client_reactivated' => 'Cliente riattivato',
         'client_merged' => 'Cliente unito a un altro cliente',
+        'proposal_draft_created' => 'Bozza di proposta creata',
+        'proposal_draft_updated' => 'Bozza di proposta modificata',
+        'proposal_draft_deleted' => 'Bozza di proposta eliminata',
     ],
 
     'reasons' => [

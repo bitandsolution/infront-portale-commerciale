@@ -15,6 +15,8 @@ use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\PlaceholderPageController;
+use App\Http\Controllers\Proposals\ProposalClientController;
+use App\Http\Controllers\Proposals\ProposalController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
 use App\Http\Controllers\Sports\ClubController;
@@ -220,6 +222,22 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('clienti/{client}/disattiva', [ClientManagementController::class, 'deactivate'])->whereNumber('client')->name('clients.deactivate');
             Route::post('clienti/{client}/riattiva', [ClientManagementController::class, 'reactivate'])->whereNumber('client')->name('clients.reactivate');
             Route::post('clienti/{client}/unisci', [ClientManagementController::class, 'merge'])->whereNumber('client')->name('clients.merge');
+        });
+
+        // Drafts of the configurator (M06 §4; D-372…D-375; F4-02): the agent, on his own drafts
+        // (ProposalPolicy). The pages are "proposte/nuova" and "proposte/mie" above. The draft is born
+        // with the client (store, or a new client created at step 1), is saved automatically with its
+        // lock version (update, at most 60 saves a minute) and is deleted only while it is a draft.
+        Route::middleware('can:'.Ability::ProposalsOwn->value)->group(function (): void {
+            Route::post('proposte', [ProposalController::class, 'store'])->name('proposals.store');
+            Route::post('proposte/nuova/cliente', [ProposalClientController::class, 'store'])->name('proposals.clients.store');
+            Route::get('proposte/{proposal}', [ProposalController::class, 'edit'])->whereNumber('proposal')->name('proposals.edit');
+            Route::put('proposte/{proposal}', [ProposalController::class, 'update'])
+                ->whereNumber('proposal')
+                ->middleware('throttle:60,1')
+                ->name('proposals.update');
+            Route::post('proposte/{proposal}/cliente', [ProposalClientController::class, 'update'])->whereNumber('proposal')->name('proposals.clients.update');
+            Route::delete('proposte/{proposal}', [ProposalController::class, 'destroy'])->whereNumber('proposal')->name('proposals.destroy');
         });
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.
