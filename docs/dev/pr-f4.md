@@ -1,6 +1,6 @@
 # Fetta F4 — M06 Configuratore: elenco delle PR
 
-Stato: ✅ approvato (D-370…D-376, 8/11/2026). Avanzamento: F4-01 (#82), F4-02 (#84), F4-03 (#86) e F4-04 (#89) unite e collaudate l'8/11/2026; F4-05 in revisione.
+Stato: ✅ approvato (D-370…D-376, 8/11/2026). ✅ **Fetta completata il 10/11/2026**: F4-01 (#82), F4-02 (#84), F4-03 (#86) e F4-04 (#89) unite e collaudate l'8/11/2026, F4-05 (#93, correzione #95) unita e collaudata il 10/11/2026.
 Periodo previsto: 14/1 – 3/2/2027 (D-243), avviata in anticipo. Riferimenti: pianificazione §6.1.3, `docs/specs/spec-M06-configuratore.md` (e le parti di M03, M04 e M05 usate dal configuratore), progettazione-tecnica §5.3.4 e §5.4.4, ux-architettura (principi, §4.5), mockup "Periodo e club", "Configurazione per club" e "Riepilogo" (D-162).
 
 | PR | Contenuto | Criteri e decisioni | Dipende da |
@@ -30,7 +30,7 @@ Fuori da F4:
 | F4-02 | ✅ Unita e collaudata l'8/11/2026 (PR #84; D-379…D-381 con la #85) |
 | F4-03 | ✅ Unita e collaudata l'8/11/2026 (PR #86; D-382, D-383 con la #87) |
 | F4-04 | ✅ Unita e collaudata l'8/11/2026 (PR #89; D-384…D-387 con la #90, D-388 con la #92) |
-| F4-05 | ⏳ In revisione (PR aperta il 10/11/2026) |
+| F4-05 | ✅ Unita e collaudata il 10/11/2026 (PR #93; D-389…D-393 con la #94; "Nessuna modifica" quando la copia non cambia nulla con la #95) |
 
 Da F4-03, da riusare:
 - **`DraftEvaluator`** (`App\Domain\Proposals\Services`) è l'unica valutazione dei club di una bozza: errori per campo (`club`, `tier`, `led_format`, `led_seconds`, `matches`, `seats`, `seats.<id variante>`, `elements`) e prezzi da `PriceCalculator`, un club alla volta. F4-04 la usa per il blocco del riepilogo (errore `elements`, D-373) e per gli avvisi; F4-05 per i club da saltare nella copia e nel duplica; F5 per la riverifica all'invio (RB-11).
