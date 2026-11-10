@@ -314,6 +314,8 @@ it('M06-CA8, D-091: "Duplica" makes a new draft for another client with dates, p
     // The season has started meanwhile and the list of Lazio changed.
     $this->travelTo(Carbon::parse('2027-10-15 10:00', 'Europe/Rome'));
     LedPrice::query()->where('club_id', $this->lazio->id)->update(['unit_price' => '1100.00']);
+    // Months later the old session has expired for inactivity (EnforceIdleTimeout): a new login.
+    $this->flushSession();
 
     $response = $this->actingAs($this->agent)
         ->post(route('proposals.duplicate', $original), ['client_id' => $other->id]);
