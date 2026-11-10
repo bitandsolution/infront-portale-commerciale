@@ -40,8 +40,9 @@ use Inertia\Response;
  *   or 5 (summary: only without clubs lacking elements, D-373), saved automatically (update) with its lock version; the server evaluates the clubs and
  *   calculates prices and total in the same request; the step is in the address (?passo=2), so after
  *   an expired session the agent comes back to the same draft and step (D-375);
- * - "Le mie proposte" (proposals_mine): the agent's drafts, reopened or deleted with confirmation
- *   (D-374); the back office has no proposal pages until F5.
+ * - "Le mie proposte" (proposals_mine): the agent's drafts, reopened, duplicated (F4-05, also for
+ *   another client) or deleted with confirmation (D-374); the back office has no proposal pages
+ *   until F5.
  * - At the reopening of a draft the prices saved on its rows are compared with those calculated now
  *   (M06 RB-12, M03-CA6): the prop "reopened" is calculated only when the page is opened, so it stays
  *   while the agent works (the automatic save reloads only "draft" and "clubOptions").
@@ -74,6 +75,8 @@ class ProposalController extends Controller
         return Inertia::render('Proposals/Mine', [
             'layout' => LayoutProps::for($actor, 'proposals_mine'),
             'drafts' => $drafts,
+            // "Duplica" (F4-05): the copy can be for another of the agent's clients (D-091).
+            'clients' => ProposalsPresenter::clientOptions($actor),
             'newUrl' => PortalPages::url('proposals_new'),
         ]);
     }
@@ -146,6 +149,10 @@ class ProposalController extends Controller
             'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $actor, $evaluation ?? self::evaluation($proposal)) : null,
             // Prices recalculated since the last save (RB-12): only when the page is opened.
             'reopened' => fn (): ?array => $proposal !== null ? ProposalsPresenter::repricing(self::repricing($proposal, $evaluation ?? self::evaluation($proposal))) : null,
+            // Outcome of "Copia su altri club" and of "Duplica proposta" (F4-05), flashed by
+            // ProposalCopyController: like "reopened", they stay while the agent works.
+            'copied' => fn (): mixed => session('proposal_copied'),
+            'duplicated' => fn (): mixed => session('proposal_duplicated'),
             // Selectable clubs of the season of the draft with their options (step 3 and 4).
             'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season) : []),
             'ledStepSeconds' => $settings->ledStepSeconds(),

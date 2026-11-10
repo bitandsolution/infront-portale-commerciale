@@ -112,6 +112,7 @@ enum AuditAction: string
     case ProposalDraftCreated = 'proposal.draft_created';
     case ProposalDraftUpdated = 'proposal.draft_updated';
     case ProposalDraftDeleted = 'proposal.draft_deleted';
+    case ProposalDraftDuplicated = 'proposal.draft_duplicated';
 
     public function area(): AuditArea
     {

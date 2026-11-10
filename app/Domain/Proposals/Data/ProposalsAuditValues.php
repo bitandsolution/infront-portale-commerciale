@@ -2,6 +2,9 @@
 
 namespace App\Domain\Proposals\Data;
 
+use App\Models\HospitalityVariant;
+use App\Models\LedFormat;
+use App\Models\PartnershipTier;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\ProposalVersionClub;
@@ -51,6 +54,43 @@ final class ProposalsAuditValues
             }
 
             $values[self::clubKey($row->club->code)] = self::club($row->partnershipTier?->code, $row->ledFormat?->code, $row->led_seconds_per_match ?? 0, $seats);
+        }
+
+        return $values;
+    }
+
+    /**
+     * The clubs of an evaluation (what the draft will hold after the save), one line per club.
+     *
+     * @return array<string, string>
+     */
+    public static function clubsOf(DraftEvaluation $evaluation): array
+    {
+        $tiers = PartnershipTier::query()->pluck('code', 'id');
+        $formats = LedFormat::query()->pluck('code', 'id');
+        $variants = HospitalityVariant::query()->pluck('code', 'id');
+        $values = [];
+
+        foreach ($evaluation->clubs as $club) {
+            $seats = [];
+
+            foreach ($club->data->seats as $variantId => $count) {
+                $code = $variants->get($variantId);
+
+                if ($count > 0 && is_string($code)) {
+                    $seats[$code] = $count;
+                }
+            }
+
+            $tier = $club->data->tierId !== null ? $tiers->get($club->data->tierId) : null;
+            $format = $club->data->ledFormatId !== null ? $formats->get($club->data->ledFormatId) : null;
+
+            $values[self::clubKey($club->club->code)] = self::club(
+                is_string($tier) ? $tier : null,
+                is_string($format) ? $format : null,
+                $club->data->ledSeconds,
+                $seats,
+            );
         }
 
         return $values;

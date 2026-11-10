@@ -7,8 +7,10 @@ use App\Domain\Inventory\Data\SellableOption;
 use App\Domain\Proposals\Data\CampaignKpis;
 use App\Domain\Proposals\Data\ClubEvaluation;
 use App\Domain\Proposals\Data\ClubPriceChange;
+use App\Domain\Proposals\Data\ClubsCopied;
 use App\Domain\Proposals\Data\DraftEvaluation;
 use App\Domain\Proposals\Data\DraftPriceChanges;
+use App\Domain\Proposals\Data\ProposalDuplicated;
 use App\Domain\Proposals\Services\ProposalPeriod;
 use App\Domain\Sports\Data\MatchCount;
 use App\Enums\CompetitionType;
@@ -29,8 +31,8 @@ use App\Support\Text;
 use Illuminate\Support\Carbon;
 
 /**
- * Props of the configurator pages (F4-02, F4-03, F4-04): "Nuova proposta", a draft (steps 1–5) and
- * "Le mie proposte". Prices, totals, matches, residuals and errors are always the server's
+ * Props of the configurator pages (F4-02…F4-05): "Nuova proposta", a draft (steps 1–5) and "Le mie
+ * proposte", with the outcome of "Copia su altri club" and "Duplica proposta". Prices, totals, matches, residuals and errors are always the server's
  * (CLAUDE.md §4): the page only shows them; dates of the period are sent both as "Y-m-d" (fields)
  * and in Italian (texts); system timestamps in Europe/Rome (C7).
  */
@@ -260,6 +262,7 @@ final class ProposalsPresenter
             'saveUrl' => route('proposals.update', $proposal),
             'deleteUrl' => route('proposals.destroy', $proposal),
             'newClientUrl' => route('proposals.clients.update', $proposal),
+            'copyUrl' => route('proposals.copy-clubs', $proposal),
         ];
     }
 
@@ -389,6 +392,38 @@ final class ProposalsPresenter
     }
 
     /**
+     * Outcome of "Copia su altri club" for the configurator (M06 §5, M06-CA7; F4-05): the clubs that
+     * received the configuration and, club by club, the options skipped with their reason.
+     *
+     * @return array{copied: string|null, skipped: list<array{club: string, items: list<string>}>}
+     */
+    public static function copied(ClubsCopied $result): array
+    {
+        return [
+            'copied' => $result->copied !== [] ? Text::get('ui.proposals.copy.copied_on', ['clubs' => implode(', ', $result->copied)]) : null,
+            'skipped' => $result->skipped,
+        ];
+    }
+
+    /**
+     * Outcome of "Duplica proposta" for the configurator of the copy (D-091, M06-CA8, M06 §9; F4-05):
+     * the original, the prices recalculated on the current list and matches ("da € X a € Y") and the
+     * clubs to correct.
+     *
+     * @return array{title: string, prices: array{clubs: list<array{name: string, text: string}>, total: string}|null, invalidClubs: string|null}
+     */
+    public static function duplicated(Proposal $original, ProposalDuplicated $result): array
+    {
+        return [
+            'title' => Text::get('ui.proposals.duplicated.title', ['number' => (string) $original->number]),
+            'prices' => self::repricing($result->priceChanges),
+            'invalidClubs' => $result->invalidClubs !== []
+                ? Text::get('ui.proposals.duplicated.invalid_clubs', ['clubs' => implode(', ', $result->invalidClubs)])
+                : null,
+        ];
+    }
+
+    /**
      * One draft in "Le mie proposte" (D-374).
      *
      * @return array<string, mixed>
@@ -410,8 +445,10 @@ final class ProposalsPresenter
                 : null,
             'listTotal' => Amounts::italian($version !== null ? $version->list_total : '0'),
             'updatedAt' => $proposal->updated_at->copy()->setTimezone(self::TIMEZONE)->format('d/m/Y H:i'),
+            'clientId' => $proposal->client_id !== null ? (string) $proposal->client_id : '',
             'editUrl' => route('proposals.edit', $proposal),
             'deleteUrl' => route('proposals.destroy', $proposal),
+            'duplicateUrl' => route('proposals.duplicate', $proposal),
         ];
     }
 
