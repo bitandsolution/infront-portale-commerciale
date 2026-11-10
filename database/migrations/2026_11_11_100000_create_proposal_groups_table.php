@@ -15,9 +15,16 @@ use Illuminate\Support\Facades\Schema;
  *   nullable in the schema, so the code of the previous release (which creates proposals without a
  *   group) still works on this schema (D-178); every proposal written by this release has both, and
  *   the CHECK keeps them together. The existing proposals become groups of one variant "A".
+ * - proposal_events.type also accepts "variant_added" (history of AddVariant).
  */
 return new class extends Migration
 {
+    /** Types of the history accepted before this migration (2026_11_08_100000). */
+    private const EVENT_TYPES = [
+        'created', 'submitted', 'withdrawn', 'edited_in_review', 'discount_set', 'approved', 'forced', 'rejected',
+        'resubmitted', 'new_version', 'cancelled', 'duplicated',
+    ];
+
     public function up(): void
     {
         Schema::create('proposal_groups', function (Blueprint $table): void {
@@ -46,6 +53,9 @@ return new class extends Migration
             )
             SQL);
 
+        DB::statement('ALTER TABLE proposal_events DROP CONSTRAINT proposal_events_type_valid');
+        DB::statement(self::eventTypesCheck([...self::EVENT_TYPES, 'variant_added']));
+
         $now = now();
 
         foreach (DB::table('proposals')->whereNull('proposal_group_id')->orderBy('id')->get(['id', 'agent_id', 'client_id', 'season_id']) as $proposal) {
@@ -63,6 +73,8 @@ return new class extends Migration
 
     public function down(): void
     {
+        DB::statement('ALTER TABLE proposal_events DROP CONSTRAINT proposal_events_type_valid');
+        DB::statement(self::eventTypesCheck(self::EVENT_TYPES));
         DB::statement('ALTER TABLE proposals DROP CONSTRAINT proposals_variant_letter_check');
 
         Schema::table('proposals', function (Blueprint $table): void {
@@ -72,5 +84,15 @@ return new class extends Migration
         });
 
         Schema::dropIfExists('proposal_groups');
+    }
+
+    /**
+     * @param  list<string>  $types
+     */
+    private static function eventTypesCheck(array $types): string
+    {
+        $list = implode(', ', array_map(fn (string $type): string => "'".$type."'", $types));
+
+        return "ALTER TABLE proposal_events ADD CONSTRAINT proposal_events_type_valid CHECK (type IN ({$list}))";
     }
 };
