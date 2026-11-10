@@ -103,7 +103,7 @@ it('is the same instance within a request (scoped binding)', function () {
 
 it('D-191: every key has its allowed range, its label and the right editability', function () {
     expect(array_map(fn (SettingKey $key): string => $key->value, SettingKey::editable()))
-        ->toBe(['hospitality_max_seats', 'forced_reason_min_length', 'audit_ip_retention_days']);
+        ->toBe(['hospitality_max_seats', 'forced_reason_min_length', 'audit_ip_retention_days', 'proposal_max_variants']);
 
     $ranges = [];
     foreach (SettingKey::cases() as $key) {
@@ -119,6 +119,7 @@ it('D-191: every key has its allowed range, its label and the right editability'
         'hospitality_max_seats' => [1, 6],
         'forced_reason_min_length' => [1, 200],
         'audit_ip_retention_days' => [1, 1826],
+        'proposal_max_variants' => [1, 10],
     ]);
 
     expect(SettingKey::HospitalityMaxSeats->accepts(6))->toBeTrue()

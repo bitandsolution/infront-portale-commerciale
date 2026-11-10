@@ -56,3 +56,10 @@ Ordine: DM-01 → DM-02 (in parallelo) → DM-03 → DM-04 → DM-05 → DM-06 �
 - **F6**: KPI club e digital, avvisi di completezza e di aggiornamento, simulatore di composizione, layout dinamici dei KPI.
 - **F7**: gli altri layout dinamici (club coinvolti, KPI network, KPI campagna, digital key figures, KPI club, digital club), e-mail dopo il documento (D-221), riduzione del tempo dei controlli, prova sullo staging.
 - **F8**: report e dashboard tengono conto dei gruppi (varianti approvate, scelte, non scelte).
+
+## Avanzamento
+
+| PR | Esito |
+|---|---|
+| DM-00 | ✅ Unita il 10/11/2026 (PR #97; D-394…D-401) |
+| DM-01 | 🔄 PR aperta l'11/11/2026 |

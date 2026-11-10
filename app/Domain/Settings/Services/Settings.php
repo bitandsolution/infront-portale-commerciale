@@ -83,6 +83,12 @@ final class Settings
         return $this->integer(SettingKey::AuditIpRetentionDays);
     }
 
+    /** Variants of a group of proposals (D-396). */
+    public function proposalMaxVariants(): int
+    {
+        return $this->integer(SettingKey::ProposalMaxVariants);
+    }
+
     /**
      * Drops the values read so far: the next reading queries the table again.
      */

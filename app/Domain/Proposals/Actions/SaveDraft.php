@@ -23,6 +23,7 @@ use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
 use App\Models\PartnershipTier;
 use App\Models\Proposal;
+use App\Models\ProposalGroup;
 use App\Models\ProposalVersion;
 use App\Models\ProposalVersionClub;
 use App\Models\ProposalVersionClubSeat;
@@ -57,6 +58,9 @@ use Illuminate\Validation\ValidationException;
  *   all the clubs together, D-093) (CLAUDE.md §4; prices never come from the page).
  * - Nothing changed: nothing is written, no event. Otherwise lock_version + 1 and one audit event
  *   proposal.draft_updated with the changed fields only (D-372).
+ * - Variants (D-396, DM-01): the variants of a group share client and season. While the group has
+ *   other variants they cannot change (ProposalsActionNotAllowed); the draft alone in its group can
+ *   change them, and the group follows.
  */
 final class SaveDraft
 {
@@ -93,6 +97,7 @@ final class SaveDraft
 
             $client = $this->client($locked, $data->clientId);
             $season = $this->season($locked, $data->seasonId);
+            $group = $this->group($locked, $client, $season);
             $startsOn = $season !== null ? $data->startsOn : null;
             $endsOn = $season !== null ? $data->endsOn : null;
 
@@ -143,6 +148,7 @@ final class SaveDraft
             $this->rowsWriter->write($version, $rows, $evaluation, $season);
             $locked->lock_version = $locked->lock_version + 1;
             $locked->save();
+            $group?->update(['client_id' => $client->id, 'season_id' => $season?->id]);
 
             $this->audit->record(AuditAction::ProposalDraftUpdated, $actor, AuditSubject::proposal($locked), $old, $new);
 
@@ -309,6 +315,23 @@ final class SaveDraft
         }
 
         return $client;
+    }
+
+    /**
+     * The group to align when the draft changes client or season (D-396): refused while the group
+     * has other variants; locked after the proposal, as DeleteDraft does.
+     */
+    private function group(Proposal $proposal, Client $client, ?Season $season): ?ProposalGroup
+    {
+        if ($proposal->proposal_group_id === null || ($client->id === $proposal->client_id && $season?->id === $proposal->season_id)) {
+            return null;
+        }
+
+        if (Proposal::query()->where('proposal_group_id', $proposal->proposal_group_id)->whereKeyNot($proposal->id)->exists()) {
+            throw ProposalsActionNotAllowed::variantsShareHeader();
+        }
+
+        return ProposalGroup::query()->whereKey($proposal->proposal_group_id)->lockForUpdate()->first();
     }
 
     private function season(Proposal $proposal, ?int $seasonId): ?Season

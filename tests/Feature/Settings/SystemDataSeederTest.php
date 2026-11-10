@@ -30,6 +30,7 @@ it('D-191: writes the initial value of every setting, by the system', function (
         'forced_reason_min_length' => 10,
         'hospitality_max_seats' => 6,
         'led_step_seconds' => 30,
+        'proposal_max_variants' => 5,
     ])
         ->and(Setting::query()->whereNotNull('updated_by')->exists())->toBeFalse()
         ->and(AuditEvent::query()->count())->toBe(0);
@@ -57,6 +58,7 @@ it('A1: a second run keeps the values changed by the admin and adds only the mis
         'forced_reason_min_length' => 10,
         'hospitality_max_seats' => 4,
         'led_step_seconds' => 30,
+        'proposal_max_variants' => 5,
     ])
         ->and(Setting::query()->where('key', 'hospitality_max_seats')->value('updated_by'))->toBe($admin->id)
         ->and(app(Settings::class)->hospitalityMaxSeats())->toBe(4);
@@ -68,6 +70,6 @@ it('A1: DatabaseSeeder runs the system data in every environment, the test users
 
     (new DatabaseSeeder)->setContainer(app())->__invoke();
 
-    expect(Setting::query()->count())->toBe(5)
+    expect(Setting::query()->count())->toBe(6)
         ->and(User::query()->count())->toBe(0);
 });

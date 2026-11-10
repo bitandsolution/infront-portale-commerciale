@@ -8,6 +8,7 @@ use App\Domain\Proposals\Data\ProposalsAuditValues;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
 use App\Domain\Proposals\Services\ProposalNumbers;
 use App\Domain\Proposals\Services\ProposalPeriod;
+use App\Domain\Proposals\Services\ProposalVariants;
 use App\Enums\AuditAction;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\DB;
  *
  * - The client is an active, not merged client of the agent (M05 F-02, D-366, D-368).
  * - Number from the sequence (D-371), assigned now and never reused.
+ * - A new group of variants, with the draft as its variant A (D-396).
  * - Working version with the defaults of the period (D-375): season of the top bar, start = start of
  *   the season or today, end = end of the season. Without a season to choose, season and dates stay
  *   empty and the agent picks them at step 2 (D-381).
@@ -50,8 +52,12 @@ final class CreateDraft
         $season = $this->period->defaultSeason();
 
         return DB::transaction(function () use ($agent, $client, $season): Proposal {
+            $group = ProposalVariants::newGroup($agent, $client, $season);
+
             $proposal = Proposal::query()->create([
                 'number' => $this->numbers->next(),
+                'proposal_group_id' => $group->id,
+                'variant_letter' => ProposalVariants::FIRST,
                 'agent_id' => $agent->id,
                 'client_id' => $client->id,
                 'season_id' => $season?->id,

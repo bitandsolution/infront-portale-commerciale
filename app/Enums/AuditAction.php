@@ -113,6 +113,8 @@ enum AuditAction: string
     case ProposalDraftUpdated = 'proposal.draft_updated';
     case ProposalDraftDeleted = 'proposal.draft_deleted';
     case ProposalDraftDuplicated = 'proposal.draft_duplicated';
+    // DM-01: a new variant of a group of proposals (D-396).
+    case ProposalVariantAdded = 'proposal.variant_added';
 
     public function area(): AuditArea
     {

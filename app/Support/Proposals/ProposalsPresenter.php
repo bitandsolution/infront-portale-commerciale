@@ -12,6 +12,8 @@ use App\Domain\Proposals\Data\DraftEvaluation;
 use App\Domain\Proposals\Data\DraftPriceChanges;
 use App\Domain\Proposals\Data\ProposalDuplicated;
 use App\Domain\Proposals\Services\ProposalPeriod;
+use App\Domain\Proposals\Services\ProposalVariants;
+use App\Domain\Settings\Services\Settings;
 use App\Domain\Sports\Data\MatchCount;
 use App\Enums\CompetitionType;
 use App\Models\Client;
@@ -263,6 +265,42 @@ final class ProposalsPresenter
             'deleteUrl' => route('proposals.destroy', $proposal),
             'newClientUrl' => route('proposals.clients.update', $proposal),
             'copyUrl' => route('proposals.copy-clubs', $proposal),
+            ...self::variants($proposal),
+        ];
+    }
+
+    /**
+     * The variants of the group of a draft (D-396; DM-01): letter, number and address of each, with
+     * the maximum of the settings. While the group has more variants, client and season are shared
+     * and cannot change (SaveDraft).
+     *
+     * @return array{variantLetter: string|null, variants: list<array{id: int, letter: string, number: int, url: string, current: bool}>, sharedHeader: bool, canAddVariant: bool, maxVariants: int, addVariantUrl: string}
+     */
+    public static function variants(Proposal $proposal): array
+    {
+        $variants = $proposal->proposal_group_id !== null
+            ? Proposal::query()->where('proposal_group_id', $proposal->proposal_group_id)->orderBy('variant_letter')->get(['id', 'number', 'variant_letter'])
+            : collect([$proposal]);
+        $max = app(Settings::class)->proposalMaxVariants();
+        $list = [];
+
+        foreach ($variants as $variant) {
+            $list[] = [
+                'id' => $variant->id,
+                'letter' => $variant->variant_letter ?? ProposalVariants::FIRST,
+                'number' => $variant->number,
+                'url' => route('proposals.edit', $variant),
+                'current' => $variant->id === $proposal->id,
+            ];
+        }
+
+        return [
+            'variantLetter' => $proposal->variant_letter,
+            'variants' => $list,
+            'sharedHeader' => count($list) > 1,
+            'canAddVariant' => $proposal->proposal_group_id !== null && count($list) < $max,
+            'maxVariants' => $max,
+            'addVariantUrl' => route('proposals.variants.store', $proposal),
         ];
     }
 
@@ -433,13 +471,16 @@ final class ProposalsPresenter
      *
      * @return array<string, mixed>
      */
-    public static function draftRow(Proposal $proposal): array
+    public static function draftRow(Proposal $proposal, int $groupSize = 1): array
     {
         $version = $proposal->workingVersion;
 
         return [
             'id' => $proposal->id,
             'number' => $proposal->number,
+            // D-396: the variant is shown only in a group of more variants.
+            'variant' => $groupSize > 1 ? $proposal->variant_letter : null,
+            'groupSize' => $groupSize,
             'client' => $proposal->client?->company_name,
             'season' => $proposal->season?->code,
             'period' => $version?->starts_on !== null && $version->ends_on !== null

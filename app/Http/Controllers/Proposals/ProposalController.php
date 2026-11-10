@@ -28,6 +28,7 @@ use App\Support\Text;
 use App\Support\Toast;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -60,15 +61,28 @@ class ProposalController extends Controller
         Gate::authorize('viewAny', Proposal::class);
         $actor = $this->actor($request);
 
-        $drafts = Proposal::query()
+        $proposals = Proposal::query()
             ->visibleTo($actor)
             ->where('agent_id', $actor->id)
             ->where('status', ProposalStatus::Draft->value)
             ->with(['client', 'season', 'workingVersion'])
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
-            ->get()
-            ->map(fn (Proposal $proposal): array => ProposalsPresenter::draftRow($proposal))
+            ->get();
+
+        // D-396: the variants of a group stay together, in the order of their letter; the groups in
+        // the order of their most recent change.
+        $drafts = $proposals
+            ->groupBy(fn (Proposal $proposal): string => $proposal->proposal_group_id !== null ? 'g'.$proposal->proposal_group_id : 'p'.$proposal->id)
+            ->flatMap(/** @param Collection<int, Proposal> $variants */ function (Collection $variants): array {
+                $size = $variants->count();
+
+                return $variants
+                    ->sortBy(fn (Proposal $proposal): string => $proposal->variant_letter ?? '')
+                    ->map(fn (Proposal $proposal): array => ProposalsPresenter::draftRow($proposal, $size))
+                    ->values()
+                    ->all();
+            })
             ->values()
             ->all();
 
@@ -127,7 +141,18 @@ class ProposalController extends Controller
     {
         Gate::authorize('delete', $proposal);
         $number = $proposal->number;
+        $letter = $proposal->variant_letter;
+        // D-396: deleted from the configurator, a variant leads to another variant of its group.
+        $sibling = $request->boolean('stay_in_group') && $proposal->proposal_group_id !== null
+            ? Proposal::query()->where('proposal_group_id', $proposal->proposal_group_id)->whereKeyNot($proposal->id)->orderBy('variant_letter')->first()
+            : null;
         $deleteDraft->handle($proposal, $this->actor($request));
+
+        if ($sibling !== null) {
+            return redirect()->route('proposals.edit', ['proposal' => $sibling, 'passo' => max(1, $request->integer('step', 1))])->with('toast', Toast::success(
+                Text::get('proposals.toasts.variant_deleted', ['letter' => (string) $letter, 'number' => (string) $number]),
+            ));
+        }
 
         return redirect()->route(PortalPages::routeName('proposals_mine'))->with('toast', Toast::success(
             Text::get('proposals.toasts.draft_deleted', ['number' => (string) $number]),

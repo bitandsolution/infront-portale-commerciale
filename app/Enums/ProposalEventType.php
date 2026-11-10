@@ -21,6 +21,7 @@ enum ProposalEventType: string
     case NewVersion = 'new_version';
     case Cancelled = 'cancelled';
     case Duplicated = 'duplicated';
+    case VariantAdded = 'variant_added';
 
     /**
      * Italian label (lang/it/proposals.php).

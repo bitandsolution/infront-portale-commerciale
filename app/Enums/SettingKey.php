@@ -20,6 +20,7 @@ enum SettingKey: string
     case HospitalityMaxSeats = 'hospitality_max_seats';
     case ForcedReasonMinLength = 'forced_reason_min_length';
     case AuditIpRetentionDays = 'audit_ip_retention_days';
+    case ProposalMaxVariants = 'proposal_max_variants';
 
     /** The audit events themselves last 5 years (RB-A2): keeping the IP longer is meaningless. */
     public const MAX_IP_RETENTION_DAYS = 1826;
@@ -35,6 +36,7 @@ enum SettingKey: string
             self::HospitalityMaxSeats => 6,                                   // D-147
             self::ForcedReasonMinLength => 10,                                // M04 §9
             self::AuditIpRetentionDays => self::configuredIpRetentionDays(),  // D-211, D-286
+            self::ProposalMaxVariants => 5,                                   // D-396
         };
     }
 
@@ -46,7 +48,8 @@ enum SettingKey: string
 
             self::HospitalityMaxSeats,
             self::ForcedReasonMinLength,
-            self::AuditIpRetentionDays => true,
+            self::AuditIpRetentionDays,
+            self::ProposalMaxVariants => true,
         };
     }
 
@@ -64,6 +67,8 @@ enum SettingKey: string
             self::HospitalityMaxSeats => [1, 6],
             self::ForcedReasonMinLength => [1, 200],
             self::AuditIpRetentionDays => [1, self::MAX_IP_RETENTION_DAYS],
+            // D-396: variants A…J of a group of proposals.
+            self::ProposalMaxVariants => [1, 10],
         };
     }
 
@@ -134,6 +139,7 @@ enum SettingKey: string
             self::HospitalityMaxSeats => 'seats',
             self::ForcedReasonMinLength => 'characters',
             self::AuditIpRetentionDays => 'days',
+            self::ProposalMaxVariants => 'variants',
         };
 
         if ($unit === null) {

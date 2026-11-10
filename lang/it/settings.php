@@ -38,6 +38,11 @@ return [
             'help' => "Dopo questo periodo l'IP degli eventi di accesso viene svuotato; l'evento resta nell'audit. Il massimo coincide con i 5 anni di conservazione degli eventi.",
             'fixed' => '',
         ],
+        'proposal_max_variants' => [
+            'label' => 'Massimo varianti per proposta',
+            'help' => 'Varianti (A, B, C…) di una proposta presentate nello stesso documento, per lo stesso cliente e la stessa stagione.',
+            'fixed' => '',
+        ],
     ],
 
     'units' => [
@@ -45,6 +50,7 @@ return [
         'seats' => 'posti',
         'characters' => 'caratteri',
         'days' => 'giorni',
+        'variants' => 'varianti',
     ],
 
     'availability_methods' => [

@@ -18,6 +18,7 @@ use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Proposals\ProposalClientController;
 use App\Http\Controllers\Proposals\ProposalController;
 use App\Http\Controllers\Proposals\ProposalCopyController;
+use App\Http\Controllers\Proposals\ProposalVariantController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
 use App\Http\Controllers\Sports\ClubController;
@@ -243,6 +244,8 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             // from any own proposal (ProposalPolicy::duplicate).
             Route::post('proposte/{proposal}/copia-club', [ProposalCopyController::class, 'clubs'])->whereNumber('proposal')->name('proposals.copy-clubs');
             Route::post('proposte/{proposal}/duplica', [ProposalCopyController::class, 'duplicate'])->whereNumber('proposal')->name('proposals.duplicate');
+            // Variants of a group of proposals (D-396; DM-01): a copy of the draft in its group.
+            Route::post('proposte/{proposal}/varianti', [ProposalVariantController::class, 'store'])->whereNumber('proposal')->name('proposals.variants.store');
         });
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.

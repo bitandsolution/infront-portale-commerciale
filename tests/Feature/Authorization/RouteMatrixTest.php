@@ -128,6 +128,8 @@ function routeMatrix(): array
         // F4-05: "Copia su altri club" and "Duplica proposta", on a proposal of another agent
         'proposals.copy-clubs' => ['method' => 'POST', 'expected' => $nobody],
         'proposals.duplicate' => ['method' => 'POST', 'expected' => $nobody],
+        // DM-01: "Aggiungi variante" (D-396), on a draft of another agent
+        'proposals.variants.store' => ['method' => 'POST', 'expected' => $nobody],
         // M07 — review and every proposal (D-068)
         'pages.proposals_pending' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.proposals_all' => ['method' => 'GET', 'expected' => $backOffice],
@@ -367,7 +369,7 @@ function matrixParameters(string $route): array
         in_array($route, ['clients.edit', 'clients.update', 'clients.reassign', 'clients.deactivate', 'clients.reactivate', 'clients.merge'], true) => [
             'client' => Client::factory()->create()->id,
         ],
-        in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate'], true) => [
+        in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store'], true) => [
             'proposal' => Proposal::factory()->withWorkingVersion()->create()->id,
         ],
         in_array($route, ['clients.sectors.edit', 'clients.sectors.update'], true) => [

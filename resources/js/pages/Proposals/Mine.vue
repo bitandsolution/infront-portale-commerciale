@@ -15,7 +15,7 @@ import type { LayoutData, ProposalClientOption, ProposalDraftRow } from '@/types
  * "Le mie proposte" (D-374; F4-02): the agent's drafts, the most recent first, reopened in the
  * configurator, duplicated in a new draft (F4-05, D-091: also for another of the agent's active
  * clients; the server recalculates dates, prices and residuals) or deleted with confirmation (M07
- * RB-08, ux-architettura §4.5). The other states of the proposals arrive with F5. Table from 1024 px,
+ * RB-08, ux-architettura §4.5). The variants of a group (D-396) stay together, with their letter. The other states of the proposals arrive with F5. Table from 1024 px,
  * cards below.
  */
 const props = defineProps<{
@@ -178,8 +178,12 @@ function confirmDelete(): void {
                             :key="draft.id"
                             class="hover:bg-surface/60"
                         >
-                            <td class="px-4 py-3 font-mono font-semibold">
-                                {{ draft.number }}
+                            <td class="px-4 py-3">
+                                <span class="block font-mono font-semibold">{{ draft.number }}</span>
+                                <span
+                                    v-if="draft.variant"
+                                    class="mt-0.5 block text-[13px] whitespace-nowrap text-muted"
+                                >{{ t('proposals.mine.variant_label', { letter: draft.variant, count: String(draft.groupSize) }) }}</span>
                             </td>
                             <td class="px-4 py-3 font-medium">
                                 {{ draft.client }}
@@ -252,6 +256,10 @@ function confirmDelete(): void {
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="font-mono font-semibold">{{ draft.number }}</span>
+                                <span
+                                    v-if="draft.variant"
+                                    class="text-[13px] text-muted"
+                                >{{ t('proposals.mine.variant', { letter: draft.variant }) }}</span>
                                 <span class="truncate font-medium">{{ draft.client }}</span>
                                 <StatusPill
                                     :label="t('proposals.draft_badge')"
