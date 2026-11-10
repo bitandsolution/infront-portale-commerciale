@@ -393,14 +393,19 @@ final class ProposalsPresenter
 
     /**
      * Outcome of "Copia su altri club" for the configurator (M06 §5, M06-CA7; F4-05): the clubs that
-     * received the configuration and, club by club, the options skipped with their reason.
+     * received the configuration and, club by club, the options skipped with their reason; "Nessuna
+     * modifica" when the targets already had the resulting configuration.
      *
-     * @return array{copied: string|null, skipped: list<array{club: string, items: list<string>}>}
+     * @return array{changed: bool, title: string, copied: string|null, skipped: list<array{club: string, items: list<string>}>}
      */
     public static function copied(ClubsCopied $result): array
     {
+        $copied = $result->copied !== [] ? Text::get('ui.proposals.copy.copied_on', ['clubs' => implode(', ', $result->copied)]) : null;
+
         return [
-            'copied' => $result->copied !== [] ? Text::get('ui.proposals.copy.copied_on', ['clubs' => implode(', ', $result->copied)]) : null,
+            'changed' => $result->changed,
+            'title' => Text::get($result->changed ? 'ui.proposals.copy.result_title' : 'ui.proposals.copy.unchanged_title'),
+            'copied' => $result->changed ? $copied : Text::get('ui.proposals.copy.unchanged'),
             'skipped' => $result->skipped,
         ];
     }

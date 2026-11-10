@@ -13,6 +13,7 @@ return [
         'draft_deleted' => 'Bozza n. :number eliminata',
         'client_created' => 'Cliente :client creato e scelto per la proposta',
         'clubs_copied' => 'Configurazione copiata su :count club',
+        'clubs_unchanged' => 'Nessuna modifica: i club scelti hanno già questa configurazione',
         'duplicated' => 'Proposta n. :number creata come copia della n. :original',
     ],
 

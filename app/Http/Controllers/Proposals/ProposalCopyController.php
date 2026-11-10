@@ -35,7 +35,9 @@ class ProposalCopyController extends Controller
 
         return back()
             ->with('proposal_copied', ProposalsPresenter::copied($result))
-            ->with('toast', Toast::success(Text::get('proposals.toasts.clubs_copied', ['count' => (string) count($result->copied)])));
+            ->with('toast', Toast::success($result->changed
+                ? Text::get('proposals.toasts.clubs_copied', ['count' => (string) count($result->copied)])
+                : Text::get('proposals.toasts.clubs_unchanged')));
     }
 
     public function duplicate(DuplicateProposalRequest $request, Proposal $proposal, DuplicateProposal $duplicate): RedirectResponse

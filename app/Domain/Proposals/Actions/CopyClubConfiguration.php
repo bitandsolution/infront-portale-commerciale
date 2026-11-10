@@ -115,7 +115,7 @@ final class CopyClubConfiguration
                 clubs: $clubs,
             ), $lockVersion, $actor);
 
-            return new ClubsCopied($result->lockVersion, $copied, $skipped);
+            return new ClubsCopied($result->lockVersion, $copied, $skipped, $result->changed);
         });
     }
 

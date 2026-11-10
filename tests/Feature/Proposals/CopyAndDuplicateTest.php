@@ -220,7 +220,9 @@ it('M06-CA7: the configuration is copied on the compatible clubs and the unavail
         ->assertSessionHas('proposal_copied', function (array $copied): bool {
             $skipped = collect($copied['skipped'])->keyBy('club');
 
-            return $copied['copied'] === 'Copiata su: Torino FC, AS Roma, Bologna FC.'
+            return $copied['changed'] === true
+                && $copied['title'] === 'Configurazione copiata'
+                && $copied['copied'] === 'Copiata su: Torino FC, AS Roma, Bologna FC.'
                 && ! $skipped->has('Torino FC')
                 && count($skipped['AS Roma']['items']) === 2
                 && str_contains($skipped['AS Roma']['items'][0], 'pacchetto '.dupTierModel('TOP')->name)
@@ -259,7 +261,7 @@ it('M06-CA7: the configuration is copied on the compatible clubs and the unavail
 
     // The page shows the outcome until it is closed.
     $this->actingAs($this->agent)
-        ->withSession(['proposal_copied' => ['copied' => 'Copiata su: Torino FC.', 'skipped' => []]])
+        ->withSession(['proposal_copied' => ['changed' => true, 'title' => 'Configurazione copiata', 'copied' => 'Copiata su: Torino FC.', 'skipped' => []]])
         ->get(route('proposals.edit', ['proposal' => $proposal, 'passo' => 4]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('copied.copied', 'Copiata su: Torino FC.')
@@ -278,6 +280,26 @@ it('M06 §5: the copy replaces the configuration of the targets: what the source
     expect($torino?->partnership_tier_id)->toBeNull()
         ->and($torino?->led_seconds_per_match)->toBe(30)
         ->and(dupSeatsOf($torino))->toBe([]);
+});
+
+it('M06 §5: a copy that changes nothing says "Nessuna modifica" and saves nothing', function () {
+    // Roma has no TOP on its list: the package is skipped, its PREMIUM stays; Lazio has no LED and
+    // no seats, like Roma. The result is the configuration Roma already had.
+    $proposal = dupDraft($this->agent, [dupRow($this->lazio, 'TOP'), dupRow($this->roma, 'PREMIUM')]);
+    $lockVersion = $proposal->lock_version;
+    $events = auditEventsOf(AuditAction::ProposalDraftUpdated)->count();
+
+    dupCopy($this->agent, $proposal, $this->lazio, [$this->roma])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('toast.message', 'Nessuna modifica: i club scelti hanno già questa configurazione')
+        ->assertSessionHas('proposal_copied', fn (array $copied): bool => $copied['changed'] === false
+            && $copied['title'] === 'Nessuna modifica'
+            && $copied['copied'] === 'I club scelti hanno già la configurazione che risulta dalla copia.'
+            && $copied['skipped'][0]['club'] === 'AS Roma');
+
+    expect($proposal->refresh()->lock_version)->toBe($lockVersion)
+        ->and(auditEventsOf(AuditAction::ProposalDraftUpdated))->toHaveCount($events)
+        ->and(dupRowOf($proposal, $this->roma)?->partnership_tier_id)->toBe(dupTierModel('PREMIUM')->id);
 });
 
 it('D-216: a copy from a page with an old lock version is refused and nothing changes', function () {

@@ -683,7 +683,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         />
                         <div class="flex min-w-0 flex-1 flex-col gap-1">
                             <p class="font-semibold">
-                                {{ t('proposals.copy.result_title') }}
+                                {{ copied.title }}
                             </p>
                             <p v-if="copied.copied">
                                 {{ copied.copied }}
