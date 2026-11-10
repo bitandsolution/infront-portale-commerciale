@@ -2,7 +2,7 @@
 
 Raccolta delle funzionalità **fuori MVP**: rinviate, predisposte nell'architettura o proposte come miglioramento. Si aggiorna durante l'analisi (D-133) e si consegna completa al termine.
 
-Ultimo aggiornamento: 2026-11-02 (EV-25)
+Ultimo aggiornamento: 2026-11-10 (EV-26)
 
 Legenda stato:
 - **Predisposta:** l'architettura MVP la prevede, va solo attivata o sviluppata.
@@ -36,3 +36,4 @@ Legenda stato:
 | EV-23 | **"Ricorda questo dispositivo"** per la 2FA (es. 30 giorni) | M01 | Rinviata | D-214 | Nell'MVP la 2FA si chiede a ogni login; utile per gli agenti su tablet |
 | EV-24 | **Archivio PDF delle proposte del vecchio sistema** consultabile nel portale | M09 | Rinviata | D-228 | I PDF vanno generati in blocco dal vecchio sistema (che non li salva, D-149) e riscritti con qpdf in import; tabella `legacy_documents` |
 | EV-25 | **Copia dei benefit da un club a un altro**, come base da rivedere | M03 | Rinviata | D-335 | M03 F-13; i benefit non sono usati nei documenti del rilascio 1.0 (D-117) |
+| EV-26 | **Foto reale del logo sul LED** per i clienti già attivi, caricata al posto della simulazione | M08, M09 | Proposta | D-398 | Richiesta di Infront del 10/11/2026 ("fotografia vera"); da appurare alla demo del 4/12/2026 |

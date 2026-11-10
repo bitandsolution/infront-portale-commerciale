@@ -1,6 +1,6 @@
 # Pianificazione e MVP (Fase 6) — Portale Commerciale Infront
 
-Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1, F1, F2 e F3 completate** · ultimo aggiornamento 2026-11-07
+Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1, F1, F2, F3 e F4 completate; fetta DM "Demo del 4/12/2026" approvata (D-394)** · ultimo aggiornamento 2026-11-10
 
 Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 
@@ -10,7 +10,7 @@ Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 | 6.1 | Perimetro MVP e ordine dei moduli | ✅ Approvato (D-234…D-239) |
 | 6.2 | Stime e milestone, data di avvio, uso del vecchio sistema dopo l'avvio | ✅ Approvato (D-243…D-247) |
 | 6.3 | Preparazione del repository (`CLAUDE.md`, `docs/`, CI, verifica layout D-226) | ✅ Approvato (D-249…D-254) |
-| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352), F3 il 7/11/2026 (PR #70…#78, D-356…D-369); **A1** della milestone A eseguito il 7/11/2026 sulla VM, tutto ✅ (`docs/dev/collaudo-milestone-a.md` §7); **F4** il 10/11/2026 (piano D-370…D-376; PR #82, #84, #86, #89, #93, #95; D-377…D-393); prossimi passi: analisi delle nuove specifiche di Infront (demo prevista nella prima settimana di dicembre 2026), A2 con il calendario reale, R0, F5 |
+| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352), F3 il 7/11/2026 (PR #70…#78, D-356…D-369); **A1** della milestone A eseguito il 7/11/2026 sulla VM, tutto ✅ (`docs/dev/collaudo-milestone-a.md` §7); **F4** il 10/11/2026 (piano D-370…D-376; PR #82, #84, #86, #89, #93, #95; D-377…D-393); richieste di Infront del 10/11/2026 analizzate: **fetta DM "Demo del 4/12/2026"** approvata (D-394…D-401, `docs/dev/pr-demo.md`): varianti A…E, slide scelte dall'agente, simulazione del logo sul LED, slide composta a blocchi, con libreria slide minima, invio e approvazione minima e documento PDF; prossimi passi: DM-01…DM-08, demo il 4/12/2026, poi A2 con il calendario reale, R0, F5 |
 
 ---
 
@@ -51,7 +51,8 @@ flowchart LR
   F2 --> R0((R0 rilascio interno))
   F2 --> F3[F3 M05 Clienti]
   F3 --> F4[F4 M06 Configuratore]
-  F4 --> F5[F5 M07 Ciclo di vita<br/>+ notifiche]
+  F4 --> DM[DM Demo 4/12/2026<br/>varianti, slide, LED, approvazione minima, PDF]
+  DM --> F5[F5 M07 Ciclo di vita<br/>+ notifiche]
   F2 --> F6[F6 M08 Contenuti e KPI]
   F5 --> F7[F7 M09 Documenti]
   F6 --> F7
@@ -69,6 +70,7 @@ flowchart LR
 | **R0** | Rilascio interno (✅ D-235) | Produzione aperta al solo admin per caricare stagione 2027-28, club, stadi, iscrizioni, listino, capacità | F2 | — |
 | **F3** | M05 Clienti | Settori, anagrafica con controllo duplicati (D-080, D-197), proprietà, assegnazione e unione, disattivazione. Elenco delle PR: `docs/dev/pr-f3.md` (D-356…D-361); completa **M01-CA4** (riassegnazione dei clienti dell'agente disattivato, conteggio dei clienti nel dialogo "Disattiva utente", D-282) | F0 (F2 per il configuratore) | M05: 1–8 · M01: 4 |
 | **F4** | M06 Configuratore | Percorso a 5 passi tablet-first, totale sempre visibile, residui, copia su altri club, duplica, riepilogo con KPI di campagna, salvataggio automatico. Elenco delle PR: `docs/dev/pr-f4.md` (D-370…D-376) | F1, F2, F3 | M06: 1–8, 10 · M03: 6, 8 · M04: 5, 7 |
+| **DM** | Demo del 4/12/2026 (D-394) | Richieste di Infront del 10/11/2026: **varianti A…E** in un gruppo di proposte (D-396), **slide scelte dall'agente** nel passo "Documento" (D-397), **simulazione del logo sul LED** (D-398), **slide composta a blocchi** (D-399); sotto, anticipate da F5, F6 e F7: invio e approvazione minima con lo sconto (D-395, D-401), libreria slide minima, documento PDF con copertina, recap e slide statiche. Dati della demo (D-400). Elenco delle PR: `docs/dev/pr-demo.md` | F4, S1 | Parti di M06, M07 (CA dell'approvazione), M08, M09 |
 | **F5** | M07 Ciclo di vita + notifiche | Invio, ritiro, coda, blocco di lavorazione, sconto, approvazione transazionale (D-216), forzatura, rifiuto e reinvio, versioni, annullamento, cronologia; e-mail di M01 §7 | F4 | M07: 1–8 · M04: 1, 2, 6, 8, 9 · M01: 4, 6 |
 | **F6** | M08 Contenuti e KPI | Sezioni, libreria slide con condizioni, slide dinamiche, KPI, avvisi; simulatore | F2 | M08: 1–5, 7, 8 |
 | **F7** | M09 Documenti | Composizione, 9 layout dinamici (`docs/layout-dinamici.md`), snapshot e `page_model`, pipeline, archivio, download, rigenerazione (D-205), e-mail dopo il documento (D-221) | F5, F6, S1 | M09: 1–7 · M08: 6 · M06: 9 |
@@ -105,7 +107,8 @@ flowchart LR
 | entro 18/1 | **R0** rilascio interno in produzione | — | Antonio inizia a caricare i dati 2027-28 |
 | 7/1 – 13/1 | **F3** M05 | 1 | ✅ Completata il 7/11/2026 (F3-01…F3-04, PR #70, #71, #76, #78, D-356…D-369, `docs/dev/pr-f3.md`). Settori, anagrafica con controllo dei duplicati, riassegnazione, unione e disattivazione dei clienti, clienti dell'agente disattivato (M01-CA4) |
 | 14/1 – 3/2 | **F4** M06 | 3 | ✅ Completata il 10/11/2026 (F4-01…F4-05, PR #82, #84, #86, #89, #93, #95, D-370…D-393, `docs/dev/pr-f4.md`). Bozza con salvataggio automatico, passi 1–5, valutazione dei club, riepilogo con KPI di campagna e ricalcolo, copia su altri club e duplica |
-| 4/2 – 24/2 | **F5** M07 + notifiche | 3 | |
+| 10/11 – 3/12/2026 | **DM** Demo del 4/12/2026 (D-394) | 3,5 | Fetta aggiunta per le richieste di Infront del 10/11/2026 (`docs/dev/pr-demo.md`); controllo il 26/11/2026, demo il **4/12/2026**. Anticipa parti di F5, F6 e F7, che si riducono di conseguenza |
+| 4/2 – 24/2 | **F5** M07 + notifiche | 3 | Ridotta della parte fatta in DM (D-395) |
 | 1/3 – 12/3 | Collaudo **milestone B** (agenti pilota, gestore) · **checkpoint di pianificazione** (D-247) | — | Verifica del margine sul go-live |
 | 25/2 – 10/3 | **F6** M08 | 2 | |
 | 11/3 – 13/4 | **F7** M09 (Pasqua compresa) | 4,5 | |
