@@ -516,6 +516,8 @@ export interface ProposalRepricing {
 
 /** Outcome of "Copia su altri club" (ProposalsPresenter::copied, F4-05). */
 export interface ProposalCopied {
+    changed: boolean;
+    title: string;
     copied: string | null;
     skipped: Array<{ club: string; items: string[] }>;
 }

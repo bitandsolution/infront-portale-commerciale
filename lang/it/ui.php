@@ -1302,6 +1302,8 @@ return [
             'confirm' => 'Copia la configurazione',
             'need_two' => 'Per copiare servono almeno due club nella proposta.',
             'result_title' => 'Configurazione copiata',
+            'unchanged_title' => 'Nessuna modifica',
+            'unchanged' => 'I club scelti hanno già la configurazione che risulta dalla copia.',
             'copied_on' => 'Copiata su: :clubs.',
             'skipped_title' => 'Opzioni saltate',
             'skipped_help' => 'Per le opzioni saltate i club mantengono la configurazione precedente.',
