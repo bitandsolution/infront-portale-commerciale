@@ -61,7 +61,7 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.variants_share_header'));
     }
 
-        public function render(): RedirectResponse
+    public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));
     }
