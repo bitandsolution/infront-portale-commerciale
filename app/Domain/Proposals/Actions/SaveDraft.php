@@ -4,7 +4,6 @@ namespace App\Domain\Proposals\Actions;
 
 use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
-use App\Domain\Proposals\Data\ClubEvaluation;
 use App\Domain\Proposals\Data\DraftClubData;
 use App\Domain\Proposals\Data\DraftData;
 use App\Domain\Proposals\Data\DraftEvaluation;
@@ -13,31 +12,27 @@ use App\Domain\Proposals\Data\ProposalsAuditValues;
 use App\Domain\Proposals\Exceptions\DraftConflict;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
 use App\Domain\Proposals\Services\DraftEvaluator;
+use App\Domain\Proposals\Services\DraftRowsWriter;
 use App\Domain\Proposals\Services\ProposalPeriod;
 use App\Domain\Settings\Services\Settings;
 use App\Enums\AuditAction;
-use App\Enums\MatchesSource;
 use App\Enums\SeasonStatus;
 use App\Models\Client;
 use App\Models\Club;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
 use App\Models\PartnershipTier;
-use App\Models\PriceList;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\ProposalVersionClub;
 use App\Models\ProposalVersionClubSeat;
 use App\Models\Season;
-use App\Models\Territory;
 use App\Models\User;
-use App\Models\VisibilityType;
 use App\Support\LedDuration;
 use App\Support\Text;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use RuntimeException;
 
 /**
  * Automatic save of a draft (D-165, D-372, D-373): client, season and period (steps 1 and 2, F4-02)
@@ -69,6 +64,7 @@ final class SaveDraft
         private readonly AuditLog $audit,
         private readonly DraftEvaluator $evaluator,
         private readonly Settings $settings,
+        private readonly DraftRowsWriter $rowsWriter,
     ) {}
 
     public function handle(Proposal $proposal, DraftData $data, int $lockVersion, User $actor): DraftSaved
@@ -117,21 +113,15 @@ final class SaveDraft
 
             $locked->fill(['client_id' => $client->id, 'season_id' => $season?->id]);
             $locked->setRelation('client', $client)->setRelation('season', $season);
-            $campaign = $evaluation->campaign;
             $version->fill([
                 'starts_on' => $startsOn,
                 'ends_on' => $endsOn,
-                'list_total' => $evaluation->listTotal,
-                'campaign_starts_on' => $campaign?->campaignStart?->toDateString(),
-                'campaign_months' => $campaign?->campaignMonths,
-                'total_matches' => $campaign?->totalMatches,
-                'total_spots' => $campaign?->totalSpots,
-                'top_matches' => $campaign?->topMatches,
+                ...DraftRowsWriter::versionTotals($evaluation),
             ]);
 
             $after = [
                 ...ProposalsAuditValues::draft($locked, $version),
-                ...self::clubValues($evaluation),
+                ...ProposalsAuditValues::clubsOf($evaluation),
             ];
 
             foreach (array_keys($before) as $field) {
@@ -150,7 +140,7 @@ final class SaveDraft
             }
 
             $version->save();
-            $this->writeClubs($version, $rows, $evaluation, $season);
+            $this->rowsWriter->write($version, $rows, $evaluation, $season);
             $locked->lock_version = $locked->lock_version + 1;
             $locked->save();
 
@@ -299,142 +289,6 @@ final class SaveDraft
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
-    }
-
-    /**
-     * The clubs after the save, for the audit (one line per club).
-     *
-     * @return array<string, string>
-     */
-    private static function clubValues(DraftEvaluation $evaluation): array
-    {
-        $tiers = PartnershipTier::query()->pluck('code', 'id');
-        $formats = LedFormat::query()->pluck('code', 'id');
-        $variants = HospitalityVariant::query()->pluck('code', 'id');
-        $values = [];
-
-        foreach ($evaluation->clubs as $club) {
-            $seats = [];
-
-            foreach ($club->data->seats as $variantId => $count) {
-                $code = $variants->get($variantId);
-
-                if ($count > 0 && is_string($code)) {
-                    $seats[$code] = $count;
-                }
-            }
-
-            $tier = $club->data->tierId !== null ? $tiers->get($club->data->tierId) : null;
-            $format = $club->data->ledFormatId !== null ? $formats->get($club->data->ledFormatId) : null;
-
-            $values[ProposalsAuditValues::clubKey($club->club->code)] = ProposalsAuditValues::club(
-                is_string($tier) ? $tier : null,
-                is_string($format) ? $format : null,
-                $club->data->ledSeconds,
-                $seats,
-            );
-        }
-
-        return $values;
-    }
-
-    /**
-     * Writes the club rows and their seats with what the server calculated; removes the clubs no
-     * longer in the draft (their seats go with them, C3).
-     *
-     * @param  Collection<int, ProposalVersionClub>  $rows
-     */
-    private function writeClubs(ProposalVersion $version, Collection $rows, DraftEvaluation $evaluation, ?Season $season): void
-    {
-        $kept = array_map(fn (ClubEvaluation $club): int => $club->club->id, $evaluation->clubs);
-
-        foreach ($rows as $row) {
-            if (! in_array($row->club_id, $kept, true)) {
-                $row->delete();
-            }
-        }
-
-        if ($evaluation->clubs === []) {
-            return;
-        }
-
-        $priceListId = $season !== null ? PriceList::query()->where('season_id', $season->id)->value('id') : null;
-        [$territoryId, $visibilityTypeId] = self::hiddenValues();
-
-        foreach ($evaluation->clubs as $index => $club) {
-            $row = $rows->firstWhere('club_id', $club->club->id) ?? new ProposalVersionClub([
-                'proposal_version_id' => $version->id,
-                'club_id' => $club->club->id,
-                'territory_id' => $territoryId,
-                'visibility_type_id' => $visibilityTypeId,
-            ]);
-            $quote = $club->quote;
-            $data = $club->data;
-
-            $row->fill([
-                'sort_order' => $index,
-                'partnership_tier_id' => $data->tierId,
-                'led_format_id' => $data->ledFormatId,
-                'led_seconds_per_match' => $data->ledFormatId !== null ? $data->ledSeconds : null,
-                'competition_season_id' => $quote?->matches->edition->id,
-                'home_matches' => $quote?->matches->matches,
-                'matches_source' => $quote === null ? null : ($quote->matches->fromCalendar ? MatchesSource::Calendar : MatchesSource::Standard),
-                'price_list_id' => $quote !== null ? $priceListId : null,
-                'led_unit_price' => $quote?->ledUnitPrice,
-                'led_price' => $quote?->ledPrice,
-                'partnership_price' => $quote?->partnershipPrice,
-                'hospitality_price' => $quote?->hospitalityPrice,
-                'club_total' => $quote?->total,
-            ])->save();
-
-            $this->writeSeats($row, $club);
-        }
-    }
-
-    private function writeSeats(ProposalVersionClub $row, ClubEvaluation $club): void
-    {
-        $saved = $row->seats()->get()->keyBy('hospitality_variant_id');
-        $wanted = array_filter($club->data->seats, fn (int $seats): bool => $seats > 0);
-
-        foreach ($saved as $variantId => $seat) {
-            if (! array_key_exists((int) $variantId, $wanted)) {
-                $seat->delete();
-            }
-        }
-
-        foreach ($wanted as $variantId => $seats) {
-            $line = null;
-
-            foreach ($club->quote !== null ? $club->quote->hospitality : [] as $candidate) {
-                if ($candidate->variant->id === $variantId) {
-                    $line = $candidate;
-                }
-            }
-
-            $seat = $saved->get($variantId) ?? new ProposalVersionClubSeat([
-                'proposal_version_club_id' => $row->id,
-                'hospitality_variant_id' => $variantId,
-            ]);
-
-            $seat->fill(['seats' => $seats, 'seat_price' => $line?->seatPrice, 'price' => $line?->price])->save();
-        }
-    }
-
-    /**
-     * D-085: territory and visibility type are hidden while a single value is active.
-     *
-     * @return array{int, int}
-     */
-    private static function hiddenValues(): array
-    {
-        $territory = Territory::query()->where('is_active', true)->orderBy('id')->value('id');
-        $visibilityType = VisibilityType::query()->where('is_active', true)->orderBy('id')->value('id');
-
-        if (! is_numeric($territory) || ! is_numeric($visibilityType)) {
-            throw new RuntimeException('No active territory or visibility type: run SystemDataSeeder.');
-        }
-
-        return [(int) $territory, (int) $visibilityType];
     }
 
     private static function field(int $clubId, string $field): string

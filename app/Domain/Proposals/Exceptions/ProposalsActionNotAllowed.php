@@ -37,6 +37,18 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.not_draft', ['number' => (string) $number]));
     }
 
+    /** M06 §5 (F4-05): the copy needs a club of the draft and at least another club to copy it on. */
+    public static function nothingToCopy(): self
+    {
+        return new self(Text::get('proposals.errors.nothing_to_copy'));
+    }
+
+    /** D-091, RB-14 (F4-05): only an own proposal with its configuration is duplicated. */
+    public static function notDuplicable(int $number): self
+    {
+        return new self(Text::get('proposals.errors.not_duplicable', ['number' => (string) $number]));
+    }
+
     public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));

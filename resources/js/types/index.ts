@@ -440,6 +440,8 @@ export interface ProposalDraft {
     saveUrl: string;
     deleteUrl: string;
     newClientUrl: string;
+    /** "Copia su altri club" (F4-05). */
+    copyUrl: string;
 }
 
 /** An option of a club at step 4 (ProposalsPresenter::clubOptions): shown only when available or sold out. */
@@ -512,6 +514,19 @@ export interface ProposalRepricing {
     total: string;
 }
 
+/** Outcome of "Copia su altri club" (ProposalsPresenter::copied, F4-05). */
+export interface ProposalCopied {
+    copied: string | null;
+    skipped: Array<{ club: string; items: string[] }>;
+}
+
+/** A draft just made by "Duplica proposta" (ProposalsPresenter::duplicated, F4-05). */
+export interface ProposalDuplicatedNotice {
+    title: string;
+    prices: ProposalRepricing | null;
+    invalidClubs: string | null;
+}
+
 /** A club of the draft as the agent edits it (sent with the automatic save). */
 export interface ProposalClubFields {
     club_id: number;
@@ -530,6 +545,8 @@ export interface ProposalDraftRow {
     period: string | null;
     listTotal: string;
     updatedAt: string;
+    clientId: string;
     editUrl: string;
     deleteUrl: string;
+    duplicateUrl: string;
 }

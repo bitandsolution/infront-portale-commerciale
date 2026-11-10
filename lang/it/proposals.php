@@ -12,6 +12,8 @@ return [
     'toasts' => [
         'draft_deleted' => 'Bozza n. :number eliminata',
         'client_created' => 'Cliente :client creato e scelto per la proposta',
+        'clubs_copied' => 'Configurazione copiata su :count club',
+        'duplicated' => 'Proposta n. :number creata come copia della n. :original',
     ],
 
     // Rules of the configurator that refuse an operation (M06 §7): toasts.
@@ -20,6 +22,8 @@ return [
         'client_not_selectable' => 'Scegli uno dei tuoi clienti attivi',
         'season_not_selectable' => 'La stagione scelta è chiusa: scegline un\'altra',
         'not_draft' => 'La proposta n. :number non è più una bozza: non si modifica dal configuratore',
+        'nothing_to_copy' => 'Scegli il club da copiare e almeno un altro club della proposta',
+        'not_duplicable' => 'La proposta n. :number non si può duplicare',
     ],
 
     // Errors under the fields of step 2 (M06 §8) and dialog of a draft changed elsewhere (D-165).
@@ -61,6 +65,8 @@ return [
         'ends_on' => 'data di fine',
         'lock_version' => 'versione della bozza',
         'clubs' => 'club',
+        'source_club_id' => 'club da copiare',
+        'target_club_ids' => 'club su cui copiare',
     ],
 
     // M07 §4, D-095, D-376.
@@ -70,6 +76,11 @@ return [
         'approved' => 'Approvata',
         'rejected' => 'Rifiutata',
         'cancelled' => 'Annullata',
+    ],
+
+    // Notes of the history (F4-05).
+    'history' => [
+        'duplicated_from' => 'Copia della proposta n. :number',
     ],
 
     // History of the proposal (M07 F-10, D-199).

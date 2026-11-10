@@ -17,6 +17,7 @@ use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Proposals\ProposalClientController;
 use App\Http\Controllers\Proposals\ProposalController;
+use App\Http\Controllers\Proposals\ProposalCopyController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
 use App\Http\Controllers\Sports\ClubController;
@@ -238,6 +239,10 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
                 ->name('proposals.update');
             Route::post('proposte/{proposal}/cliente', [ProposalClientController::class, 'update'])->whereNumber('proposal')->name('proposals.clients.update');
             Route::delete('proposte/{proposal}', [ProposalController::class, 'destroy'])->whereNumber('proposal')->name('proposals.destroy');
+            // Support functions (M06 §5; F4-05): "Copia su altri club" on a draft, "Duplica proposta"
+            // from any own proposal (ProposalPolicy::duplicate).
+            Route::post('proposte/{proposal}/copia-club', [ProposalCopyController::class, 'clubs'])->whereNumber('proposal')->name('proposals.copy-clubs');
+            Route::post('proposte/{proposal}/duplica', [ProposalCopyController::class, 'duplicate'])->whereNumber('proposal')->name('proposals.duplicate');
         });
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.

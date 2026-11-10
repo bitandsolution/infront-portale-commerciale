@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, Plus, RefreshCw, Search, Trash2, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, Copy, CopyCheck, Plus, RefreshCw, Search, Trash2, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -9,7 +9,9 @@ import TextField from '@/components/forms/TextField.vue';
 import NoticeDialog from '@/components/NoticeDialog.vue';
 import ClubConfiguration from '@/components/proposals/ClubConfiguration.vue';
 import ClubPicker from '@/components/proposals/ClubPicker.vue';
+import CopyClubsDialog from '@/components/proposals/CopyClubsDialog.vue';
 import DraftSummary from '@/components/proposals/DraftSummary.vue';
+import { formatLedDuration } from '@/components/proposals/ledDuration';
 import NewClientDialog from '@/components/proposals/NewClientDialog.vue';
 import EmptyState from '@/components/states/EmptyState.vue';
 import StatusPill from '@/components/StatusPill.vue';
@@ -20,7 +22,9 @@ import type {
     ProposalClientOption,
     ProposalClubFields,
     ProposalClubOption,
+    ProposalCopied,
     ProposalDraft,
+    ProposalDuplicatedNotice,
     ProposalRepricing,
     ProposalSeasonOption,
     SectorOption,
@@ -45,6 +49,10 @@ import type {
  * - Reopened draft (M06 RB-12, M03-CA6): the prices recalculated since the last save are shown in a
  *   banner ("da € X a € Y"); the prop comes only with the page, so the banner stays while the agent
  *   works, until it is closed.
+ * - F4-05: "Copia su altri club" at step 4 (CopyClubsDialog): the pending changes are saved first,
+ *   then the server copies and saves; the page is loaded again with the new clubs and the outcome
+ *   club by club (prop "copied"). A draft just duplicated shows its origin, the prices recalculated
+ *   and the clubs to correct (prop "duplicated").
  */
 const props = defineProps<{
     layout: LayoutData;
@@ -52,6 +60,8 @@ const props = defineProps<{
     lastStep: number;
     draft: ProposalDraft | null;
     reopened: ProposalRepricing | null;
+    copied: ProposalCopied | null;
+    duplicated: ProposalDuplicatedNotice | null;
     clients: ProposalClientOption[];
     sectors: SectorOption[];
     seasons: ProposalSeasonOption[];
@@ -443,6 +453,60 @@ function deleteDraft(): void {
     });
 }
 
+// "Copia su altri club" (M06 §5, M06-CA7; F4-05).
+const copyOpen = ref(false);
+const copying = ref(false);
+
+/** One line per club for the dialog: names from the options of the server. */
+function clubSummary(club: ProposalClubFields): string {
+    const option = optionsById.value.get(club.club_id);
+    const parts: string[] = [];
+    const tier = option?.tiers.find((item) => item.id === club.partnership_tier_id);
+    const format = option?.formats.find((item) => item.id === club.led_format_id);
+    const seats = club.seats.reduce((sum, item) => sum + item.seats, 0);
+    if (tier) {
+        parts.push(tier.name);
+    }
+    if (format) {
+        parts.push(format.name, t('proposals.configuration.per_match', { duration: formatLedDuration(club.led_seconds) }));
+    }
+    if (seats > 0) {
+        parts.push(t('proposals.configuration.seats_summary', { count: String(seats) }));
+    }
+
+    return parts.length > 0 ? parts.join(' · ') : t('proposals.copy.nothing_configured');
+}
+
+const copyClubs = computed(() => fields.clubs.map((club) => ({
+    id: club.club_id,
+    name: optionsById.value.get(club.club_id)?.name ?? serverClubs.value.get(club.club_id)?.name ?? '',
+    summary: clubSummary(club),
+})));
+
+function copyConfiguration(sourceId: number, targetIds: number[]): void {
+    if (props.draft === null || !online.value) {
+        return;
+    }
+    const url = props.draft.copyUrl;
+    copying.value = true;
+    // The copy starts from what is saved: the pending changes go first. The answer brings new clubs,
+    // so the page is mounted again with them (preserveState: false).
+    save(() => router.post(url, { source_club_id: sourceId, target_club_ids: targetIds, lock_version: lockVersion.value }, {
+        preserveState: false,
+        preserveScroll: true,
+        onFinish: () => {
+            copying.value = false;
+            copyOpen.value = false;
+        },
+    }));
+    if (saveState.value === 'error') {
+        copying.value = false;
+    }
+}
+
+const showCopied = ref(props.copied !== null);
+const showDuplicated = ref(props.duplicated !== null);
+
 // Step 5 shows the total in its table: no separate total column or bar there.
 const summaryStep = computed(() => currentStep.value === 5);
 
@@ -542,6 +606,111 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             class="-m-2 flex size-11 shrink-0 items-center justify-center rounded-[10px] text-ink-soft hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-accent"
                             :aria-label="t('proposals.reopened.close')"
                             @click="showReopened = false"
+                        >
+                            <X
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                        </button>
+                    </div>
+
+                    <div
+                        v-if="duplicated && showDuplicated"
+                        class="flex items-start gap-2.5 rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
+                        role="status"
+                    >
+                        <Copy
+                            :size="18"
+                            :stroke-width="2"
+                            class="mt-0.5 shrink-0 text-notice"
+                            aria-hidden="true"
+                        />
+                        <div class="flex min-w-0 flex-1 flex-col gap-1">
+                            <p class="font-semibold">
+                                {{ duplicated.title }}
+                            </p>
+                            <p class="text-[13px] text-muted">
+                                {{ t('proposals.duplicated.help') }}
+                            </p>
+                            <ul
+                                v-if="duplicated.prices"
+                                class="flex flex-col gap-0.5"
+                            >
+                                <li
+                                    v-for="club in duplicated.prices.clubs"
+                                    :key="club.name"
+                                >
+                                    {{ club.text }}
+                                </li>
+                                <li class="font-medium">
+                                    {{ duplicated.prices.total }}
+                                </li>
+                            </ul>
+                            <p
+                                v-if="duplicated.invalidClubs"
+                                class="font-medium text-accent"
+                            >
+                                {{ duplicated.invalidClubs }}
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            class="-m-2 flex size-11 shrink-0 items-center justify-center rounded-[10px] text-ink-soft hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-accent"
+                            :aria-label="t('proposals.duplicated.close')"
+                            @click="showDuplicated = false"
+                        >
+                            <X
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                        </button>
+                    </div>
+
+                    <div
+                        v-if="copied && showCopied"
+                        class="flex items-start gap-2.5 rounded-[10px] px-3.5 py-3 text-sm text-ink"
+                        :class="copied.skipped.length > 0 ? 'bg-notice-soft' : 'bg-success-soft'"
+                        role="status"
+                    >
+                        <CopyCheck
+                            :size="18"
+                            :stroke-width="2"
+                            class="mt-0.5 shrink-0"
+                            :class="copied.skipped.length > 0 ? 'text-notice' : 'text-success'"
+                            aria-hidden="true"
+                        />
+                        <div class="flex min-w-0 flex-1 flex-col gap-1">
+                            <p class="font-semibold">
+                                {{ t('proposals.copy.result_title') }}
+                            </p>
+                            <p v-if="copied.copied">
+                                {{ copied.copied }}
+                            </p>
+                            <template v-if="copied.skipped.length > 0">
+                                <p class="font-medium">
+                                    {{ t('proposals.copy.skipped_title') }}
+                                </p>
+                                <ul class="flex flex-col gap-1">
+                                    <li
+                                        v-for="club in copied.skipped"
+                                        :key="club.club"
+                                    >
+                                        <span class="font-medium">{{ club.club }}:</span>
+                                        {{ club.items.join(' ') }}
+                                    </li>
+                                </ul>
+                                <p class="text-[13px] text-muted">
+                                    {{ t('proposals.copy.skipped_help') }}
+                                </p>
+                            </template>
+                        </div>
+                        <button
+                            type="button"
+                            class="-m-2 flex size-11 shrink-0 items-center justify-center rounded-[10px] text-ink-soft hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-accent"
+                            :aria-label="t('proposals.copy.close')"
+                            @click="showCopied = false"
                         >
                             <X
                                 :size="18"
@@ -861,17 +1030,41 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         class="flex flex-col gap-3"
                         aria-labelledby="step-configuration"
                     >
-                        <div>
-                            <h3
-                                id="step-configuration"
-                                class="text-base font-semibold"
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0 flex-1">
+                                <h3
+                                    id="step-configuration"
+                                    class="text-base font-semibold"
+                                >
+                                    {{ t('proposals.configuration.title') }}
+                                </h3>
+                                <p class="mt-1 text-sm leading-relaxed text-muted">
+                                    {{ t('proposals.configuration.intro') }}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                :class="buttonClasses.secondary"
+                                class="shrink-0"
+                                :disabled="fields.clubs.length < 2 || copying || !online"
+                                :aria-describedby="fields.clubs.length < 2 ? 'proposal-copy-hint' : undefined"
+                                @click="copyOpen = true"
                             >
-                                {{ t('proposals.configuration.title') }}
-                            </h3>
-                            <p class="mt-1 text-sm leading-relaxed text-muted">
-                                {{ t('proposals.configuration.intro') }}
-                            </p>
+                                <Copy
+                                    :size="18"
+                                    :stroke-width="2"
+                                    aria-hidden="true"
+                                />
+                                {{ t('proposals.copy.action') }}
+                            </button>
                         </div>
+                        <p
+                            v-if="fields.clubs.length < 2"
+                            id="proposal-copy-hint"
+                            class="text-[13px] text-muted"
+                        >
+                            {{ t('proposals.copy.need_two') }}
+                        </p>
                         <p
                             v-if="errors.clubs"
                             class="rounded-[10px] bg-accent-soft px-3.5 py-3 text-sm text-ink"
@@ -1046,6 +1239,15 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
             :lock-version="draft ? lockVersion : null"
             @close="newClientOpen = false"
             @created="clientCreated"
+        />
+
+        <CopyClubsDialog
+            :open="copyOpen"
+            :clubs="copyClubs"
+            :initial-source="openClubs[0] ?? null"
+            :processing="copying"
+            @cancel="copyOpen = false"
+            @confirm="copyConfiguration"
         />
 
         <ConfirmDialog

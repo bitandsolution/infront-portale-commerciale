@@ -92,6 +92,7 @@ return [
         'proposal_draft_created' => 'Bozza di proposta creata',
         'proposal_draft_updated' => 'Bozza di proposta modificata',
         'proposal_draft_deleted' => 'Bozza di proposta eliminata',
+        'proposal_draft_duplicated' => 'Proposta duplicata in una nuova bozza',
     ],
 
     'reasons' => [

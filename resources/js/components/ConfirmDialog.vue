@@ -15,8 +15,10 @@ const props = withDefaults(
         title: string;
         confirmLabel: string;
         processing?: boolean;
+        /** The confirmation is not possible yet (e.g. nothing chosen in the dialog). */
+        confirmDisabled?: boolean;
     }>(),
-    { processing: false },
+    { processing: false, confirmDisabled: false },
 );
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>();
@@ -99,7 +101,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
                 <button
                     type="button"
                     :class="buttonClasses.primary"
-                    :disabled="processing"
+                    :disabled="processing || confirmDisabled"
                     @click="emit('confirm')"
                 >
                     {{ confirmLabel }}
