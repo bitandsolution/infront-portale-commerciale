@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Support\Files\SampleFiles;
 use App\Support\Navigation\PortalPages;
 use Database\Seeders\SystemDataSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -300,7 +301,7 @@ it('C9, D-405: the database refuses a club slide without club, a static slide wi
     $slide = Slide::factory()->forSeason($this->season)->create();
 
     expect(fn () => DB::table('slides')->where('id', $slide->id)->update($attributes))
-        ->toThrow(Illuminate\Database\QueryException::class);
+        ->toThrow(QueryException::class);
 })->with([
     'club without club' => [['scope' => 'club', 'club_id' => null]],
     'static with layout' => [['layout_code' => 'cover']],
