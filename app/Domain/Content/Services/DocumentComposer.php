@@ -96,7 +96,7 @@ final class DocumentComposer
             array_values(array_filter(SlideDocumentType::cases(), fn (SlideDocumentType $documentType): bool => $documentType->fits($type))),
         );
 
-        return Slide::query()
+        return array_values(Slide::query()
             ->with(['conditions', 'section'])
             ->where('season_id', $input->season?->id)
             ->where('language', Slide::LANGUAGE)
@@ -113,8 +113,7 @@ final class DocumentComposer
                 fn (Slide $a, Slide $b): int => $a->sort_order <=> $b->sort_order,
                 fn (Slide $a, Slide $b): int => $a->id <=> $b->id,
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

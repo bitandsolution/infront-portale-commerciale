@@ -92,6 +92,7 @@ final class Slide extends Model
         $values = [];
 
         foreach (SlideConditionType::cases() as $type) {
+            /** @var list<string> $typeValues */
             $typeValues = $this->conditions
                 ->filter(fn (SlideCondition $condition): bool => $condition->condition_type === $type)
                 ->map(fn (SlideCondition $condition): string => $condition->value)

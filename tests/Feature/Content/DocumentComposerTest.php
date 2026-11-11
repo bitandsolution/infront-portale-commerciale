@@ -79,7 +79,7 @@ function compClubSlide(Season $season, Club $club, string $title, string $sectio
 it('M08-CA1: a Lazio Top proposal includes the Top benefit slides and excludes Premium and Official', function () {
     $lazio = Club::factory()->infront()->create();
     $factory = fn (string $tier) => Slide::factory()->forSeason($this->season)->forClub($lazio)
-        ->document(SlideDocumentType::Club)->section('BENEFIT')->when(SlideConditionType::PartnershipTier, $tier);
+        ->document(SlideDocumentType::Club)->section('BENEFIT')->withCondition(SlideConditionType::PartnershipTier, $tier);
     $factory('TOP')->create(['title' => 'Benefit Top']);
     $factory('PREMIUM')->create(['title' => 'Benefit Premium']);
     $factory('OFFICIAL')->create(['title' => 'Benefit Official']);
@@ -93,9 +93,9 @@ it('M08-CA1: a Lazio Top proposal includes the Top benefit slides and excludes P
 it('M08-CA2: a proposal without hospitality excludes the slides with "Hospitality presente = Sì"', function () {
     $club = Club::factory()->infront()->create();
     Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)
-        ->when(SlideConditionType::HasHospitality, 'true')->create(['title' => 'Ticketing & Hospitality']);
+        ->withCondition(SlideConditionType::HasHospitality, 'true')->create(['title' => 'Ticketing & Hospitality']);
     Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)
-        ->when(SlideConditionType::HasHospitality, 'false')->create(['title' => 'Senza hospitality']);
+        ->withCondition(SlideConditionType::HasHospitality, 'false')->create(['title' => 'Senza hospitality']);
 
     expect(compTitles(compBuild($this->season, [[compRow($club->id, 'TOP')]])))->toBe(['Senza hospitality'])
         ->and(compTitles(compBuild($this->season, [[compRow($club->id, 'TOP', hospitality: true)]])))->toBe(['Ticketing & Hospitality']);
@@ -104,7 +104,7 @@ it('M08-CA2: a proposal without hospitality excludes the slides with "Hospitalit
 it('M08-CA3: a slide with "Livello = Top o Premium" is included for both tiers, not for Official', function () {
     $club = Club::factory()->infront()->create();
     Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)
-        ->when(SlideConditionType::PartnershipTier, 'TOP', 'PREMIUM')->create(['title' => 'Top o Premium']);
+        ->withCondition(SlideConditionType::PartnershipTier, 'TOP', 'PREMIUM')->create(['title' => 'Top o Premium']);
 
     expect(compTitles(compBuild($this->season, [[compRow($club->id, 'TOP')]])))->toBe(['Top o Premium'])
         ->and(compTitles(compBuild($this->season, [[compRow($club->id, 'PREMIUM')]])))->toBe(['Top o Premium'])
@@ -114,9 +114,9 @@ it('M08-CA3: a slide with "Livello = Top o Premium" is included for both tiers, 
 it('M08-CA4: Bologna (Serie A) + Empoli (Serie B) include the Serie A and Serie B KPI slides; only Serie A excludes Serie B', function () {
     [$bologna, $empoli, $como] = Club::factory()->infront()->count(3)->create();
     Slide::factory()->forSeason($this->season)->document(SlideDocumentType::Network)->section('CLUB', 10)
-        ->when(SlideConditionType::CompetitionTier, '1')->create(['title' => 'KPI Serie A']);
+        ->withCondition(SlideConditionType::CompetitionTier, '1')->create(['title' => 'KPI Serie A']);
     Slide::factory()->forSeason($this->season)->document(SlideDocumentType::Network)->section('CLUB', 20)
-        ->when(SlideConditionType::CompetitionTier, '2')->create(['title' => 'KPI Serie B']);
+        ->withCondition(SlideConditionType::CompetitionTier, '2')->create(['title' => 'KPI Serie B']);
 
     $mixed = compBuild($this->season, [[compRow($bologna->id, 'TOP', competitionTier: 1), compRow($empoli->id, 'TOP', competitionTier: 2)]]);
     $serieA = compBuild($this->season, [[compRow($bologna->id, 'TOP', competitionTier: 1), compRow($como->id, 'TOP', competitionTier: 1)]]);
@@ -130,7 +130,7 @@ it('M08-CA4: Bologna (Serie A) + Empoli (Serie B) include the Serie A and Serie 
 it('RB-01, D-202: different condition types must all hold; no conditions = always included', function () {
     $club = Club::factory()->infront()->create();
     Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)
-        ->when(SlideConditionType::PartnershipTier, 'TOP')->when(SlideConditionType::LedFormat, 'DOMINATION')
+        ->withCondition(SlideConditionType::PartnershipTier, 'TOP')->withCondition(SlideConditionType::LedFormat, 'DOMINATION')
         ->create(['title' => 'Top con Domination']);
     Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)->create(['title' => 'Sempre']);
 
@@ -142,7 +142,7 @@ it('D-118: in the network document a condition holds when at least one club sati
     [$lazio, $genoa] = Club::factory()->infront()->count(2)->create();
     foreach (['TOP', 'PREMIUM', 'OFFICIAL'] as $order => $tier) {
         Slide::factory()->forSeason($this->season)->document(SlideDocumentType::Network)->section('BENEFIT', $order)
-            ->when(SlideConditionType::PartnershipTier, $tier)->create(['title' => 'Benefit '.$tier]);
+            ->withCondition(SlideConditionType::PartnershipTier, $tier)->create(['title' => 'Benefit '.$tier]);
     }
 
     $composition = compBuild($this->season, [[compRow($lazio->id, 'TOP'), compRow($genoa->id, 'PREMIUM')]]);
@@ -153,7 +153,7 @@ it('D-118: in the network document a condition holds when at least one club sati
 it('D-404: with variants a condition holds when one club of one variant satisfies it', function () {
     $lazio = Club::factory()->infront()->create();
     Slide::factory()->forSeason($this->season)->forClub($lazio)->document(SlideDocumentType::Club)
-        ->when(SlideConditionType::HasLed, 'true')->create(['title' => 'LED bordocampo']);
+        ->withCondition(SlideConditionType::HasLed, 'true')->create(['title' => 'LED bordocampo']);
 
     $composition = compBuild($this->season, [[compRow($lazio->id, 'TOP')], [compRow($lazio->id, 'TOP', 'FILA_1')]]);
 

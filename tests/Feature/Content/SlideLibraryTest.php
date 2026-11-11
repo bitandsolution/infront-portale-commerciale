@@ -88,7 +88,7 @@ it('F-01: admin and manager see the slides of the season of the bar, by section,
     $lazio = slidesClub($this->season);
     Slide::factory()->forSeason($this->season)->section('CLOSING')->create(['title' => 'Grazie']);
     Slide::factory()->forSeason($this->season)->forClub($lazio)->document(SlideDocumentType::Club)->section('BENEFIT')
-        ->when(SlideConditionType::PartnershipTier, 'TOP', 'PREMIUM')->when(SlideConditionType::HasLed, 'true')
+        ->withCondition(SlideConditionType::PartnershipTier, 'TOP', 'PREMIUM')->withCondition(SlideConditionType::HasLed, 'true')
         ->create(['title' => 'Benefit']);
     Slide::factory()->forSeason($this->season)->layout(DocumentLayout::LedMockup)->section('BRAND_EXPOSURE')->create(['title' => 'Simulazione']);
     Slide::factory()->create(['title' => 'Altra stagione']);
@@ -219,7 +219,7 @@ it('D-202: the conditions accept only stable codes, and Sì or No for the yes / 
 it('D-406, C10: the change of a slide writes only the changed fields; a new image is a new file', function () {
     $admin = User::factory()->admin()->create();
     $slide = Slide::factory()->forSeason($this->season)->section('BENEFIT', 20)
-        ->when(SlideConditionType::PartnershipTier, 'TOP')->create(['title' => 'Benefit']);
+        ->withCondition(SlideConditionType::PartnershipTier, 'TOP')->create(['title' => 'Benefit']);
     $oldImage = $slide->image_file_id;
 
     $this->actingAs($admin)
@@ -310,7 +310,7 @@ it('C9, D-405: the database refuses a club slide without club, a static slide wi
 ]);
 
 it('C3: the conditions disappear with their slide', function () {
-    $slide = Slide::factory()->forSeason($this->season)->when(SlideConditionType::HasLed, 'true')->create();
+    $slide = Slide::factory()->forSeason($this->season)->withCondition(SlideConditionType::HasLed, 'true')->create();
 
     DB::table('slides')->where('id', $slide->id)->delete();
 

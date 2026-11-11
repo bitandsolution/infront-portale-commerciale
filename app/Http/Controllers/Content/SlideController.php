@@ -71,7 +71,7 @@ class SlideController extends Controller
     public function store(SlideRequest $request, CreateSlide $createSlide): RedirectResponse
     {
         $season = $this->writableSeason($request->season());
-        $slide = $createSlide->handle($season, $request->slideData(), $request->image(), $this->actor($request));
+        $slide = $createSlide->handle($season, $request->slideData(), $request->slideImage(), $this->actor($request));
 
         return redirect()->route('pages.content_slides')->with('toast', Toast::success(
             Text::get('content.toasts.slide_created', ['slide' => $slide->title]),
@@ -97,7 +97,7 @@ class SlideController extends Controller
 
     public function update(SlideRequest $request, Slide $slide, UpdateSlide $updateSlide): RedirectResponse
     {
-        $changed = $updateSlide->handle($slide, $request->slideData(), $request->image(), $this->actor($request));
+        $changed = $updateSlide->handle($slide, $request->slideData(), $request->slideImage(), $this->actor($request));
 
         return back()->with('toast', Toast::success($changed
             ? Text::get('content.toasts.slide_updated', ['slide' => $slide->refresh()->title])

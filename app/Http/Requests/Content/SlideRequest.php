@@ -125,7 +125,7 @@ class SlideRequest extends FormRequest
         );
     }
 
-    public function image(): ?UploadedFile
+    public function slideImage(): ?UploadedFile
     {
         $image = $this->file('image');
 
@@ -201,7 +201,7 @@ class SlideRequest extends FormRequest
     {
         $layout = DocumentLayout::tryFrom($this->string('layout')->toString());
 
-        if ($layout?->needsImage() === false || $this->image() !== null) {
+        if ($layout?->needsImage() === false || $this->slideImage() !== null) {
             return;
         }
 

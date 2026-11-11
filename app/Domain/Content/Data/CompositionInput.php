@@ -80,7 +80,7 @@ final readonly class CompositionInput
      */
     private static function clubsOf(ProposalVersion $version): array
     {
-        return $version->clubs()
+        return array_values($version->clubs()
             ->with(['partnershipTier', 'ledFormat', 'edition.competition', 'seats'])
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -93,7 +93,6 @@ final readonly class CompositionInput
                 hasHospitality: $row->seats->sum('seats') > 0,
                 competitionTier: $row->edition?->competition->tier,
             ))
-            ->values()
-            ->all();
+            ->all());
     }
 }

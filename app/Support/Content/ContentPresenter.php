@@ -40,7 +40,7 @@ final class ContentPresenter
      * document (M08 §10).
      *
      * @param  Collection<int, Slide>  $slides
-     * @return list<array<string, mixed>>
+     * @return array<int, array<string, mixed>>
      */
     public function rows(Collection $slides): array
     {

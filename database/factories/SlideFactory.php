@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Fictitious static Infront slides for both documents, with a PNG 1920×1080 stored through
  * FileStorage (the tests need Storage::fake(StoredFile::DISK)) and the sections of the system data
- * (ContentSystemDataSeeder must have run). forClub(), layout() and when() set scope, layout and
+ * (ContentSystemDataSeeder must have run). forClub(), layout() and withCondition() set scope, layout and
  * conditions.
  *
  * @extends Factory<Slide>
@@ -84,9 +84,9 @@ class SlideFactory extends Factory
     }
 
     /**
-     * Inclusion conditions, e.g. when(SlideConditionType::PartnershipTier, 'TOP', 'PREMIUM').
+     * Inclusion conditions, e.g. withCondition(SlideConditionType::PartnershipTier, 'TOP', 'PREMIUM').
      */
-    public function when(SlideConditionType $type, string ...$values): static
+    public function withCondition(SlideConditionType $type, string ...$values): static
     {
         return $this->afterCreating(function (Slide $slide) use ($type, $values): void {
             foreach ($values as $value) {
