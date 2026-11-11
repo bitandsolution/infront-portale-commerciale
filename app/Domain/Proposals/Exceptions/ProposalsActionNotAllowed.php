@@ -49,6 +49,18 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.not_duplicable', ['number' => (string) $number]));
     }
 
+    /** D-396 (DM-01): at most the variants of the settings in a group. */
+    public static function tooManyVariants(int $max): self
+    {
+        return new self(Text::get('proposals.errors.too_many_variants', ['max' => (string) $max]));
+    }
+
+    /** D-396 (DM-01): the variants of a group share client and season. */
+    public static function variantsShareHeader(): self
+    {
+        return new self(Text::get('proposals.errors.variants_share_header'));
+    }
+
     public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));

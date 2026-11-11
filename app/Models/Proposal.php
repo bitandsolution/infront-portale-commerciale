@@ -14,13 +14,16 @@ use Illuminate\Support\Carbon;
 
 /**
  * Proposal (M06, M07; D-198, D-376): header with a progressive number (D-371), the agent who owns it,
- * client, season and status; the rows live in its versions: one working version (number null) and
+ * client, season and status; from DM-01 also a variant (letter A…J) of a group of proposals for the
+ * same client and season, presented in one document (D-396; a single proposal is variant A of its group); the rows live in its versions: one working version (number null) and
  * the frozen versions 1, 2… of F5. The agent sees only his own proposals (RB-14): queries go through
  * visibleTo() (HasOwner, column agent_id) and ProposalPolicy. Only a draft is deleted (M07 RB-08),
  * physically, with its working version (cascade).
  *
  * @property int $id
  * @property int $number
+ * @property int|null $proposal_group_id
+ * @property string|null $variant_letter
  * @property int $agent_id
  * @property int|null $client_id
  * @property int|null $season_id
@@ -45,6 +48,7 @@ use Illuminate\Support\Carbon;
  * @property-read ProposalVersion|null $workingVersion
  * @property-read ProposalVersion|null $currentVersion
  * @property-read Proposal|null $duplicatedFrom
+ * @property-read ProposalGroup|null $group
  */
 final class Proposal extends Model
 {
@@ -98,6 +102,16 @@ final class Proposal extends Model
     public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'agent_id');
+    }
+
+    /**
+     * Group of variants (D-396).
+     *
+     * @return BelongsTo<ProposalGroup, $this>
+     */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(ProposalGroup::class, 'proposal_group_id');
     }
 
     /**

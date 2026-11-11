@@ -1322,6 +1322,22 @@ return [
             'confirm_text' => 'La bozza e la sua configurazione vengono cancellate. Il numero :number non sarà riusato.',
             'confirm' => 'Elimina',
         ],
+        // Variants of a proposal (D-396; DM-01).
+        'variants' => [
+            'label' => 'Varianti della proposta',
+            'intro' => 'Le varianti (A, B, C…) vanno nello stesso documento per lo stesso cliente e la stessa stagione: ognuna ha le sue date, i suoi club e il suo totale.',
+            'tab' => 'Variante :letter',
+            'tab_label' => 'Apri la variante :letter (proposta n. :number)',
+            'current' => 'Variante :letter, aperta',
+            'add' => 'Aggiungi variante',
+            'add_help' => 'Nasce una copia di questa variante: poi cambia club, pacchetti, minuti o date.',
+            'max_reached' => 'Hai raggiunto il massimo di :max varianti.',
+            'shared_client' => 'Le varianti hanno lo stesso cliente: per cambiarlo elimina prima le altre varianti.',
+            'shared_season' => 'Le varianti hanno la stessa stagione: per cambiarla elimina prima le altre varianti.',
+            'delete' => 'Elimina la variante',
+            'delete_title' => 'Eliminare la variante :letter (proposta n. :number)?',
+            'delete_text' => 'La variante viene eliminata con la sua configurazione; le altre varianti restano con le loro lettere.',
+        ],
         'mine' => [
             'intro' => 'Le tue bozze, dalla più recente. Si salvano da sole mentre lavori: riaprile per continuare, oppure duplicale per una nuova proposta.',
             'count' => ':count bozze',
@@ -1344,6 +1360,8 @@ return [
             'duplicate_client_help' => 'Puoi scegliere un altro dei tuoi clienti attivi.',
             'duplicate_no_clients' => 'Non hai clienti attivi: crea un cliente per duplicare la proposta.',
             'duplicate_confirm' => 'Crea la copia',
+            'variant' => 'Variante :letter',
+            'variant_label' => 'Variante :letter di :count',
             'columns' => [
                 'number' => 'N.',
                 'client' => 'Cliente',

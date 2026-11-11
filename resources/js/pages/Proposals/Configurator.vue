@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, Copy, CopyCheck, Plus, RefreshCw, Search, Trash2, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, Copy, CopyCheck, Layers, Plus, RefreshCw, Search, Trash2, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -53,6 +53,9 @@ import type {
  *   then the server copies and saves; the page is loaded again with the new clubs and the outcome
  *   club by club (prop "copied"). A draft just duplicated shows its origin, the prices recalculated
  *   and the clubs to correct (prop "duplicated").
+ * - Variants (D-396; DM-01): the bar under the title opens the other variants of the group (at the
+ *   same step, after saving the pending changes) and adds a variant as a copy of this one; while the
+ *   group has more variants, client and season are shared and shown read-only.
  */
 const props = defineProps<{
     layout: LayoutData;
@@ -444,7 +447,10 @@ function deleteDraft(): void {
     dirty = false;
     clearTimeout(timer);
     deleting.value = true;
+    // A variant of a group leads to another variant of the group (D-396).
+    const variant = props.draft.variants.length > 1;
     router.delete(props.draft.deleteUrl, {
+        data: variant ? { stay_in_group: true, step: currentStep.value } : {},
         onFinish: () => {
             deleting.value = false;
             confirmingDelete.value = false;
@@ -504,6 +510,29 @@ function copyConfiguration(sourceId: number, targetIds: number[]): void {
     }
 }
 
+// "Aggiungi variante" (D-396; DM-01): a copy of this variant in the group, opened at the same step.
+const addingVariant = ref(false);
+
+function addVariant(): void {
+    if (props.draft === null || !online.value || !props.draft.canAddVariant) {
+        return;
+    }
+    const url = props.draft.addVariantUrl;
+    addingVariant.value = true;
+    // The copy starts from what is saved: the pending changes go first; the answer is another draft.
+    save(() => router.post(url, { step: currentStep.value }, {
+        preserveState: false,
+        onFinish: () => {
+            addingVariant.value = false;
+        },
+    }));
+    if (saveState.value === 'error') {
+        addingVariant.value = false;
+    }
+}
+
+const multipleVariants = computed(() => (props.draft?.variants.length ?? 0) > 1);
+
 const showCopied = ref(props.copied !== null);
 const showDuplicated = ref(props.duplicated !== null);
 
@@ -556,6 +585,71 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             tone="muted"
                         />
                     </div>
+
+                    <!-- Variants of the group (D-396) -->
+                    <nav
+                        v-if="draft"
+                        class="flex flex-col gap-2.5 rounded-[14px] border border-line bg-white p-3.5 md:p-4"
+                        :aria-label="t('proposals.variants.label')"
+                    >
+                        <div class="flex flex-wrap items-center gap-2">
+                            <Layers
+                                :size="18"
+                                :stroke-width="2"
+                                class="text-muted"
+                                aria-hidden="true"
+                            />
+                            <span class="mr-1 text-sm font-medium">{{ t('proposals.variants.label') }}</span>
+                            <template
+                                v-for="variant in draft.variants"
+                                :key="variant.id"
+                            >
+                                <span
+                                    v-if="variant.current"
+                                    class="inline-flex min-h-11 items-center gap-1.5 rounded-[10px] border border-accent bg-accent-soft px-3.5 text-sm font-semibold text-accent"
+                                    aria-current="page"
+                                    :aria-label="t('proposals.variants.current', { letter: variant.letter })"
+                                >
+                                    {{ t('proposals.variants.tab', { letter: variant.letter }) }}
+                                    <span class="text-[13px] font-medium">n. {{ variant.number }}</span>
+                                </span>
+                                <Link
+                                    v-else
+                                    :href="`${variant.url}?passo=${currentStep}`"
+                                    class="inline-flex min-h-11 items-center gap-1.5 rounded-[10px] border border-line-strong px-3.5 text-sm font-medium text-ink-soft hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
+                                    :aria-label="t('proposals.variants.tab_label', { letter: variant.letter, number: String(variant.number) })"
+                                >
+                                    {{ t('proposals.variants.tab', { letter: variant.letter }) }}
+                                    <span class="text-[13px] text-muted">n. {{ variant.number }}</span>
+                                </Link>
+                            </template>
+                            <button
+                                v-if="draft.canAddVariant"
+                                type="button"
+                                :class="buttonClasses.secondary"
+                                :disabled="addingVariant || !online"
+                                @click="addVariant"
+                            >
+                                <Plus
+                                    :size="18"
+                                    :stroke-width="2.2"
+                                    aria-hidden="true"
+                                />
+                                {{ t('proposals.variants.add') }}
+                            </button>
+                        </div>
+                        <p class="text-[13px] leading-relaxed text-muted">
+                            <template v-if="!draft.canAddVariant">
+                                {{ t('proposals.variants.max_reached', { max: String(draft.maxVariants) }) }}
+                            </template>
+                            <template v-else-if="multipleVariants">
+                                {{ t('proposals.variants.intro') }}
+                            </template>
+                            <template v-else>
+                                {{ t('proposals.variants.add_help') }}
+                            </template>
+                        </p>
+                    </nav>
 
                     <div
                         v-if="!online"
@@ -779,6 +873,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                 </p>
                             </div>
                             <button
+                                v-if="!multipleVariants"
                                 type="button"
                                 :class="buttonClasses.secondary"
                                 :disabled="creatingDraft"
@@ -818,6 +913,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                 </div>
                             </div>
                             <button
+                                v-if="!multipleVariants"
                                 type="button"
                                 :class="buttonClasses.secondary"
                                 class="shrink-0"
@@ -826,6 +922,12 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                 {{ t('proposals.client.change') }}
                             </button>
                         </div>
+                        <p
+                            v-if="multipleVariants"
+                            class="text-[13px] text-muted"
+                        >
+                            {{ t('proposals.variants.shared_client') }}
+                        </p>
                         <p
                             v-if="chosenClient && !chosenClient.selectable"
                             class="rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
@@ -977,12 +1079,18 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                     :options="seasons"
                                     :placeholder="fields.season_id === '' ? t('proposals.period.season_placeholder') : undefined"
                                     :error="errors.season_id"
+                                    :disabled="multipleVariants"
                                 />
                                 <p class="text-[13px] text-muted">
                                     <template v-if="chosenSeason">
                                         {{ chosenSeason.range }} ·
                                     </template>
-                                    {{ t('proposals.period.season_help') }}
+                                    <template v-if="multipleVariants">
+                                        {{ t('proposals.variants.shared_season') }}
+                                    </template>
+                                    <template v-else>
+                                        {{ t('proposals.period.season_help') }}
+                                    </template>
                                 </p>
                             </div>
 
@@ -1126,7 +1234,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                     :stroke-width="2"
                                     aria-hidden="true"
                                 />
-                                {{ t('proposals.delete.action') }}
+                                {{ multipleVariants ? t('proposals.variants.delete') : t('proposals.delete.action') }}
                             </button>
                             <div class="flex flex-col-reverse gap-2 sm:flex-row">
                                 <button
@@ -1252,13 +1360,15 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
 
         <ConfirmDialog
             :open="confirmingDelete"
-            :title="t('proposals.delete.confirm_title', { number: String(draft?.number ?? '') })"
+            :title="multipleVariants
+                ? t('proposals.variants.delete_title', { letter: draft?.variantLetter ?? '', number: String(draft?.number ?? '') })
+                : t('proposals.delete.confirm_title', { number: String(draft?.number ?? '') })"
             :confirm-label="t('proposals.delete.confirm')"
             :processing="deleting"
             @cancel="confirmingDelete = false"
             @confirm="deleteDraft"
         >
-            <p>{{ t('proposals.delete.confirm_text', { number: String(draft?.number ?? '') }) }}</p>
+            <p>{{ multipleVariants ? t('proposals.variants.delete_text') : t('proposals.delete.confirm_text', { number: String(draft?.number ?? '') }) }}</p>
         </ConfirmDialog>
 
         <NoticeDialog

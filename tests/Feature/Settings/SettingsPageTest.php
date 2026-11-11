@@ -28,6 +28,7 @@ function settingsForm(array $overrides = []): array
         'hospitality_max_seats' => 6,
         'forced_reason_min_length' => 10,
         'audit_ip_retention_days' => 1826,
+        'proposal_max_variants' => 5,
     ], $overrides);
 }
 

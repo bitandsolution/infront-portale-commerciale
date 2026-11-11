@@ -442,6 +442,13 @@ export interface ProposalDraft {
     newClientUrl: string;
     /** "Copia su altri club" (F4-05). */
     copyUrl: string;
+    /** D-396 (DM-01): the variants of the group of the draft. */
+    variantLetter: string | null;
+    variants: ProposalVariantLink[];
+    sharedHeader: boolean;
+    canAddVariant: boolean;
+    maxVariants: number;
+    addVariantUrl: string;
 }
 
 /** An option of a club at step 4 (ProposalsPresenter::clubOptions): shown only when available or sold out. */
@@ -539,9 +546,20 @@ export interface ProposalClubFields {
 }
 
 /** One draft of "Le mie proposte" (ProposalsPresenter::draftRow). */
+export interface ProposalVariantLink {
+    id: number;
+    letter: string;
+    number: number;
+    url: string;
+    current: boolean;
+}
+
 export interface ProposalDraftRow {
     id: number;
     number: number;
+    /** D-396: letter of the variant, only in a group of more variants. */
+    variant: string | null;
+    groupSize: number;
     client: string | null;
     season: string | null;
     period: string | null;

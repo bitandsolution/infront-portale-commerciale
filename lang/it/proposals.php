@@ -15,6 +15,8 @@ return [
         'clubs_copied' => 'Configurazione copiata su :count club',
         'clubs_unchanged' => 'Nessuna modifica: i club scelti hanno già questa configurazione',
         'duplicated' => 'Proposta n. :number creata come copia della n. :original',
+        'variant_added' => 'Variante :letter creata (proposta n. :number)',
+        'variant_deleted' => 'Variante :letter (proposta n. :number) eliminata',
     ],
 
     // Rules of the configurator that refuse an operation (M06 §7): toasts.
@@ -25,6 +27,8 @@ return [
         'not_draft' => 'La proposta n. :number non è più una bozza: non si modifica dal configuratore',
         'nothing_to_copy' => 'Scegli il club da copiare e almeno un altro club della proposta',
         'not_duplicable' => 'La proposta n. :number non si può duplicare',
+        'too_many_variants' => 'Una proposta può avere al massimo :max varianti',
+        'variants_share_header' => 'Le varianti di una proposta hanno lo stesso cliente e la stessa stagione: per cambiarli elimina prima le altre varianti',
     ],
 
     // Errors under the fields of step 2 (M06 §8) and dialog of a draft changed elsewhere (D-165).
@@ -82,6 +86,7 @@ return [
     // Notes of the history (F4-05).
     'history' => [
         'duplicated_from' => 'Copia della proposta n. :number',
+        'variant_from' => 'Variante :letter, copia della proposta n. :number',
     ],
 
     // History of the proposal (M07 F-10, D-199).
@@ -98,5 +103,6 @@ return [
         'new_version' => 'Nuova versione',
         'cancelled' => 'Annullata',
         'duplicated' => 'Duplicata',
+        'variant_added' => 'Variante aggiunta',
     ],
 ];

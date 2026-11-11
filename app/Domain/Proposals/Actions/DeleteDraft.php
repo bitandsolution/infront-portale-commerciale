@@ -8,6 +8,7 @@ use App\Domain\Proposals\Data\ProposalsAuditValues;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
 use App\Enums\AuditAction;
 use App\Models\Proposal;
+use App\Models\ProposalGroup;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\DB;
  * history in cascade; the trigger proposals_before_delete refuses anything that is not a draft
  * without frozen versions. The number is never reused: the gap is traced by the audit event
  * proposal.draft_deleted, written before the deletion with the header of the draft.
+ * A variant of a group (D-396) is deleted alone: the other variants keep their letters; the group
+ * goes with its last variant.
  */
 final class DeleteDraft
 {
@@ -36,7 +39,15 @@ final class DeleteDraft
 
             $this->audit->record(AuditAction::ProposalDraftDeleted, $actor, AuditSubject::proposal($locked), $values, []);
 
+            // The group is locked like AddVariant does, so a variant added meanwhile is seen (locking
+            // read) and the group stays.
+            $groupId = $locked->proposal_group_id;
+            $group = $groupId !== null ? ProposalGroup::query()->whereKey($groupId)->lockForUpdate()->first() : null;
             $locked->delete();
+
+            if ($group !== null && ! Proposal::query()->where('proposal_group_id', $group->id)->lockForUpdate()->exists()) {
+                $group->delete();
+            }
         });
     }
 }

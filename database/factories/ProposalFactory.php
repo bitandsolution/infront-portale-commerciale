@@ -6,6 +6,7 @@ use App\Domain\Proposals\Services\ProposalNumbers;
 use App\Enums\ProposalStatus;
 use App\Models\Client;
 use App\Models\Proposal;
+use App\Models\ProposalGroup;
 use App\Models\ProposalVersion;
 use App\Models\Season;
 use App\Models\User;
@@ -31,6 +32,13 @@ class ProposalFactory extends Factory
             'agent_id' => User::factory()->agent(),
             'client_id' => fn (array $attributes): int => Client::factory()->ownedBy(self::agent($attributes))->create()->id,
             'season_id' => Season::factory(),
+            // D-396: every proposal is a variant of its group; by default variant A of a new group.
+            'proposal_group_id' => fn (array $attributes): int => ProposalGroup::query()->create([
+                'agent_id' => $attributes['agent_id'],
+                'client_id' => $attributes['client_id'],
+                'season_id' => $attributes['season_id'],
+            ])->id,
+            'variant_letter' => 'A',
             'status' => ProposalStatus::Draft,
         ];
     }

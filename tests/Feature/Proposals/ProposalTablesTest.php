@@ -68,7 +68,7 @@ function proposalsFreeze(int $version, int $number = 1): void
 
 it('D-376: creates the proposal tables with every column of the data model', function () {
     expect(Schema::getColumnListing('proposals'))->toEqualCanonicalizing([
-        'id', 'number', 'agent_id', 'client_id', 'season_id', 'status', 'current_version_id', 'submitted_at', 'decided_at',
+        'id', 'number', 'proposal_group_id', 'variant_letter', 'agent_id', 'client_id', 'season_id', 'status', 'current_version_id', 'submitted_at', 'decided_at',
         'decided_by', 'last_rejection_reason', 'cancelled_at', 'cancelled_by', 'cancel_reason', 'review_locked_by',
         'review_locked_at', 'duplicated_from_id', 'lock_version', 'created_at', 'updated_at',
     ])->and(Schema::getColumnListing('proposal_versions'))->toEqualCanonicalizing([
@@ -93,7 +93,7 @@ it('C3: restrictive keys, except the pure children of a draft and the source of 
         ->all();
 
     expect($onDelete('proposals'))->toEqualCanonicalizing([
-        'agent_id' => 'restrict', 'client_id' => 'restrict', 'season_id' => 'restrict', 'current_version_id' => 'restrict',
+        'proposal_group_id' => 'restrict', 'agent_id' => 'restrict', 'client_id' => 'restrict', 'season_id' => 'restrict', 'current_version_id' => 'restrict',
         'decided_by' => 'restrict', 'cancelled_by' => 'restrict', 'review_locked_by' => 'restrict', 'duplicated_from_id' => 'set null',
     ])->and($onDelete('proposal_versions'))->toEqualCanonicalizing([
         'proposal_id' => 'cascade', 'frozen_by' => 'restrict', 'client_logo_file_id' => 'restrict', 'commodity_sector_id' => 'restrict',

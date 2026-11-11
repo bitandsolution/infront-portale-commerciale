@@ -13,6 +13,7 @@ use App\Domain\Proposals\Services\DraftRepricing;
 use App\Domain\Proposals\Services\DraftRowsWriter;
 use App\Domain\Proposals\Services\ProposalNumbers;
 use App\Domain\Proposals\Services\ProposalPeriod;
+use App\Domain\Proposals\Services\ProposalVariants;
 use App\Enums\AuditAction;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
@@ -21,6 +22,7 @@ use App\Enums\SeasonStatus;
 use App\Models\Client;
 use App\Models\Proposal;
 use App\Models\ProposalEvent;
+use App\Models\ProposalGroup;
 use App\Models\ProposalVersion;
 use App\Models\Season;
 use App\Models\User;
@@ -44,6 +46,9 @@ use Illuminate\Support\Facades\DB;
  *   draft as for a reopened draft (M06 §9, D-382), and the clubs to correct are reported.
  * - New number (D-371), duplicated_from_id (D-377), history "duplicated" (D-199) and audit
  *   proposal.draft_duplicated with the header, the clubs, the list total and the KPI (D-372).
+ * - The copy starts a new group as its variant A (D-396). With a group (AddVariant, DM-01) it is a
+ *   new variant of that group instead: first free letter, history "variant_added" and audit
+ *   proposal.variant_added; AddVariant checks the group and holds its lock.
  */
 final class DuplicateProposal
 {
@@ -56,7 +61,7 @@ final class DuplicateProposal
         private readonly DraftRepricing $repricing,
     ) {}
 
-    public function handle(Proposal $original, User $agent, Client $client): ProposalDuplicated
+    public function handle(Proposal $original, User $agent, Client $client, ?ProposalGroup $group = null): ProposalDuplicated
     {
         if ($agent->role !== Role::Agent || ! $agent->is_active) {
             throw ProposalsActionNotAllowed::notAgent();
@@ -78,9 +83,20 @@ final class DuplicateProposal
         $sourceRows = SaveDraft::rows($source);
         $evaluation = $this->evaluator->evaluate($season, $startsOn, $endsOn, SaveDraft::fromRows($sourceRows));
 
-        return DB::transaction(function () use ($original, $agent, $client, $season, $startsOn, $endsOn, $source, $sourceRows, $evaluation): ProposalDuplicated {
+        return DB::transaction(function () use ($original, $agent, $client, $group, $season, $startsOn, $endsOn, $source, $sourceRows, $evaluation): ProposalDuplicated {
+            $variant = $group !== null;
+            $letter = $group !== null ? ProposalVariants::nextLetter($group) : ProposalVariants::FIRST;
+
+            if ($letter === null) {
+                throw ProposalsActionNotAllowed::tooManyVariants(count(ProposalVariants::LETTERS));
+            }
+
+            $group ??= ProposalVariants::newGroup($agent, $client, $season);
+
             $proposal = Proposal::query()->create([
                 'number' => $this->numbers->next(),
+                'proposal_group_id' => $group->id,
+                'variant_letter' => $letter,
                 'agent_id' => $agent->id,
                 'client_id' => $client->id,
                 'season_id' => $season?->id,
@@ -100,21 +116,24 @@ final class DuplicateProposal
             ProposalEvent::query()->create([
                 'proposal_id' => $proposal->id,
                 'proposal_version_id' => $version->id,
-                'type' => ProposalEventType::Duplicated,
+                'type' => $variant ? ProposalEventType::VariantAdded : ProposalEventType::Duplicated,
                 'user_id' => $agent->id,
-                'notes' => Text::get('proposals.history.duplicated_from', ['number' => (string) $original->number]),
+                'notes' => $variant
+                    ? Text::get('proposals.history.variant_from', ['letter' => $letter, 'number' => (string) $original->number])
+                    : Text::get('proposals.history.duplicated_from', ['number' => (string) $original->number]),
             ]);
 
             $proposal->setRelation('client', $client)->setRelation('season', $season);
             $version->refresh();
 
             $this->audit->record(
-                AuditAction::ProposalDraftDuplicated,
+                $variant ? AuditAction::ProposalVariantAdded : AuditAction::ProposalDraftDuplicated,
                 $agent,
                 AuditSubject::proposal($proposal),
                 [],
                 [
                     ...ProposalsAuditValues::draft($proposal, $version),
+                    ...($variant ? ['proposal_group_id' => $group->id, 'variant_letter' => $letter] : []),
                     'duplicated_from_id' => $original->id,
                     'duplicated_from_number' => $original->number,
                     ...ProposalsAuditValues::clubsOf($evaluation),
