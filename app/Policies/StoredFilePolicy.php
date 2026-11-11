@@ -20,7 +20,8 @@ use App\Models\User;
  * - club logo: every active user (F1-02, D-321): logos are not reserved and the agent sees them in
  *   the configurator (F4); calendar import: who manages the calendars, admin and manager (F1-04,
  *   D-321);
- * - slide image: back office (F6);
+ * - slide image: who manages the slide library, admin and manager (DM-02, D-406); the agent sees the
+ *   slides of his own groups from DM-05;
  * - generated PDF: who can download the document, the replaced ones only the admin (F7, D-205).
  *
  * The purposes not handled yet stay admin only (PR-06), e.g. for the checks on the development VM.
@@ -35,7 +36,7 @@ class StoredFilePolicy
             FilePurpose::CalendarImport => Ability::SportsCalendarsManage->allows($user->role),
             FilePurpose::ClientLogo => $user->role === Role::Admin
                 || Client::query()->visibleTo($user)->where('logo_file_id', $file->id)->exists(),
-            FilePurpose::SlideImage,
+            FilePurpose::SlideImage => Ability::ContentManage->allows($user->role),
             FilePurpose::GeneratedPdf => $user->role === Role::Admin,
         };
     }

@@ -116,6 +116,10 @@ enum AuditAction: string
     // DM-01: a new variant of a group of proposals (D-396).
     case ProposalVariantAdded = 'proposal.variant_added';
 
+    // DM-02: slide library (D-406): area "content".
+    case SlideCreated = 'slide.created';
+    case SlideUpdated = 'slide.updated';
+
     public function area(): AuditArea
     {
         return match (strstr($this->value, '.', true)) {
@@ -126,6 +130,7 @@ enum AuditAction: string
             'pool_capacity', 'partnership_capacity', 'hospitality_capacity' => AuditArea::Inventory,
             'commodity_sector', 'client' => AuditArea::Clients,
             'proposal' => AuditArea::Proposals,
+            'slide' => AuditArea::Content,
             default => AuditArea::Users,
         };
     }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\CommoditySectorController;
+use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Inventory\AvailabilityController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\Proposals\ProposalController;
@@ -109,6 +110,7 @@ final class PortalPages
         'clients' => [ClientController::class, 'index'],
         'proposals_new' => [ProposalController::class, 'create'],
         'proposals_mine' => [ProposalController::class, 'mine'],
+        'content_slides' => [SlideController::class, 'index'],
     ];
 
     /**

@@ -177,6 +177,7 @@ final class PdfPipeline
     {
         return match ($page->layout) {
             DocumentLayout::NetworkRecap => NetworkRecapLayout::viewData($page->data, $this->fitter, $asset),
+            DocumentLayout::Cover, DocumentLayout::ClubRecap, DocumentLayout::LedMockup => throw DocumentLayout::notBuilt($page->layout),
         };
     }
 

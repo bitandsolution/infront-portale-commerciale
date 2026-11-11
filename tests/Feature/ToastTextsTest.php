@@ -28,4 +28,6 @@ it('the texts shown in a toast never end with a period', function (string $group
     'clients.errors',
     'proposals.toasts',
     'proposals.errors',
+    'content.toasts',
+    'content.errors',
 ]);

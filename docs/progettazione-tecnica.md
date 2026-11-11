@@ -507,7 +507,7 @@ erDiagram
 | Tabella | Colonne principali | Vincoli | Rif. |
 |---|---|---|---|
 | `slide_sections` | `code`, `name`, `sort_order` | Introduzione, Club, Partnership, Benefit, Brand exposure, Recap, Chiusura (gestibili) | RB-03 M08 |
-| `slides` | `scope` (infront / club), `club_id`, `season_id`, `document_type` (network / club / both), `slide_section_id`, `sort_order`, `kind` (static / dynamic), `image_file_id`, `layout_code`, `language` (it / en), `is_active`, `copied_from_id`, `created_by` | CHECK: `scope = club` ⇔ `club_id` valorizzato; `kind = dynamic` ⇔ `layout_code` valorizzato. IDX (`season_id`, `scope`, `club_id`, `is_active`) | D-115, D-116, D-124 |
+| `slides` | `title` (D-402), `scope` (infront / club), `club_id`, `season_id`, `document_type` (network / club / both), `slide_section_id`, `sort_order`, `kind` (static / dynamic), `image_file_id`, `layout_code`, `language` (it / en), `is_active`, `copied_from_id`, `created_by` | CHECK: `scope = club` ⇔ `club_id` valorizzato; `kind = dynamic` ⇔ `layout_code` valorizzato. IDX (`season_id`, `scope`, `club_id`, `is_active`) | D-115, D-116, D-124 |
 | `slide_conditions` | `slide_id`, `condition_type` (partnership_tier, has_partnership, led_format, has_led, has_hospitality, competition_tier), `value` (codice stabile: `TOP`, `JUMBO`, `true`, `2`…) | UQ (`slide_id`, `condition_type`, `value`); CASCADE sulla slide | M08 §4.2 |
 | `layout_texts` | `layout_code`, `key`, `language`, `body` | UQ (`layout_code`, `key`, `language`) | Note standard (es. squadre retrocesse), D-124 |
 

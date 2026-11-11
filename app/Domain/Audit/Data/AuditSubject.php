@@ -19,6 +19,7 @@ use App\Models\PriceList;
 use App\Models\Proposal;
 use App\Models\Season;
 use App\Models\Setting;
+use App\Models\Slide;
 use App\Models\Stadium;
 use App\Models\User;
 use App\Support\Text;
@@ -114,6 +115,14 @@ final readonly class AuditSubject
     public static function proposal(Proposal $proposal): self
     {
         return new self('proposal', $proposal->id, Text::get('proposals.label', ['number' => (string) $proposal->number]));
+    }
+
+    /**
+     * A slide of the library (DM-02), e.g. "Copertina (2027-28)".
+     */
+    public static function slide(Slide $slide, Season $season): self
+    {
+        return new self('slide', $slide->id, $slide->title.' ('.$season->code.')');
     }
 
     public static function stadium(Stadium $stadium): self

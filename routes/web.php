@@ -12,6 +12,7 @@ use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\ClientManagementController;
 use App\Http\Controllers\Clients\CommoditySectorController;
+use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\PlaceholderPageController;
@@ -205,6 +206,16 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('clienti/settori', [CommoditySectorController::class, 'store'])->name('clients.sectors.store');
             Route::get('clienti/settori/{commoditySector}', [CommoditySectorController::class, 'edit'])->whereNumber('commoditySector')->name('clients.sectors.edit');
             Route::put('clienti/settori/{commoditySector}', [CommoditySectorController::class, 'update'])->whereNumber('commoditySector')->name('clients.sectors.update');
+        });
+
+        // Slide library (M08 F-01…F-03; D-109, D-406): admin and manager. The list is the
+        // "contenuti/slide" page above; slides are deactivated, never deleted (C4). The change is a
+        // multipart request with the image (PUT spoofed as POST).
+        Route::middleware('can:'.Ability::ContentManage->value)->group(function (): void {
+            Route::get('contenuti/slide/nuova', [SlideController::class, 'create'])->name('content.slides.create');
+            Route::post('contenuti/slide', [SlideController::class, 'store'])->name('content.slides.store');
+            Route::get('contenuti/slide/{slide}', [SlideController::class, 'edit'])->whereNumber('slide')->name('content.slides.edit');
+            Route::put('contenuti/slide/{slide}', [SlideController::class, 'update'])->whereNumber('slide')->name('content.slides.update');
         });
 
         // Clients (M05 F-01, F-03, F-04; D-076, D-078, D-358). New client: agent and admin. Page and
