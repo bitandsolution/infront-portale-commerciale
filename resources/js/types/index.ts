@@ -570,3 +570,64 @@ export interface ProposalDraftRow {
     deleteUrl: string;
     duplicateUrl: string;
 }
+
+/** Season of the slide library (ContentPresenter::season). */
+export interface ContentSeason {
+    code: string;
+    name: string;
+    closed: boolean;
+}
+
+/** One row of the slide library (ContentPresenter::rows, DM-02). */
+export interface SlideRow {
+    id: number;
+    title: string;
+    scope: 'infront' | 'club';
+    clubId: number | null;
+    clubName: string | null;
+    documentType: 'network' | 'club' | 'both';
+    documentTypeLabel: string;
+    sectionId: number;
+    sectionName: string;
+    sortOrder: number;
+    kindLabel: string;
+    isDynamic: boolean;
+    imageUrl: string | null;
+    isActive: boolean;
+    conditions: string[];
+    duplicateOrder: boolean;
+    url: string;
+}
+
+/** Values of a slide for the form (ContentPresenter::form). */
+export interface SlideFormData {
+    id: number;
+    title: string;
+    scope: string;
+    clubId: number | null;
+    documentType: string;
+    sectionId: number;
+    sortOrder: number;
+    layout: string;
+    imageUrl: string | null;
+    isActive: boolean;
+    conditions: Record<string, string[]>;
+}
+
+/** Options of the slide form (ContentPresenter::options). */
+export interface SlideFormOptions {
+    scopes: Option[];
+    clubs: Option[];
+    documentTypes: Option[];
+    sections: Option[];
+    /** Id of the closing section, kept in the "summary only" document (D-397). */
+    closingSection: string;
+    layouts: Option[];
+    imageLess: string[];
+    conditions: {
+        type: string;
+        label: string;
+        boolean: boolean;
+        values: Option[];
+    }[];
+}

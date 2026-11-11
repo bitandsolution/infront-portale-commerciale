@@ -90,12 +90,12 @@ it('D-218: a revoked permission applies even with the file in the browser cache'
         ->assertForbidden();
 });
 
-it('D-215: agent and manager cannot download files until the slices that use them', function (string $role) {
+it('D-406: slide images are for admin and manager, not for the agent until DM-05', function (string $role, int $status) {
     $user = User::factory()->{$role}()->create();
     $file = storeTestFile(FilePurpose::SlideImage, null, SampleFiles::png(1920, 1080));
 
-    $this->actingAs($user)->get(route('files.download', $file))->assertForbidden();
-})->with(['agent', 'manager']);
+    $this->actingAs($user)->get(route('files.download', $file))->assertStatus($status);
+})->with([['agent', 403], ['manager', 200], ['admin', 200]]);
 
 it('D-218: a file missing from the disk answers 404 and is logged without personal data', function () {
     Log::spy();

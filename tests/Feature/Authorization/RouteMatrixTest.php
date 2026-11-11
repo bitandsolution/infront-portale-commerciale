@@ -19,9 +19,11 @@ use App\Models\PartnershipTier;
 use App\Models\PriceList;
 use App\Models\Proposal;
 use App\Models\Season;
+use App\Models\Slide;
 use App\Models\Stadium;
 use App\Models\StoredFile;
 use App\Models\User;
+use Database\Seeders\ContentSystemDataSeeder;
 use Illuminate\Routing\Route as RouteDefinition;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
@@ -193,6 +195,11 @@ function routeMatrix(): array
 
         // M08 (D-109)
         'pages.content_slides' => ['method' => 'GET', 'expected' => $backOffice],
+        // M08 — slide library (D-109, D-406): admin and manager; the forms are sent empty
+        'content.slides.create' => ['method' => 'GET', 'expected' => $backOffice],
+        'content.slides.store' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'content.slides.edit' => ['method' => 'GET', 'expected' => $backOffice],
+        'content.slides.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
         'pages.content_simulator' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.content_kpi' => ['method' => 'GET', 'expected' => $backOffice],
 
@@ -394,6 +401,19 @@ function matrixParameters(string $route): array
         in_array($route, ['inventory.capacities.edit', 'inventory.capacities.update'], true) => [
             'club' => ($club = Club::factory()->infront()->create())->id,
             'stagione' => ClubEnrollment::query()->create(['competition_season_id' => CompetitionSeason::factory()->create()->id, 'club_id' => $club->id])->competitionSeason->season_id,
+        ],
+        // A season for the new slide (the one of the top bar, CurrentSeason::default()).
+        $route === 'content.slides.create' => (function (): array {
+            Season::factory()->create();
+
+            return [];
+        })(),
+        in_array($route, ['content.slides.edit', 'content.slides.update'], true) => [
+            'slide' => (function (): int {
+                (new ContentSystemDataSeeder)->run();
+
+                return Slide::factory()->create()->id;
+            })(),
         ],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
         str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],

@@ -58,7 +58,7 @@ lang/it/                   tutti i testi dell'interfaccia
 docs/                      specifiche e decisioni (vedi §2)
 ```
 
-Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08), `Documents` (M09), `Audit` (M10), `Reports` (M10), più le aree trasversali `Files` (archiviazione dei file, C10), `Settings` (impostazioni di sistema, PR-07), `Notifications` (invio e registro delle e-mail, PR-08) e `Operations` (salute, avvisi delle code, Sentry: PR-09).
+Aree (`<Area>`): `Users` (M01), `Sports` (M02), `Catalog` (M03), `Inventory` (M04), `Clients` (M05), `Proposals` (M06, M07), `Content` (M08: libreria slide e composizione dei documenti dalla DM-02), `Documents` (M09), `Audit` (M10), `Reports` (M10), più le aree trasversali `Files` (archiviazione dei file, C10), `Settings` (impostazioni di sistema, PR-07), `Notifications` (invio e registro delle e-mail, PR-08) e `Operations` (salute, avvisi delle code, Sentry: PR-09).
 
 Regole:
 - **La logica di dominio sta nelle Action e nei Service**, mai nei controller, nei modelli o nei componenti Vue. Calcoli di prezzo, partite, residui e composizione dei documenti hanno **una sola implementazione**, lato server, usata anche dal simulatore e dai riepiloghi.
@@ -229,10 +229,13 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Sconto | `discount_type` (`DiscountType`: percent / amount), `discount_value`, `discount_amount` |
 | Totale di listino / finale | `list_total` / `final_total` |
 | Blocco di lavorazione | `review_locked_by`, `review_locked_at` |
-| Sezione delle slide | `SlideSection` · `slide_sections` |
-| Slide (statica / dinamica) | `Slide` · `slides` (`kind`: static / dynamic) |
-| Condizione di inclusione | `SlideCondition` · `slide_conditions` |
-| Layout dinamico | `layout_code` (enum `DocumentLayout`) |
+| Sezione delle slide | `SlideSection` · `slide_sections` (fisse, da `ContentSystemDataSeeder`: INTRO, CLUB, PARTNERSHIP, BENEFIT, BRAND_EXPOSURE, RECAP, CLOSING = `SlideSection::CLOSING`; nessuna pagina, D-406) |
+| Slide (statica / dinamica) | `Slide` · `slides` (`title` obbligatorio, D-402; `scope`: `SlideScope` infront / club; `document_type`: `SlideDocumentType` network / club / both; `kind`: `SlideKind` static / dynamic; immagine `image_file_id`, nulla solo per la simulazione LED; mai cancellata, si disattiva, D-406) |
+| Condizione di inclusione | `SlideCondition` · `slide_conditions` (`condition_type`: `SlideConditionType` partnership_tier, has_partnership, led_format, has_led, has_hospitality, competition_tier; valori come codici stabili, `"true"` / `"false"` per i sì/no, il livello della competizione `"1"`…`"3"`; stesso tipo = OR, tipi diversi = AND, D-202) |
+| Layout dinamico | `layout_code` (enum `DocumentLayout`: `cover`, `network_recap`, `club_recap`, `led_mockup`; obbligatorie copertina e recap, `isMandatory()`; recap una pagina per variante; simulazione LED senza immagine, una pagina per club con il LED, D-405) |
+| Libreria slide (admin e gestore, stagione della barra, stagione chiusa in sola lettura) | `CreateSlide`, `UpdateSlide` (`App\Domain\Content\Actions`, condizioni con `SlideConditions`), dati `SlideData`; eventi `slide.created`, `slide.updated` con `ContentAuditValues` (area di audit `content`); rifiuti `ContentActionNotAllowed` (toast); `SlidePolicy`, `SlideController`, `SlideRequest` (`slideImage()`, valori ammessi delle condizioni `allowedValues()`), `ContentPresenter` (`App\Support\Content`); pagina `content_slides`, rotte `content.slides.create` / `.store` / `.edit` / `.update`; pagine `Content/Slides/Index`, `Content/Slides/Form` (DM-02, D-402…D-406) |
+| Tipo di documento (club con un solo club distinto in tutte le varianti, network con 2 o più) | `DocumentType` (`forClubs()`, D-121, D-403) |
+| Composizione del documento di un gruppo (slide candidate per stagione, lingua, tipo e ambito; condizioni vere se le soddisfa almeno un club di almeno una variante; ordine sezione → ordine → id; pagine per variante o per club; avvisi per copertina, recap e chiusura mancanti) | `DocumentComposer` (`App\Domain\Content\Services`): `forGroup()`, `compose(CompositionInput)` → `Composition` con le `ComposedSlide` (`mandatory`, `inSummary`, `instances` di `SlideInstance`, `competitionTiers` per D-251); ingresso `CompositionInput::fromGroup()` con `VariantFacts` e `ClubFacts`; comando `documents:compose` (D-118, D-396, D-403…D-405) |
 | Testi fissi dei layout | `LayoutText` · `layout_texts` |
 | Definizione KPI / valore KPI | `KpiDefinition` · `kpi_definitions` / `ClubKpiValue` · `club_kpi_values` |
 | Documento (club / network) | `Document` · `documents` (`document_type`: club / network) |
@@ -267,7 +270,7 @@ Le migrazioni devono essere **compatibili all'indietro di una versione** (D-178)
 | Conservazione dell'audit (5 anni, IP) | `AuditRetention`, comando `audit:prune` (notturno) |
 | Utenti MariaDB: migrazioni / applicativo / manutenzione | connessioni `migrator` / predefinita / `audit_maintenance` (`docs/dev/database-utenti.md`) |
 | File salvato (logo, slide, Excel, PDF) | `StoredFile` · `stored_files`; le entità puntano a `…_file_id` (C10) |
-| Tipo d'uso del file (con le sue regole) | `FilePurpose`: `client_logo`, `club_logo`, `slide_image`, `calendar_import`, `generated_pdf` |
+| Tipo d'uso del file (con le sue regole) | `FilePurpose`: `client_logo`, `club_logo`, `slide_image` (scaricabile da admin e gestore, D-406), `calendar_import`, `generated_pdf` |
 | Tipo di file riconosciuto dal contenuto | `FileType`: `png`, `jpeg`, `xlsx`, `pdf` |
 | Archiviazione dei file / verifica del contenuto / ricodifica delle immagini | `FileStorage` / `FileInspector` / `ImageReencoder` (`App\Domain\Files\Services`) |
 | File rifiutato (messaggio in italiano) | `InvalidFile`; regola di validazione dei campi `AcceptableFile` |
@@ -349,6 +352,7 @@ Da creare con la PR `PR-00`; aggiorna questa sezione se cambiano.
 ./vendor/bin/sail artisan sports:import-legacy-clubs storage/app/private/club-idoc.csv --merge=8,20 --merge=11,39 --merge=21,35 --merge=25,36 --dry-run  # club dal vecchio sistema, una tantum (F1-06; senza --dry-run salva)
 ./vendor/bin/sail artisan inventory:availability 2027-28 LAZIO  # disponibilità e opzioni vendibili di un club (sola lettura, F2-05)
 ./vendor/bin/sail artisan catalog:price 2027-28 LAZIO --format=FILA_1 --minutes=1,5 --tier=PREMIUM --seats=PREMIUM:2 --from=01/10/2027  # prezzi di listino di un club (sola lettura, F2-06)
+./vendor/bin/sail artisan documents:compose 205  # slide del documento del gruppo di una proposta, con pagine e avvisi (sola lettura, DM-02)
 ./vendor/bin/sail artisan files:try     # prova dei controlli sui file (solo sviluppo, PR-06)
 ./vendor/bin/sail artisan documents:try # prova della pipeline PDF: deck di 40 slide, tempi, peso, PDF scaricabile da admin (solo sviluppo, S1-02; --samples con DOCUMENT_SAMPLES_PATH)
 ./vendor/bin/sail artisan health:check  # salute interna con i dettagli di ogni controllo (PR-09; /health risponde solo ok/fail)
