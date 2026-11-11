@@ -62,4 +62,13 @@ Ordine: DM-01 → DM-02 (in parallelo) → DM-03 → DM-04 → DM-05 → DM-06 �
 | PR | Esito |
 |---|---|
 | DM-00 | ✅ Unita il 10/11/2026 (PR #97; D-394…D-401) |
-| DM-01 | 🔄 PR aperta l'11/11/2026 |
+| DM-01 | ✅ Unita e collaudata l'11/11/2026 (PR #98) |
+| DM-02 | ✅ Unita e collaudata l'11/11/2026 (decisioni D-402…D-406 con la PR #99, codice con la PR #100). Collaudo sulla VM: sei slide Infront di prova, recap network con documento "Entrambi" rifiutato, `documents:compose 205` → documento network Lazio + Roma con Copertina, Benefit Top, Simulazione LED (solo Roma, l'unico club con il LED), Recap (Proposta A), Grazie; Benefit Premium escluso; dopo la disattivazione di Benefit Top 4 slide e 4 pagine; variante B con due istanze del recap; agente senza accesso alla libreria; audit `slide.created` / `slide.updated`, tutto ✅ |
+
+### Eredità di DM-02 per le PR successive
+
+- **DM-03**: le versioni congelate all'approvazione devono portare anche la scelta delle slide del gruppo (D-397, con DM-05); `CompositionInput::fromGroup()` legge la versione di lavoro di ogni variante o, senza, l'ultima congelata (`currentVersion`).
+- **DM-04**: `DocumentComposer::forGroup()` dà le slide e le pagine (`instances`: recap per variante, simulazione LED per club); `ComposedSlide::competitionTiers` restringe i dati delle slide network ai club di quella competizione (D-251); `DocumentLayout::view()` e `PdfPipeline::layoutData()` lanciano `notBuilt()` per `cover` e `club_recap` finché DM-04 non li disegna; il recap club si riallinea all'originale (layout-dinamici §4.9). Miniature leggere dai derivati JPEG (D-310).
+- **DM-05**: il passo "Documento" mostra la `Composition` del gruppo (`mandatory`, `inSummary` per "Solo riepilogo"); `StoredFilePolicy` per `slide_image` va estesa all'agente sulle slide del proprio gruppo (D-406).
+- **DM-06**: `led_mockup` (`DocumentLayout::LedMockup`) è già selezionabile in libreria, senza immagine; una pagina per club con il LED (D-405); resta la domanda sulla simulazione nei documenti network.
+
