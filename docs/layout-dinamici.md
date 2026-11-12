@@ -209,7 +209,7 @@ Icone ed etichette nello sfondo. ❓ La somma del totale va confermata con Infro
 - Capienza: **10 righe** per slide (club e hospitality), totali e note solo sull'ultima; una riga hospitality resta sulla slide del suo club. Nelle slide precedenti la cella PROPOSTA ECONOMICA è disegnata vuota.
 
 ### 4.9 Recap economico club
-❓ **Da confermare in F7**: D-314 riguarda il recap network. L'originale del club (pagina 29) ha la stessa struttura a griglia con la cella unica PROPOSTA ECONOMICA; la tabella qui sotto, con un prezzo per riga, va riallineata all'originale quando si costruisce questo layout.
+✅ **Deciso con D-415** (DM-04): stessa griglia del recap network (§4.8, D-314), con la cella unica PROPOSTA ECONOMICA e **senza prezzo per riga**; intestazione nel colore del club; righe partnership, LED e hospitality del club, solo quelle presenti. La tabella "💡 Righe del nuovo recap club" più sotto resta come elenco delle righe, ma la colonna Prezzo non si disegna.
 
 Misure dal PDF Udinese (pagina 29): stessa griglia di colonne del network; intestazione a top 453, alta 105, nel colore del club (#97989B); riga club da top 559, alta 60; riga dei totali da top 619, alta 90.
 

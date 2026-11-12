@@ -530,6 +530,7 @@ erDiagram
 |---|---|---|---|
 | `documents` | `proposal_id`, `proposal_version_id`, `document_type` (club / network), `format` (pdf; pptx e web predisposti), `language`, `status` (queued / generating / ready / failed), `attempts`, `last_error`, `file_id`, `page_count`, `size_bytes`, `kpi_snapshot` JSON, `page_model` JSON, `generated_by` (nullo = automatico), `generated_at`, `superseded_at`, `superseded_by_id` | Un solo documento valido per (versione, formato, lingua): colonna generata su `superseded_at` + UQ. IDX (`proposal_id`, `generated_at`) | D-120…D-125 |
 
+- **Documento del gruppo di varianti** (D-413, DM-04): `documents.proposal_group_id` obbligatoria; le versioni congelate di tutte le varianti nel `page_model`; `proposal_id` e `proposal_version_id` puntano alla variante A. Un solo documento valido per (gruppo, formato, lingua). Dopo la scelta del cliente una rigenerazione contiene solo la variante scelta (D-414).
 - **Snapshot KPI** (D-111): i valori usati sono copiati nel documento, con fonte e periodo; aggiornare un KPI non tocca i documenti esistenti.
 - 💡 **`page_model`**: il modello di pagine indipendente dal formato (M09 §6, passo 6), con l'elenco ordinato delle slide (id e file usati) e i dati scritti nei layout. Rende il documento **riproducibile** e permette di produrre in futuro PPTX (D-122) e pagina web (D-123) dallo stesso modello, senza ricomporre.
 - **Rigenerazione** (D-125): crea un nuovo documento per la stessa versione e marca il precedente come sostituito (vedi domanda 4).
