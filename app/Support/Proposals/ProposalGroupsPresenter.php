@@ -114,7 +114,7 @@ final class ProposalGroupsPresenter
                 'clubs' => $this->clubNames($review),
                 'totals' => array_map(fn (Proposal $variant): array => [
                     'letter' => $many ? $variant->variant_letter : null,
-                    'total' => Amounts::italian($review->evaluation($variant)?->listTotal ?? '0'),
+                    'total' => Amounts::italian(self::listTotal($review->evaluation($variant))),
                 ], $review->variants),
                 'problems' => $review->problems,
                 'url' => route('proposals.groups.show', $group),
@@ -353,6 +353,11 @@ final class ProposalGroupsPresenter
         }
 
         return implode(', ', $names);
+    }
+
+    private static function listTotal(?DraftEvaluation $evaluation): string
+    {
+        return $evaluation !== null ? $evaluation->listTotal : '0';
     }
 
     private static function moment(mixed $moment): ?string
