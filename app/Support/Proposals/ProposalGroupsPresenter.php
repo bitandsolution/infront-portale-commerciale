@@ -161,7 +161,7 @@ final class ProposalGroupsPresenter
                     'letter' => $many ? $variant->variant_letter : null,
                     'status' => $many ? $variant->status->label() : null,
                     'total' => Amounts::italian($version !== null ? $version->list_total : '0'),
-                    'final' => $version !== null && $version->isFrozen() && $version->discount_type !== null ? Amounts::italian($version->final_total) : null,
+                    'final' => $version !== null && $version->isFrozen() && $version->discount_type !== null && $version->final_total !== null ? Amounts::italian($version->final_total) : null,
                 ];
             }
 

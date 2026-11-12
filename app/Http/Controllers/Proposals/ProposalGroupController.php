@@ -79,7 +79,7 @@ class ProposalGroupController extends Controller
         return Inertia::render('Proposals/All', [
             'layout' => LayoutProps::for($this->actor($request), 'proposals_all'),
             'groups' => $presenter->list($groups),
-            'status' => $status?->value ?? '',
+            'status' => $status !== null ? $status->value : '',
             'statuses' => ProposalGroupsPresenter::statusOptions(),
             'limit' => self::ALL_LIMIT,
         ]);
