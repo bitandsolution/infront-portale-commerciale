@@ -1356,9 +1356,35 @@ return [
             'hint' => 'Correggi la proposta e inviala di nuovo: mantiene lo stesso numero e la sua cronologia.',
         ],
         // DM-03a: queue "Da approvare" and detail of a group (M07 F-01; D-411).
+        // DM-03b: every group for admin and manager (M07 F-01).
+        'all' => [
+            'intro' => 'Tutte le proposte degli agenti, dalla modificata più di recente. Apri una proposta per vederne le varianti, la cronologia e, se approvata, la scelta del cliente.',
+            'count' => ':count proposte',
+            'count_one' => '1 proposta',
+            'limit' => 'Sono mostrate le ultime :limit proposte: usa il filtro per stato per trovarne altre.',
+            'filter' => 'Stato',
+            'status_all' => 'Tutti gli stati',
+            'empty_title' => 'Nessuna proposta',
+            'empty_message' => 'Le proposte create dagli agenti compaiono qui.',
+            'empty_filtered' => 'Nessuna proposta con questo stato.',
+            'columns' => [
+                'number' => 'N.',
+                'status' => 'Stato',
+                'client' => 'Cliente',
+                'agent' => 'Agente',
+                'clubs' => 'Club',
+                'total' => 'Listino',
+                'updated' => 'Ultima modifica',
+                'actions' => 'Azioni',
+            ],
+            'final' => 'finale € :total',
+            'open' => 'Apri',
+            'open_label' => 'Apri la proposta n. :number',
+        ],
         'pending' => [
             'intro' => 'Le proposte inviate dagli agenti, dalla più vecchia. Apri una proposta per vederne le varianti, applicare lo sconto e approvarla o rifiutarla.',
             'count' => ':count proposte in approvazione',
+            'count_one' => '1 proposta in approvazione',
             'empty_title' => 'Nessuna proposta da approvare',
             'empty_message' => 'Quando un agente invia una proposta, compare qui.',
             'columns' => [
@@ -1377,6 +1403,7 @@ return [
         ],
         'groups' => [
             'back_mine' => 'Torna alle mie proposte',
+            'back_all' => 'Torna a tutte le proposte',
             'back_pending' => 'Torna alle proposte da approvare',
             'client' => 'Cliente',
             'season' => 'Stagione',
@@ -1452,6 +1479,7 @@ return [
             'choose_confirm_text' => 'Le altre varianti diventano "Non scelta" e i loro impegni di magazzino si rilasciano. L\'operazione non si annulla.',
             'choose_confirm' => 'Registra',
             'choose_placeholder' => 'Scegli la variante',
+            'choose_label' => 'Variante scelta',
         ],
         'mine' => [
             'intro' => 'Le tue proposte, dalla più recente. Bozze e rifiutate si riaprono nel configuratore e si salvano da sole; quelle inviate si aprono nel dettaglio. Ognuna si può duplicare per una nuova proposta.',

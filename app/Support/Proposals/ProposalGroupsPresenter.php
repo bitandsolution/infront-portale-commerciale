@@ -125,6 +125,83 @@ final class ProposalGroupsPresenter
     }
 
     /**
+     * Rows of "Proposte › Tutte" (DM-03b): number, status, client, agent, season, clubs and totals of
+     * every variant (the frozen version after the approval, the working one before); the final total
+     * only where a discount was frozen. Nothing is evaluated again: the list is read only.
+     *
+     * @param  Collection<int, ProposalGroup>  $groups  with client, agent, season and the versions of the proposals
+     * @return list<array<string, mixed>>
+     */
+    public function list(Collection $groups): array
+    {
+        $rows = [];
+
+        foreach ($groups as $group) {
+            /** @var Collection<int, Proposal> $variants */
+            $variants = $group->proposals->sortBy('variant_letter')->values();
+            $first = $variants->first();
+
+            if (! $first instanceof Proposal) {
+                continue;
+            }
+
+            $status = self::status($variants);
+            $many = $variants->count() > 1;
+            $clubs = [];
+            $totals = [];
+
+            foreach ($variants as $variant) {
+                $version = self::frozenVersion($variant) ?? $variant->workingVersion;
+
+                foreach ($version !== null ? $version->clubs : [] as $row) {
+                    $clubs[$row->club_id] = $row->club->short_name;
+                }
+
+                $totals[] = [
+                    'letter' => $many ? $variant->variant_letter : null,
+                    'status' => $many ? $variant->status->label() : null,
+                    'total' => Amounts::italian($version !== null ? $version->list_total : '0'),
+                    'final' => $version !== null && $version->isFrozen() && $version->discount_type !== null ? Amounts::italian($version->final_total) : null,
+                ];
+            }
+
+            $rows[] = [
+                'id' => $group->id,
+                'number' => $first->number,
+                'status' => $status->value,
+                'statusLabel' => $status->label(),
+                'statusTone' => self::tone($status),
+                'client' => $group->client?->company_name,
+                'agent' => $group->agent->first_name.' '.$group->agent->last_name,
+                'season' => $group->season?->code,
+                'variants' => $variants->count(),
+                'clubs' => implode(', ', $clubs),
+                'totals' => $totals,
+                'updatedAt' => self::moment($variants->max('updated_at')),
+                'url' => route('proposals.groups.show', $group),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The filter of "Proposte › Tutte": every status a group can have, "" for all.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public static function statusOptions(): array
+    {
+        $options = [['value' => '', 'label' => Text::get('ui.proposals.all.status_all')]];
+
+        foreach ([ProposalStatus::Submitted, ProposalStatus::Approved, ProposalStatus::Rejected, ProposalStatus::Draft] as $status) {
+            $options[] = ['value' => $status->value, 'label' => $status->label()];
+        }
+
+        return $options;
+    }
+
+    /**
      * Detail of a group for its viewer (D-411): header, every variant with its summary (current
      * evaluation before the approval, frozen version after it), the history and the actions the
      * viewer can take. For admin and manager, while the group waits: prices changed since the sending
@@ -214,8 +291,16 @@ final class ProposalGroupsPresenter
             'approveUrl' => route('proposals.groups.approve', $group),
             'canChoose' => $isReviewer && $many && $allApproved,
             'chooseUrl' => route('proposals.groups.choose', $group),
-            'backUrl' => $isAgent ? route('pages.proposals_mine') : route('pages.proposals_pending'),
-            'backLabel' => Text::get($isAgent ? 'ui.proposals.groups.back_mine' : 'ui.proposals.groups.back_pending'),
+            'backUrl' => match (true) {
+                $isAgent => route('pages.proposals_mine'),
+                $waiting => route('pages.proposals_pending'),
+                default => route('pages.proposals_all'),
+            },
+            'backLabel' => Text::get(match (true) {
+                $isAgent => 'ui.proposals.groups.back_mine',
+                $waiting => 'ui.proposals.groups.back_pending',
+                default => 'ui.proposals.groups.back_all',
+            }),
         ];
     }
 

@@ -732,3 +732,21 @@ export interface ProposalGroupDetail {
     backUrl: string;
     backLabel: string;
 }
+
+/** A row of "Proposte › Tutte" (ProposalGroupsPresenter::list; DM-03b). */
+export interface ProposalGroupRow {
+    id: number;
+    number: number;
+    status: string;
+    statusLabel: string;
+    statusTone: StatusTone;
+    client: string | null;
+    agent: string;
+    season: string | null;
+    variants: number;
+    clubs: string;
+    /** One per variant: list total, final total only after an approval with discount. */
+    totals: Array<{ letter: string | null; status: string | null; total: string; final: string | null }>;
+    updatedAt: string | null;
+    url: string;
+}

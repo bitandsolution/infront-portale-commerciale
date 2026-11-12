@@ -39,6 +39,8 @@ use Inertia\Response;
  */
 class ProposalGroupController extends Controller
 {
+    private const ALL_LIMIT = 200;
+
     public function pending(Request $request, ProposalGroupsPresenter $presenter): Response
     {
         Gate::authorize('review', ProposalGroup::class);
@@ -57,16 +59,47 @@ class ProposalGroupController extends Controller
         ]);
     }
 
+    /**
+     * "Proposte › Tutte" (M07 F-01; DM-03b): every group for admin and manager, the most recent first,
+     * with the filter by status in the address (?stato=approved); at most the last 200 groups.
+     */
+    public function all(Request $request, ProposalGroupsPresenter $presenter): Response
+    {
+        Gate::authorize('review', ProposalGroup::class);
+        $status = ProposalStatus::tryFrom((string) $request->query('stato', ''));
+
+        $groups = ProposalGroup::query()
+            ->when($status !== null, fn (Builder $query) => $query->whereHas('proposals', fn (Builder $proposals) => $proposals->where('status', $status?->value)))
+            ->with(['client', 'agent', 'season', 'proposals.workingVersion.clubs.club', 'proposals.currentVersion.clubs.club'])
+            ->orderByDesc(Proposal::query()->selectRaw('MAX(updated_at)')->whereColumn('proposal_group_id', 'proposal_groups.id'))
+            ->orderByDesc('id')
+            ->limit(self::ALL_LIMIT)
+            ->get();
+
+        return Inertia::render('Proposals/All', [
+            'layout' => LayoutProps::for($this->actor($request), 'proposals_all'),
+            'groups' => $presenter->list($groups),
+            'status' => $status?->value ?? '',
+            'statuses' => ProposalGroupsPresenter::statusOptions(),
+            'limit' => self::ALL_LIMIT,
+        ]);
+    }
+
     public function show(Request $request, ProposalGroup $group, ProposalGroupsPresenter $presenter): Response
     {
         Gate::authorize('view', $group);
         $actor = $this->actor($request);
+        $page = match (true) {
+            $actor->can('submit', $group) => 'proposals_mine',
+            ProposalGroupsPresenter::status($group->proposals()->get()) === ProposalStatus::Submitted => 'proposals_pending',
+            default => 'proposals_all',
+        };
 
         $preview = $actor->can('review', ProposalGroup::class) ? $request->input('sconti', []) : [];
         $parsed = DiscountForm::parse(is_array($preview) ? $preview : []);
 
         return Inertia::render('Proposals/Group', [
-            'layout' => LayoutProps::for($actor, $actor->can('submit', $group) ? 'proposals_mine' : 'proposals_pending'),
+            'layout' => LayoutProps::for($actor, $page),
             'group' => $presenter->group($group, $actor, $parsed['discounts'], $parsed['errors']),
         ]);
     }

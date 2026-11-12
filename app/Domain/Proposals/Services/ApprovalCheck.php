@@ -43,8 +43,9 @@ final class ApprovalCheck
         $many = count($list) > 1;
         $evaluations = [];
         $byLetter = [];
-        $problems = [];
         $season = null;
+
+        $periodProblems = [];
 
         foreach ($list as $variant) {
             $letter = $many ? (string) $variant->variant_letter : '';
@@ -54,21 +55,34 @@ final class ApprovalCheck
             $version = $variant->workingVersion;
 
             if ($evaluation === null || $version === null || $version->starts_on === null || $version->ends_on === null) {
-                $problems[] = Text::get('proposals.approval_problems.period', ['letter' => (string) $variant->variant_letter]);
+                $periodProblems[] = Text::get('proposals.approval_problems.period', ['letter' => (string) $variant->variant_letter]);
 
                 continue;
-            }
-
-            foreach ($this->variantProblems($evaluation) as $problem) {
-                $problems[] = $many
-                    ? Text::get('proposals.approval_problems.variant', ['letter' => $letter, 'problem' => $problem])
-                    : $problem;
             }
 
             $byLetter[$letter] = $evaluation;
         }
 
         $needs = $season instanceof Season ? $this->inventory->needs($season, $byLetter) : [];
+        $short = [];
+
+        foreach ($needs as $need) {
+            if (! $need->isCovered()) {
+                $short[$need->club->id.'|'.$need->resource->value] = true;
+            }
+        }
+
+        // Errors of a variant on a resource that the group lacks are said once, with the numbers, by
+        // the shortfall below (DM-03b collaudo): the agent's hints ("scegline un altro") do not repeat.
+        $problems = $periodProblems;
+
+        foreach ($byLetter as $letter => $evaluation) {
+            foreach ($this->variantProblems($evaluation, $short) as $problem) {
+                $problems[] = $letter !== ''
+                    ? Text::get('proposals.approval_problems.variant', ['letter' => $letter, 'problem' => $problem])
+                    : $problem;
+            }
+        }
 
         foreach ($needs as $need) {
             if (! $need->isCovered()) {
@@ -98,9 +112,10 @@ final class ApprovalCheck
     }
 
     /**
+     * @param  array<string, true>  $short  "club id|resource" the group lacks
      * @return list<string>
      */
-    private function variantProblems(DraftEvaluation $evaluation): array
+    private function variantProblems(DraftEvaluation $evaluation, array $short): array
     {
         $problems = [];
 
@@ -109,12 +124,32 @@ final class ApprovalCheck
         }
 
         foreach ($evaluation->clubs as $club) {
-            foreach ($club->errors as $message) {
+            foreach ($club->errors as $field => $message) {
+                $resource = self::resourceOf((string) $field);
+
+                if ($resource !== null && isset($short[$club->club->id.'|'.$resource->value])) {
+                    continue;
+                }
+
                 $problems[] = Text::get('proposals.approval_problems.club', ['club' => $club->club->name, 'message' => rtrim($message, '.')]);
             }
         }
 
         return $problems;
+    }
+
+    /**
+     * The resource an error field of a club speaks of (DraftEvaluator: tier, led_format, led_seconds,
+     * seats, seats.<variant id>); null for the others (club, matches, elements).
+     */
+    private static function resourceOf(string $field): ?InventoryResource
+    {
+        return match (true) {
+            $field === 'tier' => InventoryResource::Partnership,
+            $field === 'led_format', $field === 'led_seconds' => InventoryResource::Pool,
+            $field === 'seats', str_starts_with($field, 'seats.') => InventoryResource::Hospitality,
+            default => null,
+        };
     }
 
     private static function shortfall(InventoryNeed $need): string

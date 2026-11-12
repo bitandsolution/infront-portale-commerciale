@@ -20,7 +20,7 @@ const props = defineProps<{
 
 const { t } = useTrans();
 
-const count = computed(() => t('proposals.pending.count', { count: String(props.groups.length) }));
+const count = computed(() => (props.groups.length === 1 ? t('proposals.pending.count_one') : t('proposals.pending.count', { count: String(props.groups.length) })));
 </script>
 
 <template>

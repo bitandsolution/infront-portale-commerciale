@@ -257,7 +257,8 @@ it('M07 §9: of two groups waiting on the last contract the first approved wins,
     $second = apprGroup($this->agent, $this->lazio, [['tier' => true]]);
 
     apprApprove($this->admin, $first)->assertSessionHasNoErrors();
-    apprApprove($this->admin, $second)->assertSessionHas('toast.message', fn (string $message): bool => str_starts_with($message, 'Approvazione bloccata: SS Lazio: Il pacchetto Top è esaurito'));
+    // The error "esaurito" of the variant is said once, with the numbers, by the shortfall.
+    apprApprove($this->admin, $second)->assertSessionHas('toast.message', 'Approvazione bloccata: SS Lazio, Top: richiesti 1 contratto, disponibili 0 contratti');
 
     expect($first->refresh()->status)->toBe(ProposalStatus::Approved)
         ->and($second->refresh()->status)->toBe(ProposalStatus::Submitted);
@@ -384,4 +385,41 @@ it('D-410: the choice is recorded once, only on an approved group of more varian
         ->assertSessionHas('toast.message', 'La scelta del cliente si registra solo su una proposta approvata con almeno due varianti, una volta sola');
 
     $this->actingAs($this->agent)->post(route('proposals.groups.choose', $a->proposal_group_id), ['proposal_id' => $a->id])->assertForbidden();
+});
+
+it('M07 F-01: "Tutte" lists every group with its status, the filter by status and the way back', function () {
+    $approved = apprGroup($this->agent, $this->lazio, [['tier' => true], ['seconds' => 60]]);
+    apprApprove($this->admin, $approved, [$approved->id => ['type' => 'percent', 'value' => '15']]);
+    $this->travel(1)->minutes();
+    $waiting = apprGroup($this->agent, $this->lazio, [['seconds' => 30]]);
+
+    foreach ([$this->admin, $this->manager] as $reviewer) {
+        $this->actingAs($reviewer)->get(route('pages.proposals_all'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Proposals/All')
+                ->has('groups', 2)
+                ->where('groups.0.number', $waiting->number)
+                ->where('groups.0.statusLabel', 'In approvazione')
+                ->where('groups.1.number', $approved->number)
+                ->where('groups.1.statusLabel', 'Approvata')
+                ->where('groups.1.clubs', $this->lazio->short_name)
+                ->where('groups.1.totals.0.total', '155.680,00')
+                ->where('groups.1.totals.0.final', '132.328,00')
+                ->where('groups.1.totals.1.final', null));
+    }
+
+    $this->actingAs($this->admin)->get(route('pages.proposals_all', ['stato' => 'approved']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('status', 'approved')
+            ->has('groups', 1)
+            ->where('groups.0.number', $approved->number));
+
+    $this->actingAs($this->admin)->get(route('proposals.groups.show', $approved->proposal_group_id))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('group.backUrl', route('pages.proposals_all'))
+            ->where('group.backLabel', 'Torna a tutte le proposte'));
+    $this->actingAs($this->admin)->get(route('proposals.groups.show', $waiting->proposal_group_id))
+        ->assertInertia(fn (Assert $page) => $page->where('group.backUrl', route('pages.proposals_pending')));
+    $this->actingAs($this->agent)->get(route('pages.proposals_all'))->assertForbidden();
 });

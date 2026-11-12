@@ -455,7 +455,7 @@ function reject(): void {
                     <div class="min-w-72 flex-1">
                         <SelectField
                             v-model="chosenVariant"
-                            :label="t('proposals.approval.choose_title')"
+                            :label="t('proposals.approval.choose_label')"
                             :options="choiceOptions"
                             :placeholder="chosenVariant === '' ? t('proposals.approval.choose_placeholder') : undefined"
                         />
