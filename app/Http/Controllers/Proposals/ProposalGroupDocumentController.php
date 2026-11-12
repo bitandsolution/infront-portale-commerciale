@@ -17,7 +17,7 @@ class ProposalGroupDocumentController extends Controller
 {
     public function update(DocumentSlidesRequest $request, ProposalGroup $group, SaveDocumentSlides $saveDocumentSlides): RedirectResponse
     {
-        $saveDocumentSlides->handle($group, $request->mode(), $request->excludedSlideIds(), $request->actor());
+        $saveDocumentSlides->handle($group, $request->mode(), $request->excludedSlideIds(), $request->actor(), $request->excludedCustomSlideIds());
 
         return back();
     }

@@ -6,6 +6,7 @@ use App\Domain\Content\Data\ClubFacts;
 use App\Domain\Content\Data\ComposedSlide;
 use App\Domain\Content\Data\Composition;
 use App\Domain\Content\Data\CompositionInput;
+use App\Domain\Content\Data\CustomSlide;
 use App\Domain\Content\Data\SlideInstance;
 use App\Domain\Content\Data\VariantFacts;
 use App\Enums\DocumentLayout;
@@ -41,6 +42,10 @@ use Illuminate\Database\Eloquent\Builder;
  * - Warnings for a missing cover, recap or closing (D-405): the document can still be composed.
  * - Chosen slides (D-397, D-418): every slide is listed with its flag "included" from the
  *   DocumentSelection of the input; cover and recap are always included.
+ * - Slides composed with blocks (D-399, D-428, D-429; DM-07): the first library slide with the
+ *   layout "custom_blocks" (the background "Slide personalizzata") is never a page by itself; every
+ *   composed slide of the group is drawn on it and placed at the end of its section, in the order the
+ *   slides were added. Without that background the composed slides are left out, with a warning.
  */
 final class DocumentComposer
 {
@@ -66,9 +71,16 @@ final class DocumentComposer
 
         $rows = $input->clubRows();
         $slides = [];
+        $background = null;
 
         foreach ($this->candidates($input, $type, $clubIds) as $slide) {
             if (! $this->conditionsHold($slide, $rows)) {
+                continue;
+            }
+
+            if ($slide->layout_code?->isCustomBackground() === true) {
+                $background ??= $slide;
+
                 continue;
             }
 
@@ -91,7 +103,61 @@ final class DocumentComposer
             );
         }
 
-        return new Composition($type, $clubIds, $slides, [...$this->warnings($slides, $type), ...$this->ledWarnings($slides)], $input->selection);
+        $warnings = [...$this->warnings($slides, $type), ...$this->ledWarnings($slides)];
+
+        if ($input->customSlides !== []) {
+            if ($background === null) {
+                $warnings[] = Text::get('content.composition.missing_custom_background', ['document' => mb_strtolower($type->label())]);
+            } else {
+                $slides = $this->withCustomSlides($slides, $input, $background);
+            }
+        }
+
+        return new Composition($type, $clubIds, $slides, $warnings, $input->selection);
+    }
+
+    /**
+     * The slides composed with blocks placed at the end of their section (D-429), on the background
+     * of the library (D-428).
+     *
+     * @param  list<ComposedSlide>  $slides
+     * @return list<ComposedSlide>
+     */
+    private function withCustomSlides(array $slides, CompositionInput $input, Slide $background): array
+    {
+        /** @var array<string, SlideSection> $sections */
+        $sections = SlideSection::query()->get()->keyBy('code')->all();
+        $custom = $input->customSlides;
+        usort($custom, fn (CustomSlide $a, CustomSlide $b): int => [$a->sortOrder, $a->id] <=> [$b->sortOrder, $b->id]);
+
+        foreach ($custom as $slide) {
+            $section = $sections[$slide->sectionCode] ?? $sections[SlideSection::BRAND_EXPOSURE] ?? null;
+
+            if ($section === null) {
+                continue;
+            }
+
+            $position = 0;
+
+            foreach ($slides as $index => $composed) {
+                if ($composed->section()->sort_order <= $section->sort_order) {
+                    $position = $index + 1;
+                }
+            }
+
+            array_splice($slides, $position, 0, [new ComposedSlide(
+                slide: $background,
+                mandatory: false,
+                inSummary: false,
+                instances: [new SlideInstance],
+                competitionTiers: [],
+                included: $input->selection->includesCustom($slide->included),
+                custom: $slide,
+                customSection: $section,
+            )]);
+        }
+
+        return array_values($slides);
     }
 
     /**

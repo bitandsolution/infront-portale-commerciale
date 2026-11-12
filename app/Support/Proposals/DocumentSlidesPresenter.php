@@ -30,12 +30,16 @@ use App\Support\Text;
  * Every slide whose conditions hold is listed by section, with its thumbnail (D-420), whether it is
  * mandatory, excluded, out of the "Solo riepilogo" and how many pages it makes. The warnings for the
  * missing system slides reach admin and manager (D-416); the agent reads a neutral note.
+ *
+ * DM-07: the slides composed with blocks are listed in their section with their own tick, and the
+ * editor of their content comes with the list ("custom", CustomSlidesPresenter).
  */
 final class DocumentSlidesPresenter
 {
     public function __construct(
         private readonly DocumentComposer $composer,
         private readonly LedMockups $ledMockups,
+        private readonly CustomSlidesPresenter $customSlides,
     ) {}
 
     /**
@@ -62,10 +66,12 @@ final class DocumentSlidesPresenter
                 $versions[(string) $variant->variant_letter] = $version;
             }
 
-            $composition = $this->composer->compose(CompositionInput::fromVersions($group->season, $versions));
+            $input = CompositionInput::fromVersions($group->season, $versions);
         } else {
-            $composition = $this->composer->forGroup($group);
+            $input = CompositionInput::fromGroup($group);
         }
+
+        $composition = $this->composer->compose($input);
 
         $editable = ! $frozen && SaveDocumentSlides::editableBy($viewer, $group, $variants->all());
         $isReviewer = $viewer->can('review', ProposalGroup::class);
@@ -88,6 +94,7 @@ final class DocumentSlidesPresenter
             'pages' => $composition->pageCount(),
             'warnings' => $isReviewer ? $composition->warnings : [],
             'note' => ! $isReviewer && $composition->documentType !== null && $composition->warnings !== [] ? Text::get('ui.proposals.slides.agent_note') : null,
+            'custom' => $this->customSlides->present($group, $input->customSlides, $composition, $editable),
         ];
     }
 
@@ -99,7 +106,7 @@ final class DocumentSlidesPresenter
         $sections = [];
 
         foreach ($composition->slides as $composed) {
-            $name = $composed->slide->section->name;
+            $name = $composed->section()->name;
             $last = array_key_last($sections);
 
             if ($last === null || $sections[$last]['name'] !== $name) {
@@ -119,17 +126,38 @@ final class DocumentSlidesPresenter
     private function slide(ComposedSlide $composed, Composition $composition, int $variantCount): array
     {
         $slide = $composed->slide;
+
+        if ($composed->custom !== null) {
+            return [
+                'id' => $composed->custom->id,
+                'custom' => true,
+                'title' => $composed->custom->title,
+                'kind' => 'custom',
+                'note' => Text::get('ui.proposals.slides.kinds.custom'),
+                'mandatory' => false,
+                'inSummary' => false,
+                'included' => $composed->included,
+                'excluded' => ! $composed->custom->included,
+                'locked' => $composition->selection->mode === DocumentMode::Summary,
+                'pages' => 1,
+                'pagesLabel' => null,
+                'thumbnailUrl' => $slide->image_file_id !== null ? route('files.thumbnail', $slide->image_file_id) : null,
+            ];
+        }
+
         $kind = match ($slide->layout_code) {
             null => 'static',
             DocumentLayout::Cover => 'cover',
             DocumentLayout::NetworkRecap, DocumentLayout::ClubRecap => 'recap',
             DocumentLayout::LedMockup => 'led',
+            DocumentLayout::CustomBlocks => 'custom',
         };
         $pages = count($composed->instances);
         $summaryOnly = $composition->selection->mode === DocumentMode::Summary;
 
         return [
             'id' => $slide->id,
+            'custom' => false,
             'title' => $slide->title,
             'kind' => $kind,
             'note' => $kind !== 'static' ? Text::get('ui.proposals.slides.kinds.'.$kind) : null,

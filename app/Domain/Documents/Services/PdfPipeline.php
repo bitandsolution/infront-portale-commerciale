@@ -11,6 +11,7 @@ use App\Domain\Documents\Data\PdfReport;
 use App\Domain\Documents\Data\StaticSlidePage;
 use App\Domain\Documents\Exceptions\DocumentCheckFailed;
 use App\Domain\Documents\Layouts\CoverLayout;
+use App\Domain\Documents\Layouts\CustomBlocksLayout;
 use App\Domain\Documents\Layouts\LedMockupLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Enums\DocumentLayout;
@@ -182,6 +183,7 @@ final class PdfPipeline implements RendersPdf
             DocumentLayout::NetworkRecap, DocumentLayout::ClubRecap => NetworkRecapLayout::viewData($page->data, $this->fitter, $asset),
             DocumentLayout::Cover => CoverLayout::viewData($page->data, $asset),
             DocumentLayout::LedMockup => LedMockupLayout::viewData($page->data, $asset),
+            DocumentLayout::CustomBlocks => CustomBlocksLayout::viewData($page->data, $this->fitter, $asset),
         };
     }
 

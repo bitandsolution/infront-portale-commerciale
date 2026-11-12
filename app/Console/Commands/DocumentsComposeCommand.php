@@ -61,10 +61,10 @@ final class DocumentsComposeCommand extends Command
             $this->table(
                 is_array($columns) ? array_values(array_filter($columns, 'is_string')) : [],
                 array_map(fn (ComposedSlide $composed): array => [
-                    $composed->slide->section->name,
-                    (string) $composed->slide->sort_order,
-                    $composed->slide->title,
-                    ContentPresenter::kindLabel($composed->slide),
+                    $composed->section()->name,
+                    $composed->custom !== null ? '—' : (string) $composed->slide->sort_order,
+                    $composed->title(),
+                    $composed->custom !== null ? Text::get('content.compose_command.custom') : ContentPresenter::kindLabel($composed->slide),
                     implode(', ', array_map(fn (SlideInstance $instance): string => match (true) {
                         $instance->variantLetter !== null => Text::get('content.compose_command.variant', ['letter' => $instance->variantLetter]),
                         $instance->clubId !== null => (string) ($clubs[$instance->clubId] ?? $instance->clubId),

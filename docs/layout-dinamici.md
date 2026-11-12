@@ -227,6 +227,20 @@ Le righe senza contenuto (per esempio nessuna hospitality) non compaiono. Testi 
 ### 4.10 Nota IVA
 Il PPTX club riporta "€ 180.000 + IVA", i PDF solo l'importo. 💡 Il recap riporta la nota fissa "Importi IVA esclusa" (RB-08 M03) da `layout_texts`, Interstate Regular 16 px, sotto la tabella.
 
+### 4.11 Slide composta a blocchi (DM-07, D-399, D-428…D-432)
+Nuova rispetto ai documenti attuali: la compone l'agente nel passo "Documento" (al massimo 3 per gruppo di varianti). Codice: `CustomBlocksLayout`, vista `documents.layouts.custom-blocks`.
+
+- **Sfondo** (D-428): la slide della libreria con il layout `custom_blocks` ("Sfondo della slide personalizzata"), PNG 1920×1080 di Infront, una per i documenti network e una per club. Il grafico lascia libera l'**area del contenuto**: x 56, y 226, larghezza 1790, altezza 690 px (come la tabella del recap). Senza sfondo attivo le slide composte non entrano nel documento e chi approva vede l'avviso.
+- **Schemi**: una colonna su tutta l'area; due colonne di 865 px con 60 px tra le colonne; immagine della slide a sinistra sul 42% dell'area (mai tagliata, proporzioni mantenute) e blocchi a destra.
+- **Blocchi**, impilati dall'alto con 28 px tra un blocco e l'altro:
+  - titolo: Interstate Black 52 px, interlinea 1,15, #000000, a capo su più righe;
+  - testo: Interstate Regular 28 px, interlinea 1,4, #333333; grassetto in Bold; elenco puntato con "•" e rientro di 1,2 volte il corpo; una riga vuota lascia 0,7 volte il corpo;
+  - tabella: righe di 2,2 volte il corpo (24 px), celle di uguale larghezza con bordo #000000; prima riga d'intestazione su #CC0033 in Bold bianco; il testo della cella si riduce e si taglia come al §6.3;
+  - immagine: larga quanto la colonna, al massimo 420 px di altezza, allineata a sinistra;
+  - immagine con testo: immagine sul 38% della colonna (al massimo 320 px di altezza), testo a destra a 28 px dall'immagine.
+- **Contenuto che non entra** (D-431): tutto si riduce insieme a passi del 5% fino al 70%; oltre, quello che supera il fondo dell'area si taglia: l'ultima riga tenuta finisce con "…", un'immagine si riduce allo spazio rimasto (sotto 80 px non compare), righe di tabella e blocchi successivi non compaiono. Il passo "Documento" lo segnala, con le stesse misure del PDF.
+- **Anteprima** (D-432): la stessa pagina resa da Chromium, a richiesta.
+
 ---
 
 ## 5. Conteggio dei top match (⚠️ verificato sul dump)

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\AliasSource;
+use App\Enums\CustomSlideLayout;
 use App\Enums\FilePurpose;
 use App\Models\BenefitCategory;
 use App\Models\CalendarImport;
@@ -18,8 +19,10 @@ use App\Models\OnTopAsset;
 use App\Models\PartnershipTier;
 use App\Models\PriceList;
 use App\Models\Proposal;
+use App\Models\ProposalCustomSlide;
 use App\Models\Season;
 use App\Models\Slide;
+use App\Models\SlideSection;
 use App\Models\Stadium;
 use App\Models\StoredFile;
 use App\Models\User;
@@ -144,6 +147,15 @@ function routeMatrix(): array
         // DM-05: slides of the document (D-397): the agent of the group (here another agent, refused);
         // admin and manager go back with the errors of the empty body
         'proposals.groups.slides' => ['method' => 'PUT', 'expected' => $backOfficeForm],
+        // DM-07: slides composed with blocks (D-399), same permissions as the slides of the document:
+        // the agent of the group (here another agent, refused); admin and manager go back with the
+        // toast (the group is a draft) or with the errors of the empty body. The preview is for who
+        // sees the group.
+        'proposals.groups.custom-slides.store' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'proposals.groups.custom-slides.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
+        'proposals.groups.custom-slides.destroy' => ['method' => 'DELETE', 'expected' => $backOfficeForm],
+        'proposals.groups.custom-slides.image' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'proposals.groups.custom-slides.preview' => ['method' => 'GET', 'expected' => $backOffice],
         // DM-04: regeneration of the PDF document, admin only (D-125; a group not approved goes back
         // with the toast). The download goes through files.download (StoredFilePolicy).
         'documents.regenerate' => ['method' => 'POST', 'expected' => $adminForm],
@@ -403,6 +415,24 @@ function matrixParameters(string $route): array
         in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store'], true) => [
             'proposal' => Proposal::factory()->withWorkingVersion()->create()->id,
         ],
+        str_starts_with($route, 'proposals.groups.custom-slides.') && $route !== 'proposals.groups.custom-slides.store' => (function (): array {
+            (new ContentSystemDataSeeder)->run();
+            $group = (int) Proposal::factory()->withWorkingVersion()->create()->proposal_group_id;
+
+            return ['group' => $group, 'customSlide' => ProposalCustomSlide::query()->create([
+                'proposal_group_id' => $group,
+                'sort_order' => 1,
+                'title' => 'Slide personalizzata 1',
+                'layout' => CustomSlideLayout::OneColumn,
+                'slide_section_id' => SlideSection::query()->where('code', SlideSection::BRAND_EXPOSURE)->value('id'),
+                'blocks' => [],
+            ])->id];
+        })(),
+        $route === 'proposals.groups.custom-slides.store' => (function (): array {
+            (new ContentSystemDataSeeder)->run();
+
+            return ['group' => Proposal::factory()->withWorkingVersion()->create()->proposal_group_id];
+        })(),
         str_starts_with($route, 'proposals.groups.'), $route === 'documents.regenerate' => [
             'group' => Proposal::factory()->withWorkingVersion()->create()->proposal_group_id,
         ],

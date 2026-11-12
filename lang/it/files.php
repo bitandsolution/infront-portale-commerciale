@@ -14,6 +14,7 @@ return [
         'generated_pdf' => 'Documento PDF',
         'thumbnail' => 'Miniatura',
         'field_photo' => 'Foto del campo',
+        'custom_slide_image' => 'Immagine della slide personalizzata',
     ],
 
     'types' => [

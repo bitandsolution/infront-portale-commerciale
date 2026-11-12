@@ -4,6 +4,7 @@ namespace App\Domain\Proposals\Actions;
 
 use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
+use App\Domain\Content\Data\CustomSlide;
 use App\Domain\Content\Data\DocumentSelection;
 use App\Domain\Documents\Actions\RequestDocument;
 use App\Domain\Proposals\Data\AppliedDiscount;
@@ -21,6 +22,7 @@ use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
 use App\Models\InventoryCommitment;
 use App\Models\Proposal;
+use App\Models\ProposalCustomSlide;
 use App\Models\ProposalEvent;
 use App\Models\ProposalGroup;
 use App\Models\ProposalVersion;
@@ -44,7 +46,8 @@ use Illuminate\Support\Facades\DB;
  *    variants ask together within the residuals; any problem blocks the approval and nothing is
  *    written (the forcing is F5);
  * 4. for every variant: club rows rewritten with the current prices (D-409), discount on the total
- *    (D-408), client frozen, slides chosen for the document copied from the group (D-419), working
+ *    (D-408), client frozen, slides chosen for the document and slides composed with blocks copied
+ *    from the group (D-419, DM-07), working
  *    version frozen as version 1 (D-198), one commitment per resource and club row with the contract
  *    period (D-062, D-192);
  * 5. status "Approvata", history "discount_set" and "approved", audit proposal.approved;
@@ -72,6 +75,10 @@ final class ApproveGroup
         DB::transaction(function () use ($group, $discounts, $actor): void {
             $locked = ProposalGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
             $selection = $locked->documentSelection();
+            // DM-07: the slides composed with blocks are frozen with the versions, like the choice.
+            $customSlides = array_values($locked->customSlides()->with('section')->get()
+                ->map(fn (ProposalCustomSlide $slide): array => CustomSlide::fromModel($slide)->toArray())
+                ->all());
             $variants = Proposal::query()
                 ->where('proposal_group_id', $group->id)
                 ->orderBy('id')
@@ -111,14 +118,17 @@ final class ApproveGroup
             foreach ($review->variants as $variant) {
                 /** @var DraftEvaluation $evaluation */
                 $evaluation = $review->evaluation($variant);
-                $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $selection, $actor);
+                $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $selection, $customSlides, $actor);
             }
 
             $this->requestDocument->handle($group, $actor);
         }, 3);
     }
 
-    private function approve(ProposalGroup $group, Proposal $variant, Season $season, DraftEvaluation $evaluation, AppliedDiscount $discount, DocumentSelection $selection, User $actor): void
+    /**
+     * @param  list<array<string, mixed>>  $customSlides
+     */
+    private function approve(ProposalGroup $group, Proposal $variant, Season $season, DraftEvaluation $evaluation, AppliedDiscount $discount, DocumentSelection $selection, array $customSlides, User $actor): void
     {
         /** @var ProposalVersion $version */
         $version = $variant->workingVersion;
@@ -139,6 +149,7 @@ final class ApproveGroup
             'commodity_sector_id' => $client?->commodity_sector_id,
             'sector_free_text' => $client?->sector_free_text,
             ...$selection->columns(),
+            'custom_slides' => $customSlides,
             'number' => ((int) ProposalVersion::query()->where('proposal_id', $variant->id)->max('number')) + 1,
             'frozen_at' => $now,
             'frozen_by' => $actor->id,

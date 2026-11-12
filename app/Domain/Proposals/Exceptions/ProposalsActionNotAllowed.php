@@ -85,6 +85,24 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.document_not_editable'));
     }
 
+    /** D-399 (DM-07): at most three slides composed with blocks per group. */
+    public static function tooManyCustomSlides(int $max): self
+    {
+        return new self(Text::get('proposals.errors.too_many_custom_slides', ['max' => (string) $max]));
+    }
+
+    /** D-430 (DM-07): at most two images per slide composed with blocks. */
+    public static function tooManyImages(int $max): self
+    {
+        return new self(Text::get('proposals.errors.too_many_custom_images', ['max' => (string) $max]));
+    }
+
+    /** DM-07: the image goes to a block with an image or to the slide with the layout "image_text". */
+    public static function customImageTarget(): self
+    {
+        return new self(Text::get('proposals.errors.custom_image_target'));
+    }
+
     /**
      * DM-03b (D-216, D-409): a variant is not valid any more or the group asks more than the residual.
      *

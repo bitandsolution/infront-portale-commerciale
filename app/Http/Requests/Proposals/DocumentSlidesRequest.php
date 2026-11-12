@@ -34,6 +34,9 @@ class DocumentSlidesRequest extends FormRequest
             'mode' => ['required', 'string', Rule::enum(DocumentMode::class)],
             'excluded_slide_ids' => ['present', 'array', 'max:'.self::MAX_EXCLUDED],
             'excluded_slide_ids.*' => ['integer', 'min:1'],
+            // DM-07: the slides composed with blocks left out (absent: unchanged).
+            'excluded_custom_slide_ids' => ['sometimes', 'array', 'max:'.self::MAX_EXCLUDED],
+            'excluded_custom_slide_ids.*' => ['integer', 'min:1'],
         ];
     }
 
@@ -42,7 +45,7 @@ class DocumentSlidesRequest extends FormRequest
      */
     public function attributes(): array
     {
-        return ['mode' => 'contenuto del documento', 'excluded_slide_ids' => 'slide escluse'];
+        return ['mode' => 'contenuto del documento', 'excluded_slide_ids' => 'slide escluse', 'excluded_custom_slide_ids' => 'slide personalizzate escluse'];
     }
 
     public function mode(): DocumentMode
@@ -56,6 +59,20 @@ class DocumentSlidesRequest extends FormRequest
     public function excludedSlideIds(): array
     {
         $ids = $this->input('excluded_slide_ids', []);
+
+        return array_values(array_map(intval(...), is_array($ids) ? array_filter($ids, is_numeric(...)) : []));
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function excludedCustomSlideIds(): ?array
+    {
+        if (! $this->has('excluded_custom_slide_ids')) {
+            return null;
+        }
+
+        $ids = $this->input('excluded_custom_slide_ids', []);
 
         return array_values(array_map(intval(...), is_array($ids) ? array_filter($ids, is_numeric(...)) : []));
     }

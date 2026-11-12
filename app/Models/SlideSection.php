@@ -22,6 +22,16 @@ final class SlideSection extends Model
     /** Section of the closing slide, kept in the "summary only" document (D-397, D-405). */
     public const CLOSING = 'CLOSING';
 
+    /** Default section of a slide composed with blocks: at its end, right before the recap (D-429). */
+    public const BRAND_EXPOSURE = 'BRAND_EXPOSURE';
+
+    /**
+     * Sections a slide composed with blocks can close (D-429): those before the recap.
+     *
+     * @var list<string>
+     */
+    public const CUSTOM_SLIDE_SECTIONS = ['INTRO', 'CLUB', 'PARTNERSHIP', 'BENEFIT', 'BRAND_EXPOSURE'];
+
     protected $guarded = ['id'];
 
     /**
