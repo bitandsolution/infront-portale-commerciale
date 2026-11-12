@@ -98,7 +98,7 @@ final class ProposalGroupsPresenter
                 'client' => $group->client?->company_name,
                 'agent' => $group->agent->first_name.' '.$group->agent->last_name,
                 'variants' => $variants->count(),
-                'clubs' => $this->clubNames($evaluations->filter()->values()->all()),
+                'clubs' => $this->clubNames(array_values($evaluations->all())),
                 'totals' => $variants->map(fn (Proposal $variant): array => [
                     'letter' => $variants->count() > 1 ? $variant->variant_letter : null,
                     'total' => Amounts::italian(($evaluation = $evaluations->get($variant->id)) instanceof DraftEvaluation ? $evaluation->listTotal : '0'),
@@ -178,13 +178,13 @@ final class ProposalGroupsPresenter
      * History of every variant of the group, the most recent first (M07 F-10, D-199).
      *
      * @param  Collection<int, Proposal>  $variants
-     * @return list<array<string, string|null>>
+     * @return list<array{at: string|null, variant: string|null, label: string, user: string, notes: string|null}>
      */
     private function history(Collection $variants): array
     {
         $letters = $variants->count() > 1 ? $variants->pluck('variant_letter', 'id') : collect();
 
-        return ProposalEvent::query()
+        return array_values(ProposalEvent::query()
             ->whereIn('proposal_id', $variants->pluck('id'))
             ->with('user')
             ->orderByDesc('created_at')
@@ -195,11 +195,10 @@ final class ProposalGroupsPresenter
                 'at' => self::moment($event->created_at),
                 'variant' => is_string($letter = $letters->get($event->proposal_id)) ? $letter : null,
                 'label' => $event->type->label(),
-                'user' => $event->user !== null ? $event->user->first_name.' '.$event->user->last_name : null,
+                'user' => $event->user->first_name.' '.$event->user->last_name,
                 'notes' => $event->notes,
             ])
-            ->values()
-            ->all();
+            ->all());
     }
 
     /**

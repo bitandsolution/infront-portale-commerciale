@@ -682,7 +682,7 @@ export interface ProposalGroupDetail {
         draft: ProposalDraft | null;
         editUrl: string | null;
     }>;
-    history: Array<{ at: string | null; variant: string | null; label: string; user: string | null; notes: string | null }>;
+    history: Array<{ at: string | null; variant: string | null; label: string; user: string; notes: string | null }>;
     canSubmit: boolean;
     submitUrl: string;
     canReject: boolean;
