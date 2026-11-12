@@ -75,7 +75,7 @@ it('D-376: creates the proposal tables with every column of the data model', fun
         'id', 'proposal_id', 'number', 'working_slot', 'frozen_at', 'frozen_by', 'change_note', 'starts_on', 'ends_on',
         'client_name', 'client_logo_file_id', 'commodity_sector_id', 'sector_free_text', 'list_total', 'discount_type',
         'discount_value', 'discount_amount', 'final_total', 'campaign_starts_on', 'campaign_months', 'total_matches',
-        'total_spots', 'top_matches', 'is_forced', 'forced_reason', 'is_legacy', 'snapshot', 'created_at', 'updated_at',
+        'total_spots', 'top_matches', 'document_mode', 'excluded_slide_ids', 'is_forced', 'forced_reason', 'is_legacy', 'snapshot', 'created_at', 'updated_at',
     ])->and(Schema::getColumnListing('proposal_version_clubs'))->toEqualCanonicalizing([
         'id', 'proposal_version_id', 'club_id', 'competition_season_id', 'sort_order', 'territory_id', 'visibility_type_id',
         'partnership_tier_id', 'led_format_id', 'led_seconds_per_match', 'home_matches', 'matches_source', 'price_list_id',

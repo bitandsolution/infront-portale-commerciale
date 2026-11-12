@@ -104,7 +104,7 @@ it('D-375: "Nuova proposta" opens step 1 without creating an empty draft', funct
             ->component('Proposals/Configurator')
             ->where('draft', null)
             ->where('step', 1)
-            ->where('lastStep', 5)
+            ->where('lastStep', 6)
             ->where('createUrl', route('proposals.store')));
 
     expect(Proposal::query()->count())->toBe(0);
