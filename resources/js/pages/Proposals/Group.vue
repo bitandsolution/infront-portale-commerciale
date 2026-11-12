@@ -6,6 +6,7 @@ import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import SelectField from '@/components/forms/SelectField.vue';
 import TextField from '@/components/forms/TextField.vue';
+import DocumentPanel from '@/components/proposals/DocumentPanel.vue';
 import DraftSummary from '@/components/proposals/DraftSummary.vue';
 import StatusPill from '@/components/StatusPill.vue';
 import { useTrans } from '@/composables/useTrans';
@@ -19,7 +20,8 @@ import type { LayoutData, ProposalGroupDetail } from '@/types';
  * configurator. Admin and manager, while the group waits: prices changed since the sending (D-409),
  * availability of the group (D-216), discount of every variant with the final total calculated by the
  * server (D-408), "Approva" and "Rifiuta"; after the approval of more variants, the choice of the
- * client (D-410). The agent never sees discounts (D-011).
+ * client (D-410). The agent never sees discounts (D-011). DM-04: the PDF document of the group
+ * (DocumentPanel) and, before the approval, what the library lacks for it (D-416).
  */
 const props = defineProps<{
     layout: LayoutData;
@@ -308,6 +310,12 @@ function reject(): void {
                 </div>
             </section>
 
+            <!-- PDF document of the approved group (DM-04) -->
+            <DocumentPanel
+                v-if="group.document"
+                :document="group.document"
+            />
+
             <!-- Admin and manager: problems and availability of the group (D-216, D-409) -->
             <section
                 v-if="reviewing"
@@ -337,6 +345,34 @@ function reject(): void {
                     </ul>
                     <p class="text-muted">
                         {{ t('proposals.approval.blocked_hint') }}
+                    </p>
+                </div>
+
+                <!-- What the document would miss in the library (D-416): the approval stays possible -->
+                <div
+                    v-if="group.documentWarnings.length > 0"
+                    class="flex flex-col gap-2 rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
+                    role="status"
+                >
+                    <p class="flex items-center gap-2 font-semibold">
+                        <Info
+                            :size="18"
+                            :stroke-width="2"
+                            class="shrink-0 text-notice"
+                            aria-hidden="true"
+                        />
+                        {{ t('proposals.document.warnings_title') }}
+                    </p>
+                    <ul class="flex list-disc flex-col gap-1 pl-5">
+                        <li
+                            v-for="(warning, index) in group.documentWarnings"
+                            :key="index"
+                        >
+                            {{ warning }}
+                        </li>
+                    </ul>
+                    <p class="text-muted">
+                        {{ t('proposals.document.warnings_hint') }}
                     </p>
                 </div>
 

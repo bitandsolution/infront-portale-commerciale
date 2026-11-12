@@ -2,8 +2,11 @@
 
 use App\Domain\Documents\Data\DocumentPage;
 use App\Domain\Documents\Data\StaticSlidePage;
+use App\Domain\Documents\Layouts\CoverLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
+use App\Domain\Documents\Layouts\RecapStyle;
 use App\Domain\Documents\Services\PdfPipeline;
+use App\Enums\DocumentType;
 use App\Support\Documents\SampleDeck;
 use Illuminate\Support\Facades\File;
 
@@ -13,7 +16,7 @@ use Illuminate\Support\Facades\File;
 | to 960×540 (tolerant of anti-aliasing). The references of the layouts are kept at full size
 | (1920×1080), so the thin borders of the grids are visible when Antonio approves them; the static
 | slide is kept reduced, since a full-size photo-like PNG would weigh megabytes. Cases: 2 clubs, discount with hospitality, 12 clubs on two slides, long
-| names, static slide. DejaVu substitute font, so CI and the VM draw the same pictures.
+| names, static slide; DM-04: network and club cover, club recap, title of a variant on a recap. DejaVu substitute font, so CI and the VM draw the same pictures.
 |
 | A missing reference is written by the CI job "pdf" (VISUAL_REFERENCES_WRITE_MISSING=true) and
 | committed to the branch of the pull request: Antonio approves it by looking at the image in the
@@ -42,7 +45,35 @@ function visualCasePage(string $case, string $folder): DocumentPage
         return new StaticSlidePage($folder.'/statica.png');
     }
 
+    // DM-04: covers, club recap (D-415) and the title of a variant above a recap (D-396).
+    if (str_starts_with($case, 'cover_')) {
+        file_put_contents($folder.'/copertina.png', SampleDeck::background('Infront Opportunity 2027-28'));
+        file_put_contents($folder.'/logo-cliente.png', SampleDeck::clientLogo());
+
+        return CoverLayout::page(
+            $folder.'/copertina.png',
+            $case === 'cover_club' ? DocumentType::Club : DocumentType::Network,
+            '24/05/2027',
+            $folder.'/logo-cliente.png',
+        );
+    }
+
+    if ($case === 'club_recap') {
+        file_put_contents($folder.'/sfondo-club.png', SampleDeck::background('Atletico Borgoverde - Proposta economica'));
+
+        return NetworkRecapLayout::pages(
+            SampleDeck::clubRecap(),
+            $folder.'/sfondo-club.png',
+            RecapStyle::club('#007A3D', 'Atletico Borgoverde'),
+            'Proposta A',
+        )[0];
+    }
+
     file_put_contents($folder.'/sfondo.png', SampleDeck::background('Infront Network - Recap proposta commerciale'));
+
+    if ($case === 'recap_variant_title') {
+        return NetworkRecapLayout::pages(SampleDeck::recap(2, SampleDeck::DISCOUNT_PERCENT, false, $folder), $folder.'/sfondo.png', null, 'Proposta B')[0];
+    }
 
     [$clubs, $discount, $longNames, $page] = match ($case) {
         'recap_two_clubs' => [2, SampleDeck::DISCOUNT_NONE, false, 0],
@@ -161,4 +192,8 @@ it('layout §6.5 (D-311): the rendering matches the approved reference', functio
     'recap_twelve_clubs_page_2',
     'recap_long_names',
     'static_slide',
+    'cover_network',
+    'cover_club',
+    'club_recap',
+    'recap_variant_title',
 ]);

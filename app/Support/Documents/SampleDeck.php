@@ -135,6 +135,44 @@ final class SampleDeck
     }
 
     /**
+     * Fictitious club recap (D-415, DM-04): the partnership, LED and hospitality rows of one club,
+     * with a 15% discount.
+     */
+    public static function clubRecap(): NetworkRecap
+    {
+        $rows = [
+            new RecapRow('Top Partner', null, Text::get('documents.network_recap.none'), null, null, null, '155680.00'),
+            new RecapRow('LED', null, '2ª fila', 19, 90, 6, '28500.00'),
+            new RecapRow('Hospitality Premium · 2 posti', null, '', null, null, null, '9000.00', isHospitality: true),
+        ];
+
+        return new NetworkRecap($rows, new RecapTotals(
+            19,
+            90 * 19,
+            6 * 19,
+            '193180.00',
+            Text::get('documents.network_recap.discount_percent', ['value' => '15']),
+            '164203.00',
+        ));
+    }
+
+    /**
+     * Client logo of the cover: a wide coloured rectangle with an invented name, transparent around.
+     */
+    public static function clientLogo(): string
+    {
+        $image = self::image(600, 200);
+        imagesavealpha($image, true);
+        imagealphablending($image, false);
+        imagefill($image, 0, 0, (int) imagecolorallocatealpha($image, 0, 0, 0, 127));
+        imagealphablending($image, true);
+        imagefilledrectangle($image, 10, 30, 590, 170, self::color($image, [20, 60, 120]));
+        self::text($image, 'Caffè Esempio', 60, 125, 52, [255, 255, 255]);
+
+        return self::png($image);
+    }
+
+    /**
      * A deck of $pages pages for documents:try and the M09-CA4 test (about 40 slides): a cover, the
      * recap of 12 clubs (two pages, with the continuation) and static slides up to the total, each
      * with its own picture. The images are written into $folder; with $samples the real images of

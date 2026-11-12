@@ -1428,6 +1428,23 @@ return [
                 'confirm' => 'Rifiuta',
             ],
         ],
+        // DM-04: the PDF document of the group (D-413…D-417).
+        'document' => [
+            'title' => 'Documento PDF',
+            'none' => 'Il documento non è ancora stato generato.',
+            'pending' => 'Il documento è in preparazione: la pagina si aggiorna da sola.',
+            'ready' => ':type · :pages pagine · :size MB · generato il :at',
+            'failed' => 'Il documento non è riuscito. L\'amministratore può rigenerarlo dopo aver sistemato la libreria delle slide.',
+            'failed_reason' => 'Motivo: :reason',
+            'download' => 'Scarica il PDF',
+            'regenerate' => 'Rigenera',
+            'regenerate_title' => 'Rigenerare il documento?',
+            'regenerate_text' => 'Il documento attuale resta consultabile solo dall\'amministratore. Il nuovo documento contiene le varianti approvate: dopo la scelta del cliente, solo quella scelta.',
+            'previous_title' => 'Documenti sostituiti',
+            'previous_entry' => ':status · :at',
+            'warnings_title' => 'Documento PDF: cosa manca nella libreria',
+            'warnings_hint' => 'L\'approvazione è possibile, ma senza copertina o recap il documento non si genera: aggiungi la slide in "Contenuti › Slide" prima di approvare o rigenera il documento dopo.',
+        ],
         // DM-03b: approval with the discounts (D-408, D-409) and choice of the client (D-410).
         'approval' => [
             'section' => 'Approvazione',

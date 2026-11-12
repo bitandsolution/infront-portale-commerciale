@@ -2,6 +2,7 @@
 
 namespace App\Domain\Documents\Services;
 
+use App\Domain\Documents\Contracts\RendersPdf;
 use App\Domain\Documents\Data\DocumentPage;
 use App\Domain\Documents\Data\LayoutPage;
 use App\Domain\Documents\Data\PdfFont;
@@ -9,6 +10,7 @@ use App\Domain\Documents\Data\PdfMetadata;
 use App\Domain\Documents\Data\PdfReport;
 use App\Domain\Documents\Data\StaticSlidePage;
 use App\Domain\Documents\Exceptions\DocumentCheckFailed;
+use App\Domain\Documents\Layouts\CoverLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Enums\DocumentLayout;
 use App\Support\Text;
@@ -28,10 +30,10 @@ use RuntimeException;
  * 5. qpdf: linearisation, object streams, compression, title / author / subject (M09 §7);
  * 6. checks (M09 §9): valid PDF, number of pages, fonts embedded as subsets, warning beyond 20 MB.
  *
- * The composition of the document (which slides, in which order, from which proposal) is slice F7:
- * here the pages arrive ready. The same code will serve the simulator of M08 (D-220).
+ * The composition of the document (which slides, in which order, from which group) is DocumentBuilder
+ * (DM-04): here the pages arrive ready. The same code will serve the simulator of M08 (D-220).
  */
-final class PdfPipeline
+final class PdfPipeline implements RendersPdf
 {
     /**
      * M09 §9: a PDF heavier than this is generated anyway, with a warning.
@@ -176,8 +178,9 @@ final class PdfPipeline
     private function layoutData(LayoutPage $page, Closure $asset): array
     {
         return match ($page->layout) {
-            DocumentLayout::NetworkRecap => NetworkRecapLayout::viewData($page->data, $this->fitter, $asset),
-            DocumentLayout::Cover, DocumentLayout::ClubRecap, DocumentLayout::LedMockup => throw DocumentLayout::notBuilt($page->layout),
+            DocumentLayout::NetworkRecap, DocumentLayout::ClubRecap => NetworkRecapLayout::viewData($page->data, $this->fitter, $asset),
+            DocumentLayout::Cover => CoverLayout::viewData($page->data, $asset),
+            DocumentLayout::LedMockup => throw DocumentLayout::notBuilt($page->layout),
         };
     }
 

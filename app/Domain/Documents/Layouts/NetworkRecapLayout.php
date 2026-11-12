@@ -9,7 +9,6 @@ use App\Domain\Documents\Data\RecapRow;
 use App\Domain\Documents\Data\RecapTotals;
 use App\Domain\Documents\Services\TextFitter;
 use App\Enums\DocumentFontWeight;
-use App\Enums\DocumentLayout;
 use App\Support\Documents\DocumentNumbers;
 use App\Support\Text;
 use Closure;
@@ -29,6 +28,9 @@ use Closure;
  *
  * Interstate instead of Calibri (D-249). All the measures live here, not in the Blade view
  * (layout-dinamici §6.1): the view only draws the boxes and the texts it receives.
+ *
+ * DM-04: the same grid draws the club recap (D-415) with another RecapStyle, and every recap of a
+ * group of variants can carry the title of its variant ("Proposta A", D-396).
  */
 final class NetworkRecapLayout
 {
@@ -126,18 +128,21 @@ final class NetworkRecapLayout
      *
      * @return list<LayoutPage>
      */
-    public static function pages(NetworkRecap $recap, string $backgroundPath): array
+    public static function pages(NetworkRecap $recap, string $backgroundPath, ?RecapStyle $style = null, ?string $title = null): array
     {
-        $chunks = self::chunks($recap->rows);
+        $style ??= RecapStyle::network();
+        $chunks = self::chunks($recap->rows, $style->rowsPerPage);
         $pages = [];
 
         foreach ($chunks as $index => $rows) {
             $last = $index === count($chunks) - 1;
 
-            $pages[] = new LayoutPage(DocumentLayout::NetworkRecap, $backgroundPath, [
+            $pages[] = new LayoutPage($style->layout, $backgroundPath, [
                 'rows' => $rows,
                 'totals' => $last ? $recap->totals : null,
                 'relegationNote' => $last ? $recap->relegationNote : null,
+                'style' => $style,
+                'title' => $title,
             ]);
         }
 
@@ -159,34 +164,56 @@ final class NetworkRecapLayout
         $rows = $data['rows'] ?? [];
         $totals = ($data['totals'] ?? null) instanceof RecapTotals ? $data['totals'] : null;
         $relegationNote = is_string($data['relegationNote'] ?? null) ? $data['relegationNote'] : null;
+        $style = ($data['style'] ?? null) instanceof RecapStyle ? $data['style'] : RecapStyle::network();
+        $title = is_string($data['title'] ?? null) ? $data['title'] : null;
 
         $view = ['boxes' => [], 'texts' => [], 'logos' => []];
 
-        // Header: red cells with black borders and the original titles in white.
+        if ($title !== null) {
+            [$priceLeft, $priceRight] = self::COLUMNS['price'];
+            $fitted = $fitter->fit($title, DocumentFontWeight::Bold, RecapStyle::TITLE_SIZE, $priceRight - $priceLeft);
+            $view['texts'][] = [
+                'left' => $priceLeft,
+                'top' => $style->titleTop(),
+                'width' => $priceRight - $priceLeft,
+                'height' => RecapStyle::TITLE_HEIGHT,
+                'align' => 'right',
+                'weight' => DocumentFontWeight::Bold->value,
+                'size' => $fitted->size,
+                'color' => $style->headerBackground,
+                'text' => $fitted->text,
+                'strike' => false,
+            ];
+        }
+
+        // Header: coloured cells with black borders and the original titles in white.
         foreach (self::COLUMNS as $column => [$left, $right]) {
-            $view['boxes'][] = self::box($left, self::HEADER_TOP, $right - $left, self::HEADER_HEIGHT, self::HEADER_BACKGROUND);
+            $label = $column === 'club' && $style->firstColumnTitle !== null
+                ? $style->firstColumnTitle
+                : Text::get('documents.network_recap.columns.'.$column);
+            $view['boxes'][] = self::box($left, $style->headerTop, $right - $left, $style->headerHeight, $style->headerBackground);
             $view['texts'][] = self::text(
                 $column,
-                self::HEADER_TOP,
-                self::HEADER_HEIGHT,
-                $fitter->fit(Text::get('documents.network_recap.columns.'.$column), DocumentFontWeight::Bold, self::HEADER_SIZE, self::innerWidth($column)),
+                $style->headerTop,
+                $style->headerHeight,
+                $fitter->fit($label, DocumentFontWeight::Bold, self::HEADER_SIZE, self::innerWidth($column)),
                 DocumentFontWeight::Bold,
                 self::HEADER_COLOR,
             );
         }
 
-        $top = self::ROWS_TOP;
+        $top = $style->rowsTop;
 
         foreach ($rows as $row) {
-            self::row($view, $row, $top, $fitter, $asset);
-            $top += self::ROW_HEIGHT;
+            self::row($view, $row, $top, $style->rowHeight, $style->nameLeft, $fitter, $asset);
+            $top += $style->rowHeight;
         }
 
         $priceBottom = $top;
 
         if ($totals !== null) {
-            self::totals($view, $totals, $top);
-            $top += self::TOTALS_HEIGHT;
+            self::totals($view, $totals, $top, $style->totalsHeight);
+            $top += $style->totalsHeight;
             $priceBottom = $top;
 
             $view['texts'][] = [
@@ -205,10 +232,10 @@ final class NetworkRecapLayout
 
         // PROPOSTA ECONOMICA: one merged cell over the rows (and the totals, on the last page).
         [$priceLeft, $priceRight] = self::COLUMNS['price'];
-        $view['boxes'][] = self::box($priceLeft, self::ROWS_TOP, $priceRight - $priceLeft, $priceBottom - self::ROWS_TOP);
+        $view['boxes'][] = self::box($priceLeft, $style->rowsTop, $priceRight - $priceLeft, $priceBottom - $style->rowsTop);
 
         if ($totals !== null) {
-            self::price($view, $totals, self::ROWS_TOP, $priceBottom);
+            self::price($view, $totals, $style->rowsTop, $priceBottom);
         }
 
         if ($relegationNote !== null) {
@@ -248,28 +275,28 @@ final class NetworkRecapLayout
      * @param  array{boxes: list<array<string, mixed>>, texts: list<array<string, mixed>>, logos: list<array<string, mixed>>}  $view
      * @param  Closure(string): string  $asset
      */
-    private static function row(array &$view, RecapRow $row, int $top, TextFitter $fitter, Closure $asset): void
+    private static function row(array &$view, RecapRow $row, int $top, int $height, int $nameLeft, TextFitter $fitter, Closure $asset): void
     {
         foreach (['club', 'format', 'matches', 'minutes', 'spots'] as $column) {
-            $view['boxes'][] = self::box(self::COLUMNS[$column][0], $top, self::width($column), self::ROW_HEIGHT);
+            $view['boxes'][] = self::box(self::COLUMNS[$column][0], $top, self::width($column), $height);
         }
 
         if ($row->logoPath !== null && ! $row->isHospitality) {
             $view['logos'][] = [
                 'src' => $asset($row->logoPath),
                 'left' => self::LOGO_LEFT,
-                'top' => $top + intdiv(self::ROW_HEIGHT - self::LOGO_SIZE, 2),
+                'top' => $top + intdiv($height - self::LOGO_SIZE, 2),
                 'size' => self::LOGO_SIZE,
             ];
         }
 
-        $nameWidth = self::COLUMNS['club'][1] - self::NAME_LEFT - self::CELL_PADDING;
+        $nameWidth = self::COLUMNS['club'][1] - $nameLeft - self::CELL_PADDING;
         $name = $fitter->fit(mb_strtoupper($row->label), DocumentFontWeight::Bold, self::TEXT_SIZE, $nameWidth);
         $view['texts'][] = [
-            'left' => self::NAME_LEFT,
+            'left' => $nameLeft,
             'top' => $top,
             'width' => $nameWidth,
-            'height' => self::ROW_HEIGHT,
+            'height' => $height,
             'align' => 'left',
             'weight' => DocumentFontWeight::Bold->value,
             'size' => $name->size,
@@ -295,7 +322,7 @@ final class NetworkRecapLayout
             $view['texts'][] = self::text(
                 $column,
                 $top,
-                self::ROW_HEIGHT,
+                $height,
                 $fitter->fit($value, DocumentFontWeight::Bold, self::TEXT_SIZE, self::innerWidth($column)),
                 DocumentFontWeight::Bold,
             );
@@ -307,14 +334,14 @@ final class NetworkRecapLayout
      *
      * @param  array{boxes: list<array<string, mixed>>, texts: list<array<string, mixed>>, logos: list<array<string, mixed>>}  $view
      */
-    private static function totals(array &$view, RecapTotals $totals, int $top): void
+    private static function totals(array &$view, RecapTotals $totals, int $top, int $height): void
     {
         $label = Text::get('documents.network_recap.total');
         $view['texts'][] = [
             'left' => self::COLUMNS['club'][0],
             'top' => $top,
             'width' => self::TOTAL_LABEL_RIGHT - self::COLUMNS['club'][0],
-            'height' => self::TOTALS_HEIGHT,
+            'height' => $height,
             'align' => 'right',
             'weight' => DocumentFontWeight::Bold->value,
             'size' => self::TOTALS_SIZE,
@@ -330,8 +357,8 @@ final class NetworkRecapLayout
         ];
 
         foreach ($values as $column => $value) {
-            $view['boxes'][] = self::box(self::COLUMNS[$column][0], $top, self::width($column), self::TOTALS_HEIGHT);
-            $view['texts'][] = self::text($column, $top, self::TOTALS_HEIGHT, new FittedText($value, self::TOTALS_SIZE), DocumentFontWeight::Bold);
+            $view['boxes'][] = self::box(self::COLUMNS[$column][0], $top, self::width($column), $height);
+            $view['texts'][] = self::text($column, $top, $height, new FittedText($value, self::TOTALS_SIZE), DocumentFontWeight::Bold);
         }
     }
 
@@ -422,7 +449,7 @@ final class NetworkRecapLayout
      * @param  list<RecapRow>  $rows
      * @return list<list<RecapRow>>
      */
-    private static function chunks(array $rows): array
+    private static function chunks(array $rows, int $perPage): array
     {
         $groups = [];
 
@@ -439,7 +466,7 @@ final class NetworkRecapLayout
         foreach ($groups as $group) {
             $current = count($chunks) - 1;
 
-            if ($chunks[$current] !== [] && count($chunks[$current]) + count($group) > self::ROWS_PER_PAGE) {
+            if ($chunks[$current] !== [] && count($chunks[$current]) + count($group) > $perPage) {
                 $chunks[] = [];
                 $current++;
             }

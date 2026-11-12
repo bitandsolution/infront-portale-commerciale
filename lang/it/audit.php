@@ -18,6 +18,7 @@ return [
         'clients' => 'Clienti',
         'proposals' => 'Proposte',
         'content' => 'Contenuti',
+        'documents' => 'Documenti',
     ],
 
     'actions' => [
@@ -101,6 +102,10 @@ return [
         'proposal_client_chosen' => 'Scelta del cliente registrata',
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
+        'document_requested' => 'Documento PDF richiesto',
+        'document_regenerated' => 'Documento PDF rigenerato',
+        'document_generated' => 'Documento PDF generato',
+        'document_failed' => 'Documento PDF non riuscito',
     ],
 
     'reasons' => [

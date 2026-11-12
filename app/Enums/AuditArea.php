@@ -11,7 +11,7 @@ namespace App\Enums;
  * (D-337); "inventory" (F2-04) the capacities of the inventory, then the commitments (D-337);
  * "clients" (F3) the commodity sectors, then the clients (D-356); "proposals" (F4) the drafts of the
  * configurator, then the life cycle of F5 (D-372, D-376); "content" (DM-02) the slide library
- * (D-406), then the KPI of F6.
+ * (D-406), then the KPI of F6; "documents" (DM-04) the PDF documents of the approved groups.
  */
 enum AuditArea: string
 {
@@ -24,6 +24,7 @@ enum AuditArea: string
     case Clients = 'clients';
     case Proposals = 'proposals';
     case Content = 'content';
+    case Documents = 'documents';
 
     /**
      * Italian label (lang/it/audit.php).

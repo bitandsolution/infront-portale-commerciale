@@ -141,6 +141,9 @@ function routeMatrix(): array
         // empty choice, goes back with the toast or the errors)
         'proposals.groups.approve' => ['method' => 'POST', 'expected' => $backOfficeForm],
         'proposals.groups.choose' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        // DM-04: regeneration of the PDF document, admin only (D-125; a group not approved goes back
+        // with the toast). The download goes through files.download (StoredFilePolicy).
+        'documents.regenerate' => ['method' => 'POST', 'expected' => $adminForm],
         // M07 — review and every proposal (D-068)
         'pages.proposals_pending' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.proposals_all' => ['method' => 'GET', 'expected' => $backOffice],
@@ -388,7 +391,7 @@ function matrixParameters(string $route): array
         in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store'], true) => [
             'proposal' => Proposal::factory()->withWorkingVersion()->create()->id,
         ],
-        str_starts_with($route, 'proposals.groups.') => [
+        str_starts_with($route, 'proposals.groups.'), $route === 'documents.regenerate' => [
             'group' => Proposal::factory()->withWorkingVersion()->create()->proposal_group_id,
         ],
         in_array($route, ['clients.sectors.edit', 'clients.sectors.update'], true) => [

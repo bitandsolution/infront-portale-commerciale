@@ -13,6 +13,7 @@ use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\ClientManagementController;
 use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Content\SlideController;
+use App\Http\Controllers\Documents\DocumentController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\PlaceholderPageController;
@@ -279,6 +280,11 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')
             ->name('proposals.groups.choose');
+        // Regeneration of the PDF document of an approved group (M09 F-05, D-125; DM-04): admin only.
+        Route::post('proposte/gruppi/{group}/documento', [DocumentController::class, 'regenerate'])
+            ->middleware('can:'.Ability::DocumentsRegenerate->value)
+            ->whereNumber('group')
+            ->name('documents.regenerate');
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.
         Route::get('catalogo/listini/{priceList}/club/{club}/benefit', [BenefitController::class, 'show'])

@@ -4,6 +4,7 @@ namespace App\Domain\Proposals\Actions;
 
 use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
+use App\Domain\Documents\Actions\RequestDocument;
 use App\Domain\Proposals\Data\AppliedDiscount;
 use App\Domain\Proposals\Data\DiscountInput;
 use App\Domain\Proposals\Data\DraftEvaluation;
@@ -44,9 +45,11 @@ use Illuminate\Support\Facades\DB;
  * 4. for every variant: club rows rewritten with the current prices (D-409), discount on the total
  *    (D-408), client frozen, working version frozen as version 1 (D-198), one commitment per
  *    resource and club row with the contract period (D-062, D-192);
- * 5. status "Approvata", history "discount_set" and "approved", audit proposal.approved.
+ * 5. status "Approvata", history "discount_set" and "approved", audit proposal.approved;
+ * 6. the PDF document of the group is requested (RequestDocument, DM-04): its job runs after the
+ *    commit, so a failed generation never undoes the approval (D-416).
  *
- * The document (DM-04) and the e-mail to the agent (F5) arrive later.
+ * The e-mail to the agent arrives with F5.
  */
 final class ApproveGroup
 {
@@ -56,6 +59,7 @@ final class ApproveGroup
         private readonly Discounts $discounts,
         private readonly DraftRowsWriter $rows,
         private readonly AuditLog $audit,
+        private readonly RequestDocument $requestDocument,
     ) {}
 
     /**
@@ -106,6 +110,8 @@ final class ApproveGroup
                 $evaluation = $review->evaluation($variant);
                 $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $actor);
             }
+
+            $this->requestDocument->handle($group, $actor);
         }, 3);
     }
 

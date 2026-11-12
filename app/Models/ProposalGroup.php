@@ -6,6 +6,7 @@ use App\Models\Concerns\HasOwner;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -24,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property-read User $agent
  * @property-read Client|null $client
  * @property-read Season|null $season
+ * @property-read Document|null $currentDocument
  */
 final class ProposalGroup extends Model
 {
@@ -69,5 +71,28 @@ final class ProposalGroup extends Model
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class)->orderBy('variant_letter');
+    }
+
+    /**
+     * The current document of the group (D-413; DM-04): the last generation not replaced.
+     *
+     * @return HasOne<Document, $this>
+     */
+    public function currentDocument(): HasOne
+    {
+        return $this->hasOne(Document::class, 'proposal_group_id')
+            ->whereNull('superseded_at')
+            ->where('format', Document::FORMAT_PDF)
+            ->where('language', Document::LANGUAGE);
+    }
+
+    /**
+     * Every document of the group, the most recent first (D-205: the replaced ones stay).
+     *
+     * @return HasMany<Document, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'proposal_group_id')->orderByDesc('id');
     }
 }

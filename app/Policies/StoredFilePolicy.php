@@ -6,6 +6,7 @@ use App\Enums\Ability;
 use App\Enums\FilePurpose;
 use App\Enums\Role;
 use App\Models\Client;
+use App\Models\Document;
 use App\Models\StoredFile;
 use App\Models\User;
 
@@ -22,7 +23,9 @@ use App\Models\User;
  *   D-321);
  * - slide image: who manages the slide library, admin and manager (DM-02, D-406); the agent sees the
  *   slides of his own groups from DM-05;
- * - generated PDF: who can download the document, the replaced ones only the admin (F7, D-205).
+ * - generated PDF: who can download its document (DocumentPolicy::download, DM-04): admin and manager
+ *   the current documents, the agent those of his own groups, the replaced ones only the admin
+ *   (D-205); a PDF without a document (the proof of documents:try) only the admin.
  *
  * The purposes not handled yet stay admin only (PR-06), e.g. for the checks on the development VM.
  * Deactivated users are already refused by Gate::before (AppServiceProvider).
@@ -37,7 +40,14 @@ class StoredFilePolicy
             FilePurpose::ClientLogo => $user->role === Role::Admin
                 || Client::query()->visibleTo($user)->where('logo_file_id', $file->id)->exists(),
             FilePurpose::SlideImage => Ability::ContentManage->allows($user->role),
-            FilePurpose::GeneratedPdf => $user->role === Role::Admin,
+            FilePurpose::GeneratedPdf => $user->role === Role::Admin || $this->downloadsDocument($user, $file),
         };
+    }
+
+    private function downloadsDocument(User $user, StoredFile $file): bool
+    {
+        $document = Document::query()->with('group')->where('file_id', $file->id)->first();
+
+        return $document !== null && $user->can('download', $document);
     }
 }

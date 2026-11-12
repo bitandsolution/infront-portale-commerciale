@@ -42,6 +42,23 @@ final readonly class CompositionInput
     }
 
     /**
+     * Given versions of the variants of a group, by letter (DM-04: the frozen versions of the
+     * approved variants, D-414).
+     *
+     * @param  array<string, ProposalVersion>  $versions  letter → version
+     */
+    public static function fromVersions(?Season $season, array $versions): self
+    {
+        $variants = [];
+
+        foreach ($versions as $letter => $version) {
+            $variants[] = new VariantFacts((string) $letter, self::clubsOf($version));
+        }
+
+        return new self($season, $variants);
+    }
+
+    /**
      * Distinct clubs of all the variants, in the order they first appear (D-403).
      *
      * @return list<int>
