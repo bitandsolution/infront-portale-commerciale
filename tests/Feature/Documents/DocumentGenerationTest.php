@@ -211,7 +211,8 @@ it('M09 FL-01: the approval generates the club document: cover, club recap, clos
         ->and($document->page_model['variants'])->toHaveCount(1)
         ->and(array_column($document->page_model['slides'], 'title'))->toBe(['Copertina Lazio', 'Recap Lazio', 'Contatti Lazio'])
         ->and($document->kpi_snapshot['A']['total_matches'])->toBe(19)
-        ->and($document->kpi_snapshot['A']['final_total'])->toBe('132328.00');
+        // 155,680 € + 1′ × 19 matches × 1,000 € = 174,680 €, less 15%.
+        ->and($document->kpi_snapshot['A']['final_total'])->toBe('148478.00');
 
     $pages = docgRenderer()->rendered[0]['pages'];
     expect($pages[0])->toBeInstanceOf(LayoutPage::class)
@@ -436,15 +437,14 @@ it('D-205: a job of a replaced document stores nothing', function () {
         ->and(StoredFile::query()->where('purpose', FilePurpose::GeneratedPdf->value)->count())->toBe(0);
 });
 
-it('D-252: the cover carries no logo when the client has none; a LED-only club recap has the LED row', function () {
+it('D-415: a club recap with the LED only has the LED row, no partnership row', function () {
     docgClubSlides($this, $this->lazio);
     $a = docgGroup($this->agent, [[$this->lazio->id => ['seconds' => 30]]]);
-    Client::query()->whereKey($a->client_id)->update(['logo_file_id' => null]);
 
     docgApprove($this->admin, $a)->assertSessionHasNoErrors();
 
     $pages = docgRenderer()->rendered[0]['pages'];
-    expect($pages[0]->data['logo'])->toBeNull()
+    expect($pages[1]->data['rows'])->toHaveCount(1)
         ->and($pages[1]->data['rows'][0]->label)->toBe('LED')
         ->and(docgCurrent($a)->status)->toBe(DocumentStatus::Ready);
 });
