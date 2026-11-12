@@ -64,12 +64,16 @@ Ordine: DM-01 → DM-02 (in parallelo) → DM-03 → DM-04 → DM-05 → DM-06 �
 | DM-00 | ✅ Unita il 10/11/2026 (PR #97; D-394…D-401) |
 | DM-01 | ✅ Unita e collaudata l'11/11/2026 (PR #98) |
 | DM-02 | ✅ Unita e collaudata l'11/11/2026 (decisioni D-402…D-406 con la PR #99, codice con la PR #100). Collaudo sulla VM: sei slide Infront di prova, recap network con documento "Entrambi" rifiutato, `documents:compose 205` → documento network Lazio + Roma con Copertina, Benefit Top, Simulazione LED (solo Roma, l'unico club con il LED), Recap (Proposta A), Grazie; Benefit Premium escluso; dopo la disattivazione di Benefit Top 4 slide e 4 pagine; variante B con due istanze del recap; agente senza accesso alla libreria; audit `slide.created` / `slide.updated`, tutto ✅ |
+| DM-03a | ✅ Unita e collaudata il 12/11/2026 (PR #108; D-407…D-412 con la PR #107) |
+| DM-03b | ✅ Unita e collaudata il 12/11/2026 (PR #109) |
+| DM-04 | ✅ Unita e collaudata il 12/11/2026 (PR #111; D-413…D-417 con la PR #110; domande aperte chiuse con D-421, D-422) |
+| DM-05 | Decisioni D-418…D-422 approvate il 12/11/2026: modalità "Documento completo" / "Solo riepilogo" salvata con le slide escluse sul gruppo e congelata sulle versioni all'approvazione, miniature JPEG 480×270 in `stored_file_derivatives` |
 
 ### Eredità di DM-02 per le PR successive
 
 - **DM-03**: le versioni congelate all'approvazione devono portare anche la scelta delle slide del gruppo (D-397, con DM-05); `CompositionInput::fromGroup()` legge la versione di lavoro di ogni variante o, senza, l'ultima congelata (`currentVersion`).
 - **DM-04**: `DocumentComposer::forGroup()` dà le slide e le pagine (`instances`: recap per variante, simulazione LED per club); `ComposedSlide::competitionTiers` restringe i dati delle slide network ai club di quella competizione (D-251); `DocumentLayout::view()` e `PdfPipeline::layoutData()` lanciano `notBuilt()` per `cover` e `club_recap` finché DM-04 non li disegna; il recap club si riallinea all'originale (layout-dinamici §4.9). Miniature leggere dai derivati JPEG (D-310).
 - **DM-04 fatta** (PR DM-04): `DocumentBuilder` compone dalle versioni congelate delle varianti approvate (`CompositionInput::fromVersions()`), `RequestDocument` accoda `GenerateDocument` dopo il commit dell'approvazione, `DocumentGenerator` salva il PDF; `cover` e `club_recap` sono disegnati (`CoverLayout`, `RecapStyle::club()`), `led_mockup` resta `notBuilt()` fino a DM-06 e nel documento si salta (elencato in `page_model.skipped`). ⚠️ Rinviati: i derivati JPEG in `stored_file_derivatives` (la conversione resta nella cartella del lavoro, D-310) e i link al PDF negli elenchi delle proposte (il download sta nel dettaglio del gruppo).
-- **DM-05**: il passo "Documento" mostra la `Composition` del gruppo (`mandatory`, `inSummary` per "Solo riepilogo"); `StoredFilePolicy` per `slide_image` va estesa all'agente sulle slide del proprio gruppo (D-406).
+- **DM-05**: il passo "Documento" mostra la `Composition` del gruppo (`mandatory`, `inSummary` per "Solo riepilogo"); `StoredFilePolicy` per `slide_image` va estesa all'agente sulle slide del proprio gruppo (D-406). Modalità e slide escluse sul gruppo (D-418, D-419), copiate sulle versioni congelate da `ApproveGroup`; `DocumentBuilder` le legge dalla versione congelata; miniature in `stored_file_derivatives` (D-420).
 - **DM-06**: `led_mockup` (`DocumentLayout::LedMockup`) è già selezionabile in libreria, senza immagine; una pagina per club con il LED (D-405); resta la domanda sulla simulazione nei documenti network.
 
