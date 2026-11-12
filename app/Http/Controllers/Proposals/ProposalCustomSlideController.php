@@ -66,7 +66,7 @@ class ProposalCustomSlideController extends Controller
 
     public function image(CustomSlideImageRequest $request, ProposalGroup $group, ProposalCustomSlide $customSlide, AttachCustomSlideImage $attachCustomSlideImage): RedirectResponse
     {
-        $attachCustomSlideImage->handle($customSlide, $request->image(), $request->blockKey(), $request->actor());
+        $attachCustomSlideImage->handle($customSlide, $request->uploadedImage(), $request->blockKey(), $request->actor());
 
         return back();
     }

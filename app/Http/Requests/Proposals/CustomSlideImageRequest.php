@@ -52,7 +52,7 @@ class CustomSlideImageRequest extends FormRequest
         return ['image' => 'immagine'];
     }
 
-    public function image(): UploadedFile
+    public function uploadedImage(): UploadedFile
     {
         /** @var UploadedFile $file */
         $file = $this->file('image');

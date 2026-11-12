@@ -157,7 +157,7 @@ final class DocumentComposer
             )]);
         }
 
-        return array_values($slides);
+        return $slides;
     }
 
     /**

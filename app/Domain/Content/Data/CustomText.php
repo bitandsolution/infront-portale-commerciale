@@ -39,7 +39,7 @@ final readonly class CustomText
             array_shift($paragraphs);
         }
 
-        return new self(array_values($paragraphs));
+        return new self($paragraphs);
     }
 
     /**
