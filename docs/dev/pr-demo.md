@@ -48,7 +48,7 @@ Ordine: DM-01 → DM-02 (in parallelo) → DM-03 → DM-04 → DM-05 → DM-06 �
 
 ## Domande aperte
 
-- **Simulazione nei documenti network** (DM-06): con le foto generiche Infront, una slide per club con il LED o una per format presente nel gruppo. Da proporre nella PR.
+- ~~**Simulazione nei documenti network** (DM-06)~~: chiusa con D-423 (una pagina per coppia club + format distinta nel gruppo).
 
 ## Cosa resta alle fette successive
 
