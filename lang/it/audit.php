@@ -100,6 +100,7 @@ return [
         'proposal_rejected' => 'Proposta rifiutata',
         'proposal_approved' => 'Proposta approvata',
         'proposal_client_chosen' => 'Scelta del cliente registrata',
+        'proposal_document_slides_updated' => 'Slide del documento della proposta modificate',
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
         'document_requested' => 'Documento PDF richiesto',

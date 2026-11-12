@@ -41,6 +41,8 @@ return [
         'group_not_approved' => 'La scelta del cliente si registra solo su una proposta approvata con almeno due varianti, una volta sola',
         'variant_not_in_group' => 'La variante scelta non appartiene a questa proposta',
         'variants_share_header' => 'Le varianti di una proposta hanno lo stesso cliente e la stessa stagione: per cambiarli elimina prima le altre varianti',
+        // DM-05: slides of the document (D-397, D-419).
+        'document_not_editable' => 'Le slide del documento si scelgono finché la proposta è in bozza o, per chi approva, in approvazione: ricarica la pagina',
     ],
 
     // Errors under the fields of step 2 (M06 §8) and dialog of a draft changed elsewhere (D-165).

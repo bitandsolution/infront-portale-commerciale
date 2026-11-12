@@ -7,11 +7,12 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import SelectField from '@/components/forms/SelectField.vue';
 import TextField from '@/components/forms/TextField.vue';
 import DocumentPanel from '@/components/proposals/DocumentPanel.vue';
+import DocumentSlides from '@/components/proposals/DocumentSlides.vue';
 import DraftSummary from '@/components/proposals/DraftSummary.vue';
 import StatusPill from '@/components/StatusPill.vue';
 import { useTrans } from '@/composables/useTrans';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { LayoutData, ProposalGroupDetail } from '@/types';
+import type { DocumentSlides as DocumentSlidesData, LayoutData, ProposalGroupDetail } from '@/types';
 
 /**
  * Detail of a group of variants (D-411; DM-03a, DM-03b), read only and the same for admin, manager and
@@ -21,11 +22,13 @@ import type { LayoutData, ProposalGroupDetail } from '@/types';
  * availability of the group (D-216), discount of every variant with the final total calculated by the
  * server (D-408), "Approva" and "Rifiuta"; after the approval of more variants, the choice of the
  * client (D-410). The agent never sees discounts (D-011). DM-04: the PDF document of the group
- * (DocumentPanel) and, before the approval, what the library lacks for it (D-416).
+ * (DocumentPanel) and, before the approval, what the library lacks for it (D-416). DM-05: the slides
+ * of the document (DocumentSlides), which admin and manager change while the group waits (D-397).
  */
 const props = defineProps<{
     layout: LayoutData;
     group: ProposalGroupDetail;
+    documentSlides: DocumentSlidesData | null;
 }>();
 
 const { t } = useTrans();
@@ -74,8 +77,19 @@ function discountError(variantId: number): string | undefined {
 
 const confirmingApprove = ref(false);
 
+const documentSlidesPanel = ref<InstanceType<typeof DocumentSlides> | null>(null);
+
 function approve(): void {
     processing.value = true;
+    // The choice of the slides still to save goes first (DM-05): the approval freezes it.
+    if (documentSlidesPanel.value) {
+        documentSlidesPanel.value.flush(sendApproval);
+    } else {
+        sendApproval();
+    }
+}
+
+function sendApproval(): void {
     router.post(props.group.approveUrl, { discounts: discountForm }, {
         preserveScroll: true,
         preserveState: 'errors',
@@ -660,6 +674,13 @@ function reject(): void {
                     </p>
                 </article>
             </section>
+
+            <DocumentSlides
+                v-if="documentSlides"
+                ref="documentSlidesPanel"
+                :slides="documentSlides"
+                :show-warnings="false"
+            />
 
             <section class="flex flex-col gap-3 rounded-[14px] border border-line bg-white p-5">
                 <h2 class="text-lg font-semibold text-ink">

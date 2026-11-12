@@ -12,7 +12,10 @@ use App\Models\User;
  * - view: admin and manager every group (ProposalsViewAll), the agent only his own (D-411);
  * - submit: the agent of the group (ProposalsOwn); the statuses are checked by SubmitGroup;
  * - review (queue "Da approvare", rejection, then approval in DM-03b): admin and manager
- *   (ProposalsReview, D-068).
+ *   (ProposalsReview, D-068);
+ * - editDocument (slides of the document, DM-05, D-397): the agent of the group and admin and
+ *   manager; the statuses (agent on drafts and rejected groups, reviewers on groups waiting for
+ *   approval) are checked by SaveDocumentSlides.
  * Deactivated users are already refused by Gate::before.
  */
 class ProposalGroupPolicy
@@ -30,6 +33,11 @@ class ProposalGroupPolicy
     public function review(User $user): bool
     {
         return Ability::ProposalsReview->allows($user->role);
+    }
+
+    public function editDocument(User $user, ProposalGroup $group): bool
+    {
+        return $this->ownsAsAgent($user, $group) || $this->review($user);
     }
 
     private function ownsAsAgent(User $user, ProposalGroup $group): bool

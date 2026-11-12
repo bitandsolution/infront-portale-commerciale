@@ -4,6 +4,7 @@ namespace App\Domain\Proposals\Actions;
 
 use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
+use App\Domain\Content\Data\DocumentSelection;
 use App\Domain\Documents\Actions\RequestDocument;
 use App\Domain\Proposals\Data\AppliedDiscount;
 use App\Domain\Proposals\Data\DiscountInput;
@@ -43,8 +44,9 @@ use Illuminate\Support\Facades\DB;
  *    variants ask together within the residuals; any problem blocks the approval and nothing is
  *    written (the forcing is F5);
  * 4. for every variant: club rows rewritten with the current prices (D-409), discount on the total
- *    (D-408), client frozen, working version frozen as version 1 (D-198), one commitment per
- *    resource and club row with the contract period (D-062, D-192);
+ *    (D-408), client frozen, slides chosen for the document copied from the group (D-419), working
+ *    version frozen as version 1 (D-198), one commitment per resource and club row with the contract
+ *    period (D-062, D-192);
  * 5. status "Approvata", history "discount_set" and "approved", audit proposal.approved;
  * 6. the PDF document of the group is requested (RequestDocument, DM-04): its job runs after the
  *    commit, so a failed generation never undoes the approval (D-416).
@@ -68,7 +70,8 @@ final class ApproveGroup
     public function handle(ProposalGroup $group, array $discounts, User $actor): void
     {
         DB::transaction(function () use ($group, $discounts, $actor): void {
-            ProposalGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
+            $locked = ProposalGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
+            $selection = $locked->documentSelection();
             $variants = Proposal::query()
                 ->where('proposal_group_id', $group->id)
                 ->orderBy('id')
@@ -108,14 +111,14 @@ final class ApproveGroup
             foreach ($review->variants as $variant) {
                 /** @var DraftEvaluation $evaluation */
                 $evaluation = $review->evaluation($variant);
-                $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $actor);
+                $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $selection, $actor);
             }
 
             $this->requestDocument->handle($group, $actor);
         }, 3);
     }
 
-    private function approve(ProposalGroup $group, Proposal $variant, Season $season, DraftEvaluation $evaluation, AppliedDiscount $discount, User $actor): void
+    private function approve(ProposalGroup $group, Proposal $variant, Season $season, DraftEvaluation $evaluation, AppliedDiscount $discount, DocumentSelection $selection, User $actor): void
     {
         /** @var ProposalVersion $version */
         $version = $variant->workingVersion;
@@ -135,6 +138,7 @@ final class ApproveGroup
             'client_logo_file_id' => $client?->logo_file_id,
             'commodity_sector_id' => $client?->commodity_sector_id,
             'sector_free_text' => $client?->sector_free_text,
+            ...$selection->columns(),
             'number' => ((int) ProposalVersion::query()->where('proposal_id', $variant->id)->max('number')) + 1,
             'frozen_at' => $now,
             'frozen_by' => $actor->id,

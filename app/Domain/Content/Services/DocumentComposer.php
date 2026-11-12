@@ -36,6 +36,8 @@ use Illuminate\Database\Eloquent\Builder;
  * - Pages: the recap once per variant (D-396), the LED simulation once per club with the LED and not
  *   at all without one (D-405), every other slide once.
  * - Warnings for a missing cover, recap or closing (D-405): the document can still be composed.
+ * - Chosen slides (D-397, D-418): every slide is listed with its flag "included" from the
+ *   DocumentSelection of the input; cover and recap are always included.
  */
 final class DocumentComposer
 {
@@ -71,16 +73,20 @@ final class DocumentComposer
                 continue;
             }
 
+            $mandatory = $slide->layout_code?->isMandatory() ?? false;
+            $inSummary = $mandatory || $slide->section->code === SlideSection::CLOSING;
+
             $slides[] = new ComposedSlide(
                 slide: $slide,
-                mandatory: $slide->layout_code?->isMandatory() ?? false,
-                inSummary: ($slide->layout_code?->isMandatory() ?? false) || $slide->section->code === SlideSection::CLOSING,
+                mandatory: $mandatory,
+                inSummary: $inSummary,
                 instances: $instances,
                 competitionTiers: array_map('intval', $slide->conditionValues()[SlideConditionType::CompetitionTier->value] ?? []),
+                included: $input->selection->includes($slide->id, $mandatory, $inSummary),
             );
         }
 
-        return new Composition($type, $clubIds, $slides, $this->warnings($slides, $type));
+        return new Composition($type, $clubIds, $slides, $this->warnings($slides, $type), $input->selection);
     }
 
     /**

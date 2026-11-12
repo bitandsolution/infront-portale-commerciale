@@ -16,6 +16,7 @@ use App\Models\ProposalGroup;
 use App\Models\User;
 use App\Support\Navigation\LayoutProps;
 use App\Support\Proposals\DiscountForm;
+use App\Support\Proposals\DocumentSlidesPresenter;
 use App\Support\Proposals\ProposalGroupsPresenter;
 use App\Support\Text;
 use App\Support\Toast;
@@ -32,7 +33,8 @@ use Inertia\Response;
  *   for admin and manager;
  * - the detail of a group, read only, for admin and manager and for the agent of the group;
  * - "Invia in approvazione" (agent), "Rifiuta" and "Approva" with the discounts (admin and manager,
- *   DM-03b), "Registra la scelta del cliente" on an approved group of more variants (D-410).
+ *   DM-03b), "Registra la scelta del cliente" on an approved group of more variants (D-410);
+ * - the slides of the document (DM-05, D-397): admin and manager change them while the group waits.
  *
  * The detail previews the typed discounts: the page reloads the prop "group" with the query
  * parameter "sconti" (proposal id → type and value), calculated by the server (D-408).
@@ -85,7 +87,7 @@ class ProposalGroupController extends Controller
         ]);
     }
 
-    public function show(Request $request, ProposalGroup $group, ProposalGroupsPresenter $presenter): Response
+    public function show(Request $request, ProposalGroup $group, ProposalGroupsPresenter $presenter, DocumentSlidesPresenter $slides): Response
     {
         Gate::authorize('view', $group);
         $actor = $this->actor($request);
@@ -101,6 +103,9 @@ class ProposalGroupController extends Controller
         return Inertia::render('Proposals/Group', [
             'layout' => LayoutProps::for($actor, $page),
             'group' => $presenter->group($group, $actor, $parsed['discounts'], $parsed['errors']),
+            // Slides of the document (DM-05, D-397): admin and manager change them while the group
+            // waits, the others read them; reloaded alone after every tick.
+            'documentSlides' => fn (): ?array => $slides->forGroup($group, $actor),
         ]);
     }
 

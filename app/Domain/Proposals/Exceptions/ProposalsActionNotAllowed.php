@@ -77,6 +77,15 @@ final class ProposalsActionNotAllowed extends RuntimeException
     }
 
     /**
+     * D-397, D-419 (DM-05): the agent chooses the slides while the group is a draft or rejected,
+     * admin and manager while it waits for approval.
+     */
+    public static function documentNotEditable(): self
+    {
+        return new self(Text::get('proposals.errors.document_not_editable'));
+    }
+
+    /**
      * DM-03b (D-216, D-409): a variant is not valid any more or the group asks more than the residual.
      *
      * @param  list<string>  $problems

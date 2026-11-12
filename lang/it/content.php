@@ -65,6 +65,11 @@ return [
         'network' => 'Documento network',
     ],
 
+    'document_modes' => [
+        'complete' => 'Documento completo',
+        'summary' => 'Solo riepilogo',
+    ],
+
     'layouts' => [
         'cover' => 'Copertina',
         'network_recap' => 'Recap economico network',
@@ -105,11 +110,12 @@ return [
         'header' => 'Proposta n. :number · gruppo con :variants variante/i · stagione :season · :document',
         'clubs' => 'Club del gruppo: :clubs',
         'empty' => 'Nessuna slide entra nel documento.',
-        'columns' => ['Sezione', 'Ord.', 'Slide', 'Tipo', 'Istanze', 'Obbligatoria', 'Solo riepilogo'],
+        'columns' => ['Sezione', 'Ord.', 'Slide', 'Tipo', 'Istanze', 'Obbligatoria', 'Solo riepilogo', 'Nel documento'],
         'yes' => 'sì',
         'no' => '—',
         'variant' => 'Proposta :letter',
         'warnings' => 'Avvisi:',
         'total' => ':slides slide della libreria, :pages pagine previste.',
+        'mode' => 'Contenuto scelto: :mode, :included slide su :slides.',
     ],
 ];

@@ -73,3 +73,9 @@ Ordine: DM-01 → DM-02 (in parallelo) → DM-03 → DM-04 → DM-05 → DM-06 �
 - **DM-05**: il passo "Documento" mostra la `Composition` del gruppo (`mandatory`, `inSummary` per "Solo riepilogo"); `StoredFilePolicy` per `slide_image` va estesa all'agente sulle slide del proprio gruppo (D-406).
 - **DM-06**: `led_mockup` (`DocumentLayout::LedMockup`) è già selezionabile in libreria, senza immagine; una pagina per club con il LED (D-405); resta la domanda sulla simulazione nei documenti network.
 
+
+### Eredità di DM-05 per le PR successive
+
+- **DM-05 fatta** (PR DM-05): passo 6 "Documento" del configuratore (`ProposalController::DOCUMENT_STEP`) con il componente `proposals/DocumentSlides`, usato anche nel dettaglio del gruppo da admin e gestore mentre è in approvazione; scelta salvata da `SaveDocumentSlides` sul gruppo e copiata da `ApproveGroup` sulle versioni congelate (D-418, D-419); `DocumentComposer` segna ogni slide con `included` e `DocumentBuilder` usa `includedSlides()`; miniature in `stored_file_derivatives` dalla rotta `files.thumbnail` (D-420).
+- **DM-06**: la slide `led_mockup` nel passo "Documento" ha un segnaposto senza miniatura (`kind` = `led`); l'anteprima vera della simulazione può sostituirlo. In "Solo riepilogo" la simulazione non entra mai (D-398, già nel composer).
+- **DM-07**: le slide composte a blocchi del gruppo vanno mostrate nello stesso elenco del passo "Documento" (D-399: l'agente le compone lì), con una spunta come le altre; la posizione nel documento e il congelamento seguono D-419 (contenuto JSON sulle versioni all'approvazione).

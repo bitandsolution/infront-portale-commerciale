@@ -41,7 +41,8 @@ use Illuminate\Support\Str;
  * DM-04) from the frozen versions of its approved variants: after the choice of the client only the
  * chosen one is approved, so a regeneration contains only that variant (D-414).
  *
- * - Slides: DocumentComposer on those versions (one implementation of the composition).
+ * - Slides: DocumentComposer on those versions (one implementation of the composition), only those
+ *   included by the choice frozen with the versions (mode and excluded slides, D-418, D-419).
  * - Cover: the logo of the client frozen on the first version, the date of its approval (D-252).
  * - Recap: one per variant, "Proposta A" above the table when there are two or more variants; the
  *   network grid for the network document, the same grid in the colour of the club for the club
@@ -104,7 +105,7 @@ final class DocumentBuilder
         $model = [];
         $skipped = [];
 
-        foreach ($composition->slides as $composed) {
+        foreach ($composition->includedSlides() as $composed) {
             foreach ($composed->instances as $instance) {
                 $built = $this->pages($composed, $instance, $type, $versions, $rows, $firstVersion);
 
@@ -145,6 +146,11 @@ final class DocumentBuilder
                     'version_id' => $version->id,
                     'version' => $version->number,
                 ], array_keys($versions), array_values($versions)),
+                'document_mode' => $composition->selection->mode->value,
+                'excluded_slide_ids' => array_values(array_map(
+                    fn (ComposedSlide $composed): int => $composed->slide->id,
+                    array_filter($composition->slides, fn (ComposedSlide $composed): bool => ! $composed->included),
+                )),
                 'slides' => $model,
                 'skipped' => $skipped,
                 'warnings' => $composition->warnings,

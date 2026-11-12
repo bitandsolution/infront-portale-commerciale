@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Support\Clients\ClientsPresenter;
 use App\Support\Navigation\LayoutProps;
 use App\Support\Navigation\PortalPages;
+use App\Support\Proposals\DocumentSlidesPresenter;
 use App\Support\Proposals\ProposalsPresenter;
 use App\Support\Text;
 use App\Support\Toast;
@@ -50,10 +51,15 @@ use Inertia\Response;
  */
 class ProposalController extends Controller
 {
-    /** Steps: 1 Cliente, 2 Stagione e periodo, 3 Club, 4 Configurazione, 5 Riepilogo (F4-04). */
-    public const LAST_STEP = 5;
+    /**
+     * Steps: 1 Cliente, 2 Stagione e periodo, 3 Club, 4 Configurazione, 5 Riepilogo (F4-04),
+     * 6 Documento (DM-05, D-397: slides of the document and "Invia in approvazione").
+     */
+    public const LAST_STEP = 6;
 
     public const SUMMARY_STEP = 5;
+
+    public const DOCUMENT_STEP = 6;
 
     public function mine(Request $request): Response
     {
@@ -120,8 +126,9 @@ class ProposalController extends Controller
         $step = max(1, min(self::LAST_STEP, $request->integer('passo', 1)));
         $evaluation = self::evaluation($proposal);
 
-        // D-373: without clubs, or with a club without elements, the summary is not available.
-        if ($step === self::SUMMARY_STEP && $evaluation->blocksSummary()) {
+        // D-373: without clubs, or with a club without elements, the summary and the step
+        // "Documento" after it are not available.
+        if ($step >= self::SUMMARY_STEP && $evaluation->blocksSummary()) {
             $step = self::SUMMARY_STEP - 1;
         }
 
@@ -177,6 +184,9 @@ class ProposalController extends Controller
             'copied' => fn (): mixed => session('proposal_copied'),
             'duplicated' => fn (): mixed => session('proposal_duplicated'),
             // Selectable clubs of the season of the draft with their options (step 3 and 4).
+            // Slides of the document of the group (step 6, DM-05): reloaded with the draft, because a
+            // change of the clubs changes the slides whose conditions hold.
+            'documentSlides' => fn (): ?array => $proposal !== null && $proposal->group !== null ? app(DocumentSlidesPresenter::class)->forGroup($proposal->group, $actor) : null,
             'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season) : []),
             'ledStepSeconds' => $settings->ledStepSeconds(),
             'hospitalityMaxSeats' => $settings->hospitalityMaxSeats(),
