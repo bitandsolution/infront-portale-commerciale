@@ -114,6 +114,8 @@ function visualCasePage(string $case, string $folder): DocumentPage
                 ['key' => 'b', 'type' => 'text', 'text' => $long, 'column' => 'left'],
                 ['key' => 'c', 'type' => 'text', 'text' => $long, 'column' => 'right'],
                 ['key' => 'd', 'type' => 'text', 'text' => $long, 'column' => 'right'],
+                ['key' => 'e', 'type' => 'text', 'text' => $long, 'column' => 'left'],
+                ['key' => 'f', 'type' => 'text', 'text' => $long, 'column' => 'right'],
             ]],
         };
 
