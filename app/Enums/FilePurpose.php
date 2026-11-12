@@ -13,6 +13,8 @@ use App\Support\Text;
  * - slide image: PNG only, exactly 1920×1080, up to 10 MB (M08 §7, M08-CA8);
  * - calendar import: Excel .xlsx without macros, up to 5 MB (M02 F-09); cells are read in slice F1;
  * - generated PDF: produced by the portal itself (M09), only checked to be a PDF;
+ * - field photo: photo of the field for the simulation of the logo on the LED (D-398), JPEG or PNG
+ *   up to 10 MB and 5000 pixels per side, re-encoded like every image;
  * - thumbnail: JPEG derived by the portal from an image (stored_file_derivatives, D-420), at most
  *   480 pixels per side and 1 MB; who sees the original sees its thumbnail.
  *
@@ -29,6 +31,7 @@ enum FilePurpose: string
     case CalendarImport = 'calendar_import';
     case GeneratedPdf = 'generated_pdf';
     case Thumbnail = 'thumbnail';
+    case FieldPhoto = 'field_photo';
 
     private const MEGABYTE = 1024 * 1024;
 
@@ -43,6 +46,7 @@ enum FilePurpose: string
             self::CalendarImport => [FileType::Xlsx],
             self::GeneratedPdf => [FileType::Pdf],
             self::Thumbnail => [FileType::Jpeg],
+            self::FieldPhoto => [FileType::Jpeg, FileType::Png],
         };
     }
 
@@ -58,6 +62,7 @@ enum FilePurpose: string
             self::CalendarImport => 5 * self::MEGABYTE,
             self::GeneratedPdf => null,
             self::Thumbnail => self::MEGABYTE,
+            self::FieldPhoto => 10 * self::MEGABYTE,
         };
     }
 
@@ -77,7 +82,7 @@ enum FilePurpose: string
     public function maxSide(): ?int
     {
         return match ($this) {
-            self::ClientLogo, self::ClubLogo => 5000,
+            self::ClientLogo, self::ClubLogo, self::FieldPhoto => 5000,
             self::Thumbnail => 480,
             default => null,
         };

@@ -13,6 +13,7 @@ use App\Enums\DocumentType;
 use App\Enums\SlideConditionType;
 use App\Enums\SlideDocumentType;
 use App\Enums\SlideScope;
+use App\Models\Club;
 use App\Models\ProposalGroup;
 use App\Models\Slide;
 use App\Models\SlideSection;
@@ -33,14 +34,18 @@ use Illuminate\Database\Eloquent\Builder;
  *   always included; a condition is true when at least one club of at least one variant satisfies
  *   it (D-118, D-404).
  * - Order: section, order of the slide in the section, then the oldest slide first (M08 RB-03, §10).
- * - Pages: the recap once per variant (D-396), the LED simulation once per club with the LED and not
- *   at all without one (D-405), every other slide once.
+ * - Pages: the recap once per variant (D-396), the LED simulation once per pair of club and format
+ *   with the LED in the group and not at all without one (D-405, D-423), every other slide once.
+ * - A pair of club and format without configuration of the LED simulation (club or generic) gives a
+ *   warning: that page is skipped by the document (D-427).
  * - Warnings for a missing cover, recap or closing (D-405): the document can still be composed.
  * - Chosen slides (D-397, D-418): every slide is listed with its flag "included" from the
  *   DocumentSelection of the input; cover and recap are always included.
  */
 final class DocumentComposer
 {
+    public function __construct(private readonly LedMockups $ledMockups) {}
+
     public function forGroup(ProposalGroup $group): Composition
     {
         return $this->compose(CompositionInput::fromGroup($group));
@@ -86,7 +91,7 @@ final class DocumentComposer
             );
         }
 
-        return new Composition($type, $clubIds, $slides, $this->warnings($slides, $type), $input->selection);
+        return new Composition($type, $clubIds, $slides, [...$this->warnings($slides, $type), ...$this->ledWarnings($slides)], $input->selection);
     }
 
     /**
@@ -156,18 +161,57 @@ final class DocumentComposer
         }
 
         if ($slide->layout_code === DocumentLayout::LedMockup) {
-            $clubs = [];
+            $pairs = [];
 
             foreach ($input->clubRows() as $row) {
-                if ($row->hasLed()) {
-                    $clubs[$row->clubId] = true;
+                if ($row->formatCode !== null) {
+                    $pairs[$row->clubId.'|'.$row->formatCode] = new SlideInstance(clubId: $row->clubId, formatCode: $row->formatCode);
                 }
             }
 
-            return array_map(fn (int $clubId): SlideInstance => new SlideInstance(clubId: $clubId), array_keys($clubs));
+            return array_values($pairs);
         }
 
         return [new SlideInstance];
+    }
+
+    /**
+     * D-427: pairs of club and format of the LED simulation without a configuration.
+     *
+     * @param  list<ComposedSlide>  $slides
+     * @return list<string>
+     */
+    private function ledWarnings(array $slides): array
+    {
+        $missing = [];
+
+        foreach ($slides as $composed) {
+            if (! $composed->included) {
+                continue;
+            }
+
+            foreach ($composed->instances as $instance) {
+                if ($instance->clubId === null || $instance->formatCode === null) {
+                    continue;
+                }
+
+                if ($this->ledMockups->settingFor($instance->clubId, $instance->formatCode) === null) {
+                    $missing[$instance->clubId.'|'.$instance->formatCode] = $instance;
+                }
+            }
+        }
+
+        if ($missing === []) {
+            return [];
+        }
+
+        /** @var array<int, string> $names */
+        $names = Club::query()->whereKey(array_map(fn (SlideInstance $instance): ?int => $instance->clubId, $missing))->pluck('name', 'id')->all();
+
+        return array_values(array_map(
+            fn (SlideInstance $instance): string => $this->ledMockups->missingWarning((string) ($names[$instance->clubId] ?? $instance->clubId), (string) $instance->formatCode),
+            $missing,
+        ));
     }
 
     /**

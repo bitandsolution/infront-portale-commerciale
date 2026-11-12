@@ -224,7 +224,7 @@ it('D-396, D-397, D-405: one recap page per variant, cover and recap mandatory, 
         ->and($composition->warnings)->toBe([]);
 });
 
-it('D-405: the LED simulation has one page per club with the LED, and none without LED', function () {
+it('D-405, D-423: the LED simulation has one page per club and format with the LED, and none without LED', function () {
     [$lazio, $roma, $bologna] = Club::factory()->infront()->count(3)->create();
     $slide = Slide::factory()->forSeason($this->season)->document(SlideDocumentType::Both)->layout(DocumentLayout::LedMockup)
         ->section('BRAND_EXPOSURE')->create(['title' => 'Simulazione LED']);
@@ -236,7 +236,8 @@ it('D-405: the LED simulation has one page per club with the LED, and none witho
     $withoutLed = compBuild($this->season, [[compRow($lazio->id, 'TOP'), compRow($roma->id, 'PREMIUM')]]);
 
     expect($slide->image_file_id)->toBeNull()
-        ->and(array_map(fn ($instance) => $instance->clubId, $withLed->slides[0]->instances))->toBe([$lazio->id, $bologna->id])
+        ->and(array_map(fn ($instance) => [$instance->clubId, $instance->formatCode], $withLed->slides[0]->instances))
+        ->toBe([[$lazio->id, 'FILA_1'], [$bologna->id, 'JUMBO'], [$lazio->id, 'FILA_2']])
         ->and($withLed->slides[0]->inSummary)->toBeFalse()
         ->and(compTitles($withoutLed))->toBe([]);
 });

@@ -22,6 +22,9 @@ final class FakePdfRenderer implements RendersPdf
 
     public ?string $failWith = null;
 
+    /** @var list<DocumentPage> */
+    public array $screenshots = [];
+
     public function render(array $pages, PdfMetadata $metadata, string $output): PdfReport
     {
         if ($this->failWith !== null) {
@@ -33,5 +36,12 @@ final class FakePdfRenderer implements RendersPdf
         file_put_contents($output, SampleFiles::pdf());
 
         return new PdfReport($output, count($pages), (int) filesize($output), ['compose' => 0], [], []);
+    }
+
+    public function screenshot(DocumentPage $page, string $output): void
+    {
+        $this->screenshots[] = $page;
+        File::ensureDirectoryExists(dirname($output));
+        file_put_contents($output, SampleFiles::png(1920, 1080));
     }
 }

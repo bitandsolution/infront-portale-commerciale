@@ -17,4 +17,9 @@ interface RendersPdf
      * @param  list<DocumentPage>  $pages
      */
     public function render(array $pages, PdfMetadata $metadata, string $output): PdfReport;
+
+    /**
+     * PNG of a single page at 1920×1080, as the PDF would show it (previews, DM-06).
+     */
+    public function screenshot(DocumentPage $page, string $output): void;
 }

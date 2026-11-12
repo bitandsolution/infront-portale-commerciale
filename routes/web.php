@@ -12,6 +12,7 @@ use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\ClientManagementController;
 use App\Http\Controllers\Clients\CommoditySectorController;
+use App\Http\Controllers\Content\LedMockupController;
 use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Documents\DocumentController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
@@ -225,6 +226,21 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('contenuti/slide', [SlideController::class, 'store'])->name('content.slides.store');
             Route::get('contenuti/slide/{slide}', [SlideController::class, 'edit'])->whereNumber('slide')->name('content.slides.edit');
             Route::put('contenuti/slide/{slide}', [SlideController::class, 'update'])->whereNumber('slide')->name('content.slides.update');
+
+            // Simulation of the logo on the LED (D-398; DM-06): {scope} is "infront" (generic) or the
+            // id of an Infront club, {kind} the kind of photo. Admin and manager see it, only the admin
+            // saves and previews it (LedMockupSettingPolicy, in the request). The save is multipart
+            // with the photo.
+            Route::get('contenuti/simulazioni-led/{scope}/{kind}', [LedMockupController::class, 'edit'])
+                ->where(['scope' => 'infront|[0-9]+', 'kind' => 'row_1|row_2|both_rows'])
+                ->name('content.led-mockups.edit');
+            Route::post('contenuti/simulazioni-led/{scope}/{kind}', [LedMockupController::class, 'update'])
+                ->where(['scope' => 'infront|[0-9]+', 'kind' => 'row_1|row_2|both_rows'])
+                ->name('content.led-mockups.update');
+            Route::get('contenuti/simulazioni-led/{scope}/{kind}/anteprima', [LedMockupController::class, 'preview'])
+                ->where(['scope' => 'infront|[0-9]+', 'kind' => 'row_1|row_2|both_rows'])
+                ->middleware('throttle:30,1')
+                ->name('content.led-mockups.preview');
         });
 
         // Clients (M05 F-01, F-03, F-04; D-076, D-078, D-358). New client: agent and admin. Page and

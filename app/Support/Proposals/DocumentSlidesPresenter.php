@@ -6,6 +6,7 @@ use App\Domain\Content\Data\ComposedSlide;
 use App\Domain\Content\Data\Composition;
 use App\Domain\Content\Data\CompositionInput;
 use App\Domain\Content\Services\DocumentComposer;
+use App\Domain\Content\Services\LedMockups;
 use App\Domain\Proposals\Actions\SaveDocumentSlides;
 use App\Enums\DocumentLayout;
 use App\Enums\DocumentMode;
@@ -32,7 +33,10 @@ use App\Support\Text;
  */
 final class DocumentSlidesPresenter
 {
-    public function __construct(private readonly DocumentComposer $composer) {}
+    public function __construct(
+        private readonly DocumentComposer $composer,
+        private readonly LedMockups $ledMockups,
+    ) {}
 
     /**
      * @return array<string, mixed>|null
@@ -78,7 +82,7 @@ final class DocumentSlidesPresenter
             'editable' => $editable,
             'frozen' => $frozen,
             'saveUrl' => route('proposals.groups.slides', $group),
-            'sections' => self::sections($composition, $variantCount),
+            'sections' => $this->sections($composition, $variantCount),
             'includedSlides' => count($composition->includedSlides()),
             'totalSlides' => count($composition->slides),
             'pages' => $composition->pageCount(),
@@ -90,7 +94,7 @@ final class DocumentSlidesPresenter
     /**
      * @return list<array{name: string, slides: list<array<string, mixed>>}>
      */
-    private static function sections(Composition $composition, int $variantCount): array
+    private function sections(Composition $composition, int $variantCount): array
     {
         $sections = [];
 
@@ -103,7 +107,7 @@ final class DocumentSlidesPresenter
                 $last = array_key_last($sections);
             }
 
-            $sections[$last]['slides'][] = self::slide($composed, $composition, $variantCount);
+            $sections[$last]['slides'][] = $this->slide($composed, $composition, $variantCount);
         }
 
         return $sections;
@@ -112,7 +116,7 @@ final class DocumentSlidesPresenter
     /**
      * @return array<string, mixed>
      */
-    private static function slide(ComposedSlide $composed, Composition $composition, int $variantCount): array
+    private function slide(ComposedSlide $composed, Composition $composition, int $variantCount): array
     {
         $slide = $composed->slide;
         $kind = match ($slide->layout_code) {
@@ -141,7 +145,25 @@ final class DocumentSlidesPresenter
                 $kind === 'led' => Text::get($pages === 1 ? 'ui.proposals.slides.page_per_club_one' : 'ui.proposals.slides.pages_per_club', ['count' => (string) $pages]),
                 default => null,
             },
-            'thumbnailUrl' => $slide->image_file_id !== null ? route('files.thumbnail', $slide->image_file_id) : null,
+            'thumbnailUrl' => $kind === 'led' ? $this->ledThumbnail($composed) : ($slide->image_file_id !== null ? route('files.thumbnail', $slide->image_file_id) : null),
         ];
+    }
+
+    /**
+     * D-426: the photo of the field of the first club with the LED, without the logo.
+     */
+    private function ledThumbnail(ComposedSlide $composed): ?string
+    {
+        foreach ($composed->instances as $instance) {
+            if ($instance->clubId !== null && $instance->formatCode !== null) {
+                $setting = $this->ledMockups->settingFor($instance->clubId, $instance->formatCode);
+
+                if ($setting !== null) {
+                    return route('files.thumbnail', $setting->photo_file_id);
+                }
+            }
+        }
+
+        return null;
     }
 }

@@ -814,3 +814,38 @@ export interface DocumentSlides {
     /** Neutral note for the agent when the library lacks a system slide. */
     note: string | null;
 }
+
+/** A kind of photo of the LED simulation in "Contenuti › Simulazioni LED" (DM-06, D-398). */
+export interface LedMockupKindCell {
+    kind: 'row_1' | 'row_2' | 'both_rows';
+    label: string;
+    configured: boolean;
+    thumbnailUrl: string | null;
+    editUrl: string;
+}
+
+/** The generic configuration of Infront or an Infront club, three kinds of photo (DM-06). */
+export interface LedMockupRow {
+    scope: string;
+    name: string;
+    generic: boolean;
+    kinds: LedMockupKindCell[];
+}
+
+/** Editor of one configuration of the LED simulation (LedMockupsPresenter::editor). */
+export interface LedMockupEditor {
+    name: string;
+    kind: 'row_1' | 'row_2' | 'both_rows';
+    kindLabel: string;
+    areaCount: number;
+    photo: { url: string; width: number; height: number } | null;
+    /** Areas of four [x, y] points in pixels of the photo, from the top left clockwise. */
+    areas: Array<Array<[number, number]>>;
+    logoHeightPercent: number;
+    spacing: number;
+    formats: Option[];
+    canEdit: boolean;
+    saveUrl: string;
+    previewUrl: string | null;
+    indexUrl: string;
+}

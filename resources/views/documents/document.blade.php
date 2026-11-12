@@ -28,7 +28,9 @@ body { font-family: '{{ $fontFamily }}'; font-synthesis: none; -webkit-font-smoo
 <body>
 @foreach ($pages as $page)
 <section class="page">
+@if ($page['image'] !== null)
     <img class="background" src="{{ $page['image'] }}" alt="">
+@endif
 @if ($page['view'] !== null)
     @include($page['view'], $page['data'])
 @endif

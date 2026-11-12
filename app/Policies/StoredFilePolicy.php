@@ -47,6 +47,9 @@ class StoredFilePolicy
                 || (Ability::ProposalsOwn->allows($user->role) && Slide::query()->where('image_file_id', $file->id)->where('is_active', true)->exists()),
             FilePurpose::GeneratedPdf => $user->role === Role::Admin || $this->downloadsDocument($user, $file),
             FilePurpose::Thumbnail => $this->viewsOriginal($user, $file),
+            // DM-06: photos of the fields of the LED simulation, Infront material; the agent sees
+            // their thumbnail in the step "Documento" (D-426).
+            FilePurpose::FieldPhoto => Ability::ContentManage->allows($user->role) || Ability::ProposalsOwn->allows($user->role),
         };
     }
 

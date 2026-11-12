@@ -103,6 +103,7 @@ return [
         'proposal_document_slides_updated' => 'Slide del documento della proposta modificate',
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
+        'led_mockup_saved' => 'Simulazione LED configurata',
         'document_requested' => 'Documento PDF richiesto',
         'document_regenerated' => 'Documento PDF rigenerato',
         'document_generated' => 'Documento PDF generato',

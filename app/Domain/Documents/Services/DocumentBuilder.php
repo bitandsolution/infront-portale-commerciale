@@ -6,8 +6,10 @@ use App\Domain\Content\Data\ComposedSlide;
 use App\Domain\Content\Data\CompositionInput;
 use App\Domain\Content\Data\SlideInstance;
 use App\Domain\Content\Services\DocumentComposer;
+use App\Domain\Content\Services\LedMockups;
 use App\Domain\Documents\Data\BuiltDocument;
 use App\Domain\Documents\Data\DocumentPage;
+use App\Domain\Documents\Data\LayoutPage;
 use App\Domain\Documents\Data\NetworkRecap;
 use App\Domain\Documents\Data\PdfMetadata;
 use App\Domain\Documents\Data\RecapRow;
@@ -15,6 +17,7 @@ use App\Domain\Documents\Data\RecapTotals;
 use App\Domain\Documents\Data\StaticSlidePage;
 use App\Domain\Documents\Exceptions\DocumentNotComposable;
 use App\Domain\Documents\Layouts\CoverLayout;
+use App\Domain\Documents\Layouts\LedMockupLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Domain\Documents\Layouts\RecapStyle;
 use App\Enums\DiscountType;
@@ -47,7 +50,10 @@ use Illuminate\Support\Str;
  * - Recap: one per variant, "Proposta A" above the table when there are two or more variants; the
  *   network grid for the network document, the same grid in the colour of the club for the club
  *   document (D-415); the values are the frozen ones, never recalculated (D-198).
- * - Static slides: their image. The LED simulation is DM-06: skipped and listed in the page model.
+ * - Static slides: their image.
+ * - LED simulation (DM-06, D-398, D-423…D-425): one page per pair of club and format, the photo of
+ *   the club (or the generic one of Infront) with the frozen logo of the client on the LED; without
+ *   a configuration or a logo the page is skipped and listed in the page model (D-427).
  *
  * A missing cover or recap, or a background without its image, stops the generation with a clear
  * message (DocumentNotComposable, D-416).
@@ -60,7 +66,10 @@ final class DocumentBuilder
     /** C7: system times are shown in the time of Rome. */
     private const TIMEZONE = 'Europe/Rome';
 
-    public function __construct(private readonly DocumentComposer $composer) {}
+    public function __construct(
+        private readonly DocumentComposer $composer,
+        private readonly LedMockups $ledMockups,
+    ) {}
 
     public function build(ProposalGroup $group): BuiltDocument
     {
@@ -110,7 +119,7 @@ final class DocumentBuilder
                 $built = $this->pages($composed, $instance, $type, $versions, $rows, $firstVersion);
 
                 if ($built === null) {
-                    $skipped[] = ['slide_id' => $composed->slide->id, 'layout' => $composed->slide->layout_code?->value, 'club_id' => $instance->clubId];
+                    $skipped[] = ['slide_id' => $composed->slide->id, 'layout' => $composed->slide->layout_code?->value, 'club_id' => $instance->clubId, 'format' => $instance->formatCode];
 
                     continue;
                 }
@@ -122,6 +131,7 @@ final class DocumentBuilder
                     'layout' => $composed->slide->layout_code?->value,
                     'variant' => $instance->variantLetter,
                     'club_id' => $instance->clubId,
+                    'format' => $instance->formatCode,
                     'pages' => count($built),
                 ];
             }
@@ -185,7 +195,7 @@ final class DocumentBuilder
     }
 
     /**
-     * The pages of one instance of a slide; null for a layout not built yet (LED simulation, DM-06).
+     * The pages of one instance of a slide; null for a LED simulation that cannot be drawn (D-427).
      *
      * @param  array<string, ProposalVersion>  $versions
      * @param  array<int, list<ProposalVersionClub>>  $rows  version id → club rows
@@ -200,7 +210,9 @@ final class DocumentBuilder
         }
 
         if ($slide->layout_code === DocumentLayout::LedMockup) {
-            return null;
+            $page = $this->ledPage($instance, $firstVersion);
+
+            return $page !== null ? [$page] : null;
         }
 
         $background = $this->slideImage($slide->image_file_id, $slide->title);
@@ -485,6 +497,40 @@ final class DocumentBuilder
         }
 
         return $this->filePath($fileId) ?? throw DocumentNotComposable::fileMissing($title);
+    }
+
+    /**
+     * The LED simulation of a club and a format (D-398, D-423…D-425): null without the configuration
+     * of the club or the generic one, or without the logo of the client (D-427).
+     */
+    private function ledPage(SlideInstance $instance, ProposalVersion $firstVersion): ?LayoutPage
+    {
+        if ($instance->clubId === null || $instance->formatCode === null) {
+            return null;
+        }
+
+        $setting = $this->ledMockups->settingFor($instance->clubId, $instance->formatCode);
+        $logo = StoredFile::query()->find($firstVersion->client_logo_file_id);
+        $logoPath = $this->filePath($logo?->id);
+        $photoPath = $this->filePath($setting?->photo_file_id);
+
+        if ($setting === null || $logo === null || $logoPath === null || $photoPath === null) {
+            return null;
+        }
+
+        return LedMockupLayout::page(
+            photoPath: $photoPath,
+            photoWidth: (int) $setting->photo->width,
+            photoHeight: (int) $setting->photo->height,
+            areas: $setting->areas,
+            style: LedMockups::styleForFormat($instance->formatCode),
+            logoPath: $logoPath,
+            logoWidth: (int) $logo->width,
+            logoHeight: (int) $logo->height,
+            color: LogoStripColor::of($logoPath),
+            logoHeightPercent: $setting->logo_height_percent,
+            spacing: $setting->spacing,
+        );
     }
 
     /**

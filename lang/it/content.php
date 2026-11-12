@@ -11,6 +11,18 @@ return [
         'slide_created' => 'Slide :slide caricata',
         'slide_updated' => 'Slide :slide salvata',
         'nothing_changed' => 'Nessuna modifica da salvare',
+        'led_mockup_saved' => 'Simulazione LED salvata: :name, :photo',
+    ],
+
+    // DM-06: simulation of the logo on the LED (D-398).
+    'led_mockups' => [
+        'generic' => 'Generica Infront',
+        'validation' => [
+            'photo_required' => 'Carica la foto del campo.',
+            'areas_count_one' => 'Segna l\'area del LED con quattro punti.',
+            'areas_count_two' => 'Segna le due aree del LED, fila superiore e fila inferiore, con quattro punti ciascuna.',
+            'areas_outside' => 'I punti del LED devono stare dentro la foto.',
+        ],
     ],
 
     'errors' => [
@@ -65,6 +77,12 @@ return [
         'network' => 'Documento network',
     ],
 
+    'led_photo_kinds' => [
+        'row_1' => '1ª fila',
+        'row_2' => '2ª fila',
+        'both_rows' => 'Jumbo e Domination',
+    ],
+
     'document_modes' => [
         'complete' => 'Documento completo',
         'summary' => 'Solo riepilogo',
@@ -102,6 +120,8 @@ return [
         'missing_cover' => 'Manca la copertina attiva per il :document',
         'missing_recap' => 'Manca il recap attivo per il :document',
         'missing_closing' => 'Manca una slide attiva nella sezione Chiusura per il :document',
+        // DM-06 (D-427): the page is skipped, the document is generated anyway.
+        'missing_led_mockup' => 'Simulazione LED non configurata per :club (:photo): la pagina non entra nel documento',
     ],
 
     // Server command documents:compose.
