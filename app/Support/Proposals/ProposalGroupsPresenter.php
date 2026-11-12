@@ -350,7 +350,7 @@ final class ProposalGroupsPresenter
      */
     private function documentEntry(Document $document, User $viewer): array
     {
-        $ready = $document->isReady() && $document->file !== null;
+        $file = $document->isReady() ? $document->file : null;
 
         return [
             'id' => $document->id,
@@ -363,11 +363,11 @@ final class ProposalGroupsPresenter
             },
             'type' => $document->document_type->label(),
             'error' => $document->status === DocumentStatus::Failed && $viewer->can('review', ProposalGroup::class) ? $document->last_error : null,
-            'fileName' => $ready ? $document->file?->downloadName() : null,
+            'fileName' => $file?->downloadName(),
             'pages' => $document->page_count,
             'size' => $document->size_bytes !== null ? number_format($document->size_bytes / 1048576, 1, ',', '.') : null,
             'at' => self::moment($document->generated_at ?? $document->created_at),
-            'downloadUrl' => $ready && $document->file !== null && $viewer->can('download', $document) ? route('files.download', $document->file) : null,
+            'downloadUrl' => $file !== null && $viewer->can('download', $document) ? route('files.download', $file) : null,
         ];
     }
 
