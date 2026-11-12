@@ -50,7 +50,13 @@ final class LogoStripColor
         $groups = [];
 
         foreach ($pixels as [$x, $y]) {
-            $color = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+            $index = imagecolorat($image, $x, $y);
+
+            if ($index === false) {
+                continue;
+            }
+
+            $color = imagecolorsforindex($image, $index);
 
             if ($color['alpha'] > self::TRANSPARENT_ALPHA) {
                 $transparent++;
