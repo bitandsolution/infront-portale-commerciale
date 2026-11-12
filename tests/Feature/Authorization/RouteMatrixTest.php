@@ -137,6 +137,10 @@ function routeMatrix(): array
         'proposals.groups.show' => ['method' => 'GET', 'expected' => $backOffice],
         'proposals.groups.submit' => ['method' => 'POST', 'expected' => $nobody],
         'proposals.groups.reject' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        // DM-03b: approval and choice of the client, admin and manager (a group still in draft, or an
+        // empty choice, goes back with the toast or the errors)
+        'proposals.groups.approve' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        'proposals.groups.choose' => ['method' => 'POST', 'expected' => $backOfficeForm],
         // M07 — review and every proposal (D-068)
         'pages.proposals_pending' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.proposals_all' => ['method' => 'GET', 'expected' => $backOffice],

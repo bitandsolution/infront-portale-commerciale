@@ -10,7 +10,8 @@ import type { ProposalDraft } from '@/types';
  * the campaign, a row per club (package, format, minutes, matches of the period, spots per match =
  * minutes × 4, hospitality, list price), the list total and the warnings. Every number comes from the
  * server (DraftEvaluator, MatchCounter, PriceCalculator): the page only shows it. No discount field
- * (D-011, D-086). "Invia in approvazione" is in the configurator (DM-03a).
+ * (D-011, D-086): admin and manager see the discount in the detail of the group (DM-03b). "Invia in
+ * approvazione" is in the configurator (DM-03a).
  */
 const props = defineProps<{
     draft: ProposalDraft;
@@ -18,6 +19,12 @@ const props = defineProps<{
     sector: string | null;
     /** DM-03a: the detail of a group shows the summary without the configurator's actions (D-411). */
     readOnly?: boolean;
+    /**
+     * DM-03b: in the detail of a group the kind of document is the one of the whole group (D-403), in
+     * its header, and the note on the discount is only for the agent of a group still to approve.
+     */
+    inGroup?: boolean;
+    hideNote?: boolean;
 }>();
 
 const emit = defineEmits<{ fix: [] }>();
@@ -45,7 +52,7 @@ function hasProblems(errors: Record<string, string>): boolean {
                 class="text-base font-semibold"
             >
                 {{ t('proposals.summary.title') }}
-                <span class="font-normal text-ink-soft">· {{ clientName }} · {{ documentKind }}</span>
+                <span class="font-normal text-ink-soft">· {{ clientName }}<template v-if="!inGroup"> · {{ documentKind }}</template></span>
             </h3>
             <p class="text-sm text-muted">
                 <template v-if="draft.periodLabel">
@@ -358,7 +365,10 @@ function hasProblems(errors: Record<string, string>): boolean {
             </table>
         </div>
 
-        <p class="flex gap-2.5 rounded-[10px] border border-line bg-white px-3.5 py-3 text-[13px] leading-relaxed text-ink-soft">
+        <p
+            v-if="!hideNote"
+            class="flex gap-2.5 rounded-[10px] border border-line bg-white px-3.5 py-3 text-[13px] leading-relaxed text-ink-soft"
+        >
             <Info
                 :size="18"
                 :stroke-width="2"

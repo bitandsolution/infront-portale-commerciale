@@ -658,7 +658,48 @@ export interface ProposalPendingGroup {
     url: string;
 }
 
-/** The detail of a group of variants (ProposalGroupsPresenter::group; DM-03a, D-411). */
+/** The discount of a variant for admin and manager (ProposalGroupsPresenter::discount; D-408). */
+export interface ProposalVariantDiscount {
+    /** "percent", "amount" or "" (no discount). */
+    type: string;
+    /** As typed, in Italian notation. */
+    value: string;
+    hasDiscount: boolean;
+    listTotal: string;
+    amount: string;
+    percent: string;
+    finalTotal: string;
+    label: string | null;
+    editable: boolean;
+    error: string | null;
+}
+
+/** A variant in the detail of its group: the summary before the approval, the frozen version after it. */
+export interface ProposalGroupVariant {
+    id: number;
+    letter: string | null;
+    number: number;
+    status: string;
+    statusLabel: string;
+    draft: ProposalDraft | null;
+    editUrl: string | null;
+    /** D-409: prices changed since the sending (admin and manager). */
+    repricing: ProposalRepricing | null;
+    /** Admin and manager only (D-011). */
+    discount: ProposalVariantDiscount | null;
+}
+
+/** What the variants of a group ask together of one resource (ProposalGroupsPresenter::need; D-216). */
+export interface ProposalGroupNeed {
+    club: string;
+    resource: string;
+    requested: string;
+    remaining: string;
+    letters: string | null;
+    covered: boolean;
+}
+
+/** The detail of a group of variants (ProposalGroupsPresenter::group; DM-03a, DM-03b, D-411). */
 export interface ProposalGroupDetail {
     id: number;
     number: number;
@@ -674,19 +715,20 @@ export interface ProposalGroupDetail {
     decidedAt: string | null;
     decidedBy: string | null;
     rejectionReason: string | null;
-    variants: Array<{
-        id: number;
-        letter: string | null;
-        number: number;
-        statusLabel: string;
-        draft: ProposalDraft | null;
-        editUrl: string | null;
-    }>;
+    chosenLetter: string | null;
+    variants: ProposalGroupVariant[];
+    /** Admin and manager, while the group waits; null otherwise. */
+    availability: ProposalGroupNeed[] | null;
+    problems: string[];
     history: Array<{ at: string | null; variant: string | null; label: string; user: string; notes: string | null }>;
     canSubmit: boolean;
     submitUrl: string;
     canReject: boolean;
     rejectUrl: string;
+    canApprove: boolean;
+    approveUrl: string;
+    canChoose: boolean;
+    chooseUrl: string;
     backUrl: string;
     backLabel: string;
 }

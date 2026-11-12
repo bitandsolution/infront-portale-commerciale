@@ -22,6 +22,7 @@ enum ProposalEventType: string
     case Cancelled = 'cancelled';
     case Duplicated = 'duplicated';
     case VariantAdded = 'variant_added';
+    case ClientChosen = 'client_chosen';
 
     /**
      * Italian label (lang/it/proposals.php).

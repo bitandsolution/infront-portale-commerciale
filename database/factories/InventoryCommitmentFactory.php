@@ -8,34 +8,40 @@ use App\Models\HospitalityVariant;
 use App\Models\InventoryCommitment;
 use App\Models\InventoryPool;
 use App\Models\PartnershipTier;
+use App\Models\Proposal;
+use App\Models\ProposalVersion;
+use App\Models\ProposalVersionClub;
 use App\Models\Season;
+use App\Models\Territory;
 use App\Models\User;
+use App\Models\VisibilityType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * Commitments written by the tests (D-334): the proposals arrive with F5, so the proposal columns get
- * fictitious ids. Without a state the commitment is on a new LED pool for 60 seconds per match; the
+ * Commitments written by the tests. From DM-03b the commitments have foreign keys towards the proposal,
+ * its version and its club row (D-334): without them the factory creates a draft proposal of the
+ * season without a client (no logo stored) with a working version and a row of the club
+ * (proposalRow()). Without a state the commitment is on a new LED pool for 60 seconds per match; the
  * period is the whole season.
  *
  * @extends Factory<InventoryCommitment>
  */
 class InventoryCommitmentFactory extends Factory
 {
-    private static int $nextProposal = 1;
-
     /**
      * @return array<string, mixed>
      */
     public function definition(): array
     {
-        $proposal = self::$nextProposal++;
-
         return [
             'season_id' => Season::factory(),
             'club_id' => Club::factory()->infront(),
-            'proposal_id' => $proposal,
-            'proposal_version_id' => $proposal,
-            'proposal_version_club_id' => $proposal,
+            'proposal_version_club_id' => fn (array $attributes): int => self::proposalRow(
+                self::season($attributes),
+                Club::query()->findOrFail(self::id($attributes['club_id'])),
+            )->id,
+            'proposal_version_id' => fn (array $attributes): int => ProposalVersionClub::query()->findOrFail(self::id($attributes['proposal_version_club_id']))->proposal_version_id,
+            'proposal_id' => fn (array $attributes): int => ProposalVersion::query()->findOrFail(self::id($attributes['proposal_version_id']))->proposal_id,
             'resource_type' => InventoryResource::Pool,
             'inventory_pool_id' => InventoryPool::factory(),
             'partnership_tier_id' => null,
@@ -50,13 +56,33 @@ class InventoryCommitmentFactory extends Factory
     }
 
     /**
+     * A club row of a working version of a draft proposal of the season, without a client: what a
+     * commitment points to in the tests that do not go through the approval.
+     */
+    public static function proposalRow(Season $season, Club $club): ProposalVersionClub
+    {
+        $proposal = Proposal::factory()->create(['season_id' => $season->id, 'client_id' => null]);
+        $version = ProposalVersion::factory()->create(['proposal_id' => $proposal->id]);
+
+        return ProposalVersionClub::factory()->create([
+            'proposal_version_id' => $version->id,
+            'club_id' => $club->id,
+            'territory_id' => Territory::query()->orderBy('id')->value('id') ?? Territory::factory(),
+            'visibility_type_id' => VisibilityType::query()->orderBy('id')->value('id') ?? VisibilityType::factory(),
+        ]);
+    }
+
+    /**
      * @param  array<string, mixed>  $attributes
      */
     private static function season(array $attributes): Season
     {
-        $id = $attributes['season_id'];
+        return Season::query()->findOrFail(self::id($attributes['season_id']));
+    }
 
-        return Season::query()->whereKey(is_int($id) || is_string($id) ? $id : 0)->firstOrFail();
+    private static function id(mixed $value): int
+    {
+        return is_int($value) || is_string($value) ? (int) $value : 0;
     }
 
     public function forPool(InventoryPool $pool, int $seconds): static

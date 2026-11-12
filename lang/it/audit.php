@@ -97,6 +97,8 @@ return [
         'proposal_variant_added' => 'Variante di proposta aggiunta',
         'proposal_submitted' => 'Proposta inviata in approvazione',
         'proposal_rejected' => 'Proposta rifiutata',
+        'proposal_approved' => 'Proposta approvata',
+        'proposal_client_chosen' => 'Scelta del cliente registrata',
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
     ],

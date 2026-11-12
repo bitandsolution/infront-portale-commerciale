@@ -118,6 +118,8 @@ enum AuditAction: string
     // DM-03a: sending and rejection of a group (D-395, D-412), one event per variant.
     case ProposalSubmitted = 'proposal.submitted';
     case ProposalRejected = 'proposal.rejected';
+    case ProposalApproved = 'proposal.approved';
+    case ProposalClientChosen = 'proposal.client_chosen';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';

@@ -16,10 +16,12 @@ use App\Domain\Proposals\Services\ProposalVariants;
 use App\Domain\Settings\Services\Settings;
 use App\Domain\Sports\Data\MatchCount;
 use App\Enums\CompetitionType;
+use App\Enums\MatchesSource;
 use App\Enums\ProposalStatus;
 use App\Models\Client;
 use App\Models\Club;
 use App\Models\ClubEnrollment;
+use App\Models\CommoditySector;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
 use App\Models\PartnershipTier;
@@ -275,6 +277,112 @@ final class ProposalsPresenter
     }
 
     /**
+     * A frozen version in the shape of a draft (DM-03b): the summary of an approved variant shows what
+     * was frozen at the approval (D-041, D-198), never a new calculation on the current list and
+     * residuals. Clubs, matches, prices and KPI come from the rows and the columns of the version.
+     *
+     * @return array<string, mixed>
+     */
+    public static function frozen(Proposal $proposal, ProposalVersion $version): array
+    {
+        $names = self::names();
+        $rows = $version->clubs()->with(['club', 'edition.competition', 'seats'])->get();
+        $clubs = [];
+        $ledMatches = 0;
+        $fromCalendar = true;
+
+        foreach ($rows as $row) {
+            $seats = [];
+            $hospitality = [];
+
+            foreach ($row->seats as $seat) {
+                $seats[] = ['variantId' => $seat->hospitality_variant_id, 'seats' => $seat->seats];
+                $hospitality[] = Text::get('ui.proposals.summary.seats', ['variant' => $names['variants'][$seat->hospitality_variant_id] ?? '', 'count' => (string) $seat->seats]);
+            }
+
+            $led = $row->led_format_id !== null && $row->led_seconds_per_match !== null;
+
+            if ($led) {
+                $ledMatches += (int) $row->home_matches;
+            }
+
+            if ($row->matches_source !== MatchesSource::Calendar) {
+                $fromCalendar = false;
+            }
+
+            $clubs[] = [
+                'clubId' => $row->club_id,
+                'name' => $row->club->name,
+                'initials' => self::initials($row->club),
+                'competition' => $row->edition?->competition->name,
+                'selectable' => true,
+                'tierId' => $row->partnership_tier_id,
+                'ledFormatId' => $row->led_format_id,
+                'ledSeconds' => (int) $row->led_seconds_per_match,
+                'seats' => $seats,
+                'matches' => $row->home_matches,
+                'matchesLabel' => null,
+                'spots' => $led && $row->home_matches !== null ? CampaignKpis::spotsPerMatch((int) $row->led_seconds_per_match) * $row->home_matches : null,
+                'spotsPerMatch' => $led ? CampaignKpis::spotsPerMatch((int) $row->led_seconds_per_match) : null,
+                'tierName' => $row->partnership_tier_id !== null ? ($names['tiers'][$row->partnership_tier_id] ?? null) : null,
+                'formatName' => $row->led_format_id !== null ? ($names['formats'][$row->led_format_id] ?? null) : null,
+                'ledLabel' => $led ? LedDuration::format((int) $row->led_seconds_per_match) : null,
+                'hospitalityLabel' => $hospitality !== [] ? implode(', ', $hospitality) : null,
+                'price' => $row->club_total !== null ? Amounts::italian($row->club_total) : null,
+                'errors' => [],
+            ];
+        }
+
+        $start = $version->campaign_starts_on;
+        $months = $version->campaign_months;
+        $sector = $version->commodity_sector_id !== null ? CommoditySector::query()->whereKey($version->commodity_sector_id)->value('name') : null;
+
+        return [
+            'id' => $proposal->id,
+            'number' => $proposal->number,
+            'title' => Text::get('proposals.label', ['number' => (string) $proposal->number]),
+            'lockVersion' => $proposal->lock_version,
+            'savedAt' => self::time($version->updated_at),
+            'clientId' => $proposal->client_id !== null ? (string) $proposal->client_id : '',
+            'client' => [
+                'name' => (string) $version->client_name,
+                'vatNumber' => null,
+                'sector' => is_string($sector) ? ($version->sector_free_text !== null ? $sector.': '.$version->sector_free_text : $sector) : '',
+                'selectable' => false,
+            ],
+            'seasonId' => $proposal->season_id !== null ? (string) $proposal->season_id : '',
+            'startsOn' => $version->starts_on?->toDateString() ?? '',
+            'endsOn' => $version->ends_on?->toDateString() ?? '',
+            'periodLabel' => $version->starts_on !== null && $version->ends_on !== null
+                ? Text::get('ui.proposals.mine.period', ['from' => $version->starts_on->format('d/m/Y'), 'to' => $version->ends_on->format('d/m/Y')])
+                : null,
+            'listTotal' => Amounts::italian($version->list_total),
+            'clubs' => $clubs,
+            'hasErrors' => false,
+            'blocksSummary' => false,
+            'campaign' => $start !== null && $months !== null ? [
+                'clubs' => count($clubs),
+                'totalMatches' => (int) $version->total_matches,
+                'ledMatches' => $ledMatches,
+                'totalSpots' => (int) $version->total_spots,
+                'months' => $months,
+                'range' => Text::get('ui.proposals.summary.kpi.range', ['from' => self::month($start), 'to' => self::month($start->copy()->addMonthsNoOverflow(max(0, $months - 1)))]),
+                'topMatchesApplicable' => $version->top_matches !== null,
+                'topMatches' => $version->top_matches !== null ? (string) $version->top_matches : null,
+                'fromCalendar' => $fromCalendar,
+            ] : null,
+            'warnings' => [],
+            'saveUrl' => '',
+            'deleteUrl' => '',
+            'newClientUrl' => '',
+            'copyUrl' => '',
+            'submitUrl' => null,
+            'rejection' => null,
+            ...self::variants($proposal),
+        ];
+    }
+
+    /**
      * The variants of the group of a draft (D-396; DM-01): letter, number and address of each, with
      * the maximum of the settings. While the group has more variants, client and season are shared
      * and cannot change (SaveDraft).
@@ -478,7 +586,8 @@ final class ProposalsPresenter
      */
     public static function draftRow(Proposal $proposal, int $groupSize = 1): array
     {
-        $version = $proposal->workingVersion;
+        // DM-03b: an approved proposal has no working version any more, only its frozen version.
+        $version = $proposal->workingVersion ?? $proposal->currentVersion;
 
         return [
             'id' => $proposal->id,
