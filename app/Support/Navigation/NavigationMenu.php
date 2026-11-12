@@ -52,6 +52,7 @@ final class NavigationMenu
             ]),
             new NavigationItem('content', 'Images', $backOffice, [
                 new NavigationItem('content_slides', 'Images', $backOffice),
+                new NavigationItem('content_led_mockups', 'Images', $backOffice),
                 new NavigationItem('content_simulator', 'Images', $backOffice),
                 new NavigationItem('content_kpi', 'Images', $backOffice),
             ]),

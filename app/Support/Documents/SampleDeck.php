@@ -283,6 +283,47 @@ final class SampleDeck
     }
 
     /**
+     * Client logo with its own background (a red band with white text): the strip of the LED takes
+     * its colour (D-425).
+     */
+    public static function opaqueLogo(): string
+    {
+        $image = self::canvas(480, 120, [200, 16, 46]);
+        self::text($image, 'ESEMPIO', 40, 88, 60, [255, 255, 255]);
+
+        return self::png($image);
+    }
+
+    /**
+     * Photo of a field for the LED simulation (DM-06), 1768×726 like the photos of the old system:
+     * stands, the two rows of the LED left blank (light grey, rows at y 180–218 and 224–262 with a
+     * dark line between them) and the pitch with its stripes.
+     */
+    public static function fieldPhoto(): string
+    {
+        $image = self::canvas(1768, 726, [70, 74, 84]);
+
+        for ($y = 10; $y < 170; $y += 22) {
+            for ($x = intdiv($y, 22) % 2 * 11; $x < 1768; $x += 22) {
+                imagefilledellipse($image, $x, $y, 14, 14, self::color($image, [90 + ($x % 70), 92, 104]));
+            }
+        }
+
+        imagefilledrectangle($image, 0, 170, 1767, 179, self::color($image, [120, 124, 130]));
+        imagefilledrectangle($image, 0, 180, 1767, 218, self::color($image, [228, 228, 228]));
+        imagefilledrectangle($image, 0, 219, 1767, 223, self::color($image, [40, 44, 52]));
+        imagefilledrectangle($image, 0, 224, 1767, 262, self::color($image, [222, 222, 222]));
+
+        for ($x = 0, $stripe = 0; $x < 1768; $x += 160, $stripe++) {
+            imagefilledrectangle($image, $x, 263, min(1767, $x + 159), 725, self::color($image, $stripe % 2 === 0 ? [46, 140, 52] : [56, 156, 62]));
+        }
+
+        imageline($image, 0, 300, 1767, 300, self::color($image, [235, 235, 235]));
+
+        return self::png($image);
+    }
+
+    /**
      * Club logo: coloured disc with the initials, transparent around it.
      *
      * @param  array{int, int, int}  $rgb

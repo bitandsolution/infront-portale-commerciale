@@ -2,16 +2,14 @@
 
 namespace App\Enums;
 
-use LogicException;
-
 /**
  * Dynamic layouts of the slides (M08 §4.3, D-116, layout_code of slides). Position and style of the
  * data are defined in code (docs/layout-dinamici.md). Slice S1 built the network recap (D-309).
  *
  * DM-02 adds the codes of the system slides of the library (D-405), so admin and manager can upload
  * their backgrounds: cover and club recap are drawn by DM-04 (CoverLayout, NetworkRecapLayout with
- * the club RecapStyle), the LED simulation (a slide without image, one page per club with the LED)
- * by DM-06. Slice F7 adds the other KPI layouts.
+ * the club RecapStyle), the LED simulation (a slide without image, one page per club and format with
+ * the LED, D-423) by DM-06 (LedMockupLayout). Slice F7 adds the other KPI layouts.
  */
 enum DocumentLayout: string
 {
@@ -27,7 +25,7 @@ enum DocumentLayout: string
     {
         return match ($this) {
             self::Cover, self::NetworkRecap, self::ClubRecap => 'documents.layouts.positioned',
-            self::LedMockup => throw self::notBuilt($this),
+            self::LedMockup => 'documents.layouts.led-mockup',
         };
     }
 
@@ -69,10 +67,5 @@ enum DocumentLayout: string
         $label = __('content.layouts.'.$this->value);
 
         return is_string($label) ? $label : $this->value;
-    }
-
-    public static function notBuilt(self $layout): LogicException
-    {
-        return new LogicException("The layout {$layout->value} is not built yet (DM-04, DM-06).");
     }
 }

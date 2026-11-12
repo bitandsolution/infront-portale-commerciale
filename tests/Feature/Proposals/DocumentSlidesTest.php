@@ -1,12 +1,15 @@
 <?php
 
 use App\Domain\Documents\Contracts\RendersPdf;
+use App\Domain\Documents\Data\LayoutPage;
+use App\Domain\Documents\Layouts\LedMockupLayout;
 use App\Domain\Files\Services\FileDerivatives;
 use App\Enums\AuditAction;
 use App\Enums\DocumentLayout;
 use App\Enums\DocumentMode;
 use App\Enums\FileDerivativeKind;
 use App\Enums\FilePurpose;
+use App\Enums\LedPhotoKind;
 use App\Enums\SlideDocumentType;
 use App\Models\Client;
 use App\Models\Club;
@@ -15,6 +18,7 @@ use App\Models\CompetitionSeason;
 use App\Models\Document;
 use App\Models\InventoryPool;
 use App\Models\LedFormat;
+use App\Models\LedMockupSetting;
 use App\Models\LedPrice;
 use App\Models\PartnershipCapacity;
 use App\Models\PartnershipPrice;
@@ -29,6 +33,7 @@ use App\Models\Slide;
 use App\Models\StoredFile;
 use App\Models\StoredFileDerivative;
 use App\Models\User;
+use App\Support\Documents\SampleDeck;
 use Database\Seeders\SystemDataSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -395,4 +400,80 @@ it('D-420: the derived files are never changed nor deleted', function () {
     expect(fn () => DB::table('stored_file_derivatives')->update(['kind' => 'thumbnail']))->toThrow(QueryException::class)
         ->and(fn () => DB::table('stored_file_derivatives')->delete())->toThrow(QueryException::class)
         ->and(fn () => StoredFileDerivative::query()->sole()->save())->toThrow(LogicException::class);
+});
+
+/** DM-06: the generic configuration of Infront of a kind of photo, on the lower row of the sample photo. */
+function dslLedSetting(LedPhotoKind $kind): LedMockupSetting
+{
+    $photo = storeTestFile(FilePurpose::FieldPhoto, null, SampleDeck::fieldPhoto(), 'campo.png');
+
+    return LedMockupSetting::query()->create([
+        'club_id' => null,
+        'photo_kind' => $kind,
+        'photo_file_id' => $photo->id,
+        'areas' => [[[0, 224], [1768, 224], [1768, 262], [0, 262]]],
+        'logo_height_percent' => 85,
+        'spacing' => 30,
+    ]);
+}
+
+function dslApprove(User $admin, Proposal $proposal): void
+{
+    test()->actingAs($admin)
+        ->from(route('proposals.groups.show', $proposal->proposal_group_id))
+        ->post(route('proposals.groups.approve', $proposal->proposal_group_id), ['discounts' => []])
+        ->assertSessionHasNoErrors();
+}
+
+it('D-398, D-423: the PDF has the LED simulation of Lazio on the generic photo of the 2nd row', function () {
+    $setting = dslLedSetting(LedPhotoKind::Row2);
+    $proposal = dslDraft($this->agent, [$this->lazio->id => 60]);
+    dslSubmit($this->agent, $proposal);
+    dslApprove($this->admin, $proposal);
+
+    $document = Document::query()->where('proposal_group_id', $proposal->proposal_group_id)->whereNull('superseded_at')->sole();
+    $renderer = app(RendersPdf::class);
+    assert($renderer instanceof FakePdfRenderer);
+    $led = $renderer->rendered[0]['pages'][2];
+    assert($led instanceof LayoutPage);
+
+    expect(array_column($document->page_model['slides'], 'title'))->toBe(['Copertina Lazio', 'Benefit Lazio', 'Simulazione LED', 'Recap Lazio', 'Contatti Lazio'])
+        ->and($document->page_model['slides'][2])->toMatchArray(['club_id' => $this->lazio->id, 'format' => 'FILA_2', 'pages' => 1])
+        ->and($document->page_model['skipped'])->toBe([])
+        ->and($led->backgroundPath)->toBeNull()
+        ->and($led->data['style'])->toBe(LedMockupLayout::STYLE_ROWS)
+        ->and($led->data['areas'])->toBe($setting->areas)
+        ->and([$led->data['photo_width'], $led->data['photo_height']])->toBe([1768, 726])
+        ->and($led->data['photo'])->toBe(Storage::disk(StoredFile::DISK)->path(StoredFile::query()->findOrFail($setting->photo_file_id)->path));
+});
+
+it('D-427: without a configuration the LED page is skipped, who approves is warned and the document is generated', function () {
+    dslLedSetting(LedPhotoKind::Row1);
+    $proposal = dslDraft($this->agent, [$this->lazio->id => 60]);
+    dslSubmit($this->agent, $proposal);
+
+    $this->actingAs($this->manager)->get(route('proposals.groups.show', $proposal->proposal_group_id))
+        ->assertInertia(fn (Assert $page) => $page->where('documentSlides.warnings', [
+            'Simulazione LED non configurata per SS Lazio (2ª fila): la pagina non entra nel documento',
+        ]));
+
+    dslApprove($this->admin, $proposal);
+
+    $document = Document::query()->where('proposal_group_id', $proposal->proposal_group_id)->whereNull('superseded_at')->sole();
+
+    expect($document->status->value)->toBe('ready')
+        ->and(array_column($document->page_model['slides'], 'title'))->toBe(['Copertina Lazio', 'Benefit Lazio', 'Recap Lazio', 'Contatti Lazio'])
+        ->and($document->page_model['skipped'])->toBe([['slide_id' => $this->led->id, 'layout' => 'led_mockup', 'club_id' => $this->lazio->id, 'format' => 'FILA_2']]);
+});
+
+it('D-426: in the step "Documento" the LED simulation shows the thumbnail of the photo of the field', function () {
+    $setting = dslLedSetting(LedPhotoKind::Row2);
+    $proposal = dslDraft($this->agent, [$this->lazio->id => 60]);
+
+    $this->actingAs($this->agent)->get(route('proposals.edit', ['proposal' => $proposal, 'passo' => 6]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('documentSlides.sections.2.slides.0.kind', 'led')
+            ->where('documentSlides.sections.2.slides.0.thumbnailUrl', route('files.thumbnail', $setting->photo_file_id)));
+
+    $this->actingAs($this->agent)->get(route('files.thumbnail', $setting->photo_file_id))->assertOk();
 });

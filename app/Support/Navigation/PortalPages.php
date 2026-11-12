@@ -7,6 +7,7 @@ use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\CommoditySectorController;
+use App\Http\Controllers\Content\LedMockupController;
 use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Inventory\AvailabilityController;
 use App\Http\Controllers\Inventory\CapacityController;
@@ -61,6 +62,7 @@ final class PortalPages
         'inventory_capacity' => ['magazzino/capacita', Ability::InventoryCapacityManage],
 
         'content_slides' => ['contenuti/slide', Ability::ContentManage],
+        'content_led_mockups' => ['contenuti/simulazioni-led', Ability::ContentManage],
         'content_simulator' => ['contenuti/simulatore', Ability::ContentManage],
         'content_kpi' => ['contenuti/kpi', Ability::ContentManage],
 
@@ -114,6 +116,7 @@ final class PortalPages
         'proposals_pending' => [ProposalGroupController::class, 'pending'],
         'proposals_all' => [ProposalGroupController::class, 'all'],
         'content_slides' => [SlideController::class, 'index'],
+        'content_led_mockups' => [LedMockupController::class, 'index'],
     ];
 
     /**

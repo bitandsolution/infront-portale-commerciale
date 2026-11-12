@@ -215,6 +215,12 @@ function routeMatrix(): array
         'content.slides.store' => ['method' => 'POST', 'expected' => $backOfficeForm],
         'content.slides.edit' => ['method' => 'GET', 'expected' => $backOffice],
         'content.slides.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
+        // DM-06 — simulation of the logo on the LED (D-398): admin and manager see it, only the admin
+        // saves and previews (the forms and the preview are sent empty: back with the errors)
+        'pages.content_led_mockups' => ['method' => 'GET', 'expected' => $backOffice],
+        'content.led-mockups.edit' => ['method' => 'GET', 'expected' => $backOffice],
+        'content.led-mockups.update' => ['method' => 'POST', 'expected' => $adminForm],
+        'content.led-mockups.preview' => ['method' => 'GET', 'expected' => $adminForm],
         'pages.content_simulator' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.content_kpi' => ['method' => 'GET', 'expected' => $backOffice],
 
@@ -437,6 +443,7 @@ function matrixParameters(string $route): array
             })(),
         ],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
+        str_starts_with($route, 'content.led-mockups.') => ['scope' => 'infront', 'kind' => 'both_rows'],
         $route === 'files.thumbnail' => [
             'storedFile' => (function (): int {
                 (new ContentSystemDataSeeder)->run();

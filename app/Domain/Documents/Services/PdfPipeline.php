@@ -11,6 +11,7 @@ use App\Domain\Documents\Data\PdfReport;
 use App\Domain\Documents\Data\StaticSlidePage;
 use App\Domain\Documents\Exceptions\DocumentCheckFailed;
 use App\Domain\Documents\Layouts\CoverLayout;
+use App\Domain\Documents\Layouts\LedMockupLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Enums\DocumentLayout;
 use App\Support\Text;
@@ -151,7 +152,7 @@ final class PdfPipeline implements RendersPdf
             $views[] = match (true) {
                 $page instanceof StaticSlidePage => ['image' => $image($page->imagePath), 'view' => null, 'data' => []],
                 $page instanceof LayoutPage => [
-                    'image' => $image($page->backgroundPath),
+                    'image' => $page->backgroundPath !== null ? $image($page->backgroundPath) : null,
                     'view' => $page->layout->view(),
                     'data' => $this->layoutData($page, $asset),
                 ],
@@ -180,7 +181,7 @@ final class PdfPipeline implements RendersPdf
         return match ($page->layout) {
             DocumentLayout::NetworkRecap, DocumentLayout::ClubRecap => NetworkRecapLayout::viewData($page->data, $this->fitter, $asset),
             DocumentLayout::Cover => CoverLayout::viewData($page->data, $asset),
-            DocumentLayout::LedMockup => throw DocumentLayout::notBuilt($page->layout),
+            DocumentLayout::LedMockup => LedMockupLayout::viewData($page->data, $asset),
         };
     }
 

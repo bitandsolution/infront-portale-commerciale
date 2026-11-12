@@ -3,8 +3,10 @@
 use App\Domain\Documents\Data\DocumentPage;
 use App\Domain\Documents\Data\StaticSlidePage;
 use App\Domain\Documents\Layouts\CoverLayout;
+use App\Domain\Documents\Layouts\LedMockupLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Domain\Documents\Layouts\RecapStyle;
+use App\Domain\Documents\Services\LogoStripColor;
 use App\Domain\Documents\Services\PdfPipeline;
 use App\Enums\DocumentType;
 use App\Support\Documents\SampleDeck;
@@ -16,7 +18,8 @@ use Illuminate\Support\Facades\File;
 | to 960×540 (tolerant of anti-aliasing). The references of the layouts are kept at full size
 | (1920×1080), so the thin borders of the grids are visible when Antonio approves them; the static
 | slide is kept reduced, since a full-size photo-like PNG would weigh megabytes. Cases: 2 clubs, discount with hospitality, 12 clubs on two slides, long
-| names, static slide; DM-04: network and club cover, club recap, title of a variant on a recap. DejaVu substitute font, so CI and the VM draw the same pictures.
+| names, static slide; DM-04: network and club cover, club recap, title of a variant on a recap; DM-06:
+| LED simulation (Jumbo, Domination, perspective). DejaVu substitute font, so CI and the VM draw the same pictures.
 |
 | A missing reference is written by the CI job "pdf" (VISUAL_REFERENCES_WRITE_MISSING=true) and
 | committed to the branch of the pull request: Antonio approves it by looking at the image in the
@@ -55,6 +58,31 @@ function visualCasePage(string $case, string $folder): DocumentPage
             $case === 'cover_club' ? DocumentType::Club : DocumentType::Network,
             '24/05/2027',
             $folder.'/logo-cliente.png',
+        );
+    }
+
+    // DM-06: simulation of the logo on the LED (D-398, D-424, D-425): Jumbo on both rows with the
+    // transparent logo (black strip), Domination with the opaque logo (red strip and the line), the
+    // 1ª fila in perspective.
+    if (str_starts_with($case, 'led_')) {
+        file_put_contents($folder.'/campo.png', SampleDeck::fieldPhoto());
+        $opaque = $case === 'led_domination';
+        file_put_contents($folder.'/logo-led.png', $opaque ? SampleDeck::opaqueLogo() : SampleDeck::clientLogo());
+        [$width, $height] = $opaque ? [480, 120] : [600, 200];
+        $rows = [[[0, 180], [1768, 180], [1768, 218], [0, 218]], [[0, 224], [1768, 224], [1768, 262], [0, 262]]];
+
+        return LedMockupLayout::page(
+            $folder.'/campo.png',
+            1768,
+            726,
+            $case === 'led_perspective' ? [[[120, 168], [1700, 186], [1730, 226], [90, 214]]] : $rows,
+            $case === 'led_domination' ? LedMockupLayout::STYLE_DOMINATION : LedMockupLayout::STYLE_ROWS,
+            $folder.'/logo-led.png',
+            $width,
+            $height,
+            LogoStripColor::of($folder.'/logo-led.png'),
+            85,
+            30,
         );
     }
 
@@ -196,4 +224,7 @@ it('layout §6.5 (D-311): the rendering matches the approved reference', functio
     'cover_club',
     'club_recap',
     'recap_variant_title',
+    'led_rows',
+    'led_domination',
+    'led_perspective',
 ]);
