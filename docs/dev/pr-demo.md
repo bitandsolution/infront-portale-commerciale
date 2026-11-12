@@ -67,7 +67,7 @@ Ordine: DM-01 → DM-02 (in parallelo) → DM-03 → DM-04 → DM-05 → DM-06 �
 | DM-03a | ✅ Unita e collaudata il 12/11/2026 (PR #108; D-407…D-412 con la PR #107) |
 | DM-03b | ✅ Unita e collaudata il 12/11/2026 (PR #109) |
 | DM-04 | ✅ Unita e collaudata il 12/11/2026 (PR #111; D-413…D-417 con la PR #110; domande aperte chiuse con D-421, D-422) |
-| DM-05 | Decisioni D-418…D-422 approvate il 12/11/2026: modalità "Documento completo" / "Solo riepilogo" salvata con le slide escluse sul gruppo e congelata sulle versioni all'approvazione, miniature JPEG 480×270 in `stored_file_derivatives` |
+| DM-05 | ✅ Unita e collaudata il 12/11/2026 (decisioni D-418…D-422 con la PR #112, codice con la PR #113). Collaudo sulla VM: gruppo 211 A (Lazio, Roma) + B (Roma) per il cliente Prova; passo "Documento" con le slide per sezione e le miniature (4 derivati), esclusione di "Benefit Premium", "Solo riepilogo" e ritorno a "Documento completo" con l'esclusione conservata, scelta comune alle varianti, invio dal passo 6, "Grazie" tolta dall'admin in approvazione; PDF di 3 pagine (copertina, recap A e B) in "Solo riepilogo", rigenerazione uguale; audit `proposal.document_slides_updated` corretto, tutto ✅. ⚠️ Per DM-08: lo sfondo di prova del recap è scuro e rende illeggibili le righe dei club: servono sfondi chiari come nell'originale |
 
 ### Eredità di DM-02 per le PR successive
 
