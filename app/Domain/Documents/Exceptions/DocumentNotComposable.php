@@ -23,8 +23,15 @@ final class DocumentNotComposable extends RuntimeException
      */
     public static function missingSlides(array $missing, string $season): self
     {
-        return new self(Text::get('documents.failures.missing_slides', [
-            'missing' => implode('; ', $missing),
+        // "Manca la copertina … e manca il recap …": one sentence, "aggiungile" for two slides.
+        $parts = array_map(
+            fn (string $warning, int $index): string => $index === 0 ? $warning : mb_strtolower(mb_substr($warning, 0, 1)).mb_substr($warning, 1),
+            $missing,
+            array_keys($missing),
+        );
+
+        return new self(Text::get(count($parts) > 1 ? 'documents.failures.missing_slides_many' : 'documents.failures.missing_slides', [
+            'missing' => implode(' e ', $parts),
             'season' => $season,
         ]));
     }

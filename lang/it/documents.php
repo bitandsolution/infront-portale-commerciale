@@ -52,6 +52,7 @@ return [
     'failures' => [
         'no_approved_variants' => 'Il gruppo non ha varianti approvate: nessun documento da generare.',
         'missing_slides' => ':missing nella libreria della stagione :season: aggiungila in "Contenuti › Slide" e rigenera il documento.',
+        'missing_slides_many' => ':missing nella libreria della stagione :season: aggiungile in "Contenuti › Slide" e rigenera il documento.',
         'slide_without_image' => 'La slide ":slide" non ha l\'immagine di sfondo.',
         'file_missing' => 'Il file dell\'immagine della slide ":file" non si trova sul disco.',
         'generation' => 'Generazione non riuscita dopo l\'ultimo tentativo: :error',

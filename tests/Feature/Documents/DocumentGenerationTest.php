@@ -448,3 +448,11 @@ it('D-415: a club recap with the LED only has the LED row, no partnership row', 
         ->and($pages[1]->data['rows'][0]->label)->toBe('LED')
         ->and(docgCurrent($a)->status)->toBe(DocumentStatus::Ready);
 });
+
+it('D-416: with cover and recap both missing the reason is one sentence for the two slides', function () {
+    $a = docgGroup($this->agent, [[$this->lazio->id => ['tier' => true]]]);
+
+    docgApprove($this->admin, $a)->assertSessionHasNoErrors();
+
+    expect(docgCurrent($a)->last_error)->toBe('Manca la copertina attiva per il documento club e manca il recap attivo per il documento club nella libreria della stagione 2027-28: aggiungile in "Contenuti › Slide" e rigenera il documento.');
+});
