@@ -15,7 +15,9 @@ import type { LayoutData, ProposalClientOption, ProposalDraftRow } from '@/types
  * "Le mie proposte" (D-374; F4-02): the agent's drafts, the most recent first, reopened in the
  * configurator, duplicated in a new draft (F4-05, D-091: also for another of the agent's active
  * clients; the server recalculates dates, prices and residuals) or deleted with confirmation (M07
- * RB-08, ux-architettura §4.5). The variants of a group (D-396) stay together, with their letter. The other states of the proposals arrive with F5. Table from 1024 px,
+ * RB-08, ux-architettura §4.5). The variants of a group (D-396) stay together, with their letter. DM-03a:
+ * every status; drafts and rejected proposals open in the configurator, the others in the detail of
+ * their group (D-411); only drafts and rejected proposals are deleted (D-412). Table from 1024 px,
  * cards below.
  */
 const props = defineProps<{
@@ -200,18 +202,18 @@ function confirmDelete(): void {
                             </td>
                             <td class="px-4 py-3">
                                 <StatusPill
-                                    :label="t('proposals.draft_badge')"
-                                    tone="muted"
+                                    :label="draft.statusLabel"
+                                    :tone="draft.statusTone"
                                 />
                             </td>
                             <td class="px-4 py-2">
                                 <div class="flex justify-end gap-2">
                                     <Link
-                                        :href="draft.editUrl"
+                                        :href="draft.editUrl ?? draft.groupUrl ?? ''"
                                         :class="buttonClasses.secondary"
-                                        :aria-label="t('proposals.mine.open', { number: String(draft.number) })"
+                                        :aria-label="draft.editable ? t('proposals.mine.open', { number: String(draft.number) }) : t('proposals.mine.view_label', { number: String(draft.number) })"
                                     >
-                                        {{ t('proposals.mine.reopen') }}
+                                        {{ draft.editable ? t('proposals.mine.reopen') : t('proposals.mine.view') }}
                                     </Link>
                                     <button
                                         type="button"
@@ -227,6 +229,7 @@ function confirmDelete(): void {
                                         {{ t('proposals.mine.duplicate') }}
                                     </button>
                                     <button
+                                        v-if="draft.editable"
                                         type="button"
                                         class="flex size-11 items-center justify-center rounded-[10px] text-muted hover:bg-accent-soft hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
                                         :aria-label="t('proposals.mine.delete', { number: String(draft.number) })"
@@ -262,8 +265,8 @@ function confirmDelete(): void {
                                 >{{ t('proposals.mine.variant', { letter: draft.variant }) }}</span>
                                 <span class="truncate font-medium">{{ draft.client }}</span>
                                 <StatusPill
-                                    :label="t('proposals.draft_badge')"
-                                    tone="muted"
+                                    :label="draft.statusLabel"
+                                    :tone="draft.statusTone"
                                 />
                             </div>
                             <p class="mt-1 text-sm text-muted">
@@ -276,12 +279,12 @@ function confirmDelete(): void {
                         </div>
                         <div class="flex shrink-0 gap-2">
                             <Link
-                                :href="draft.editUrl"
+                                :href="draft.editUrl ?? draft.groupUrl ?? ''"
                                 :class="buttonClasses.secondary"
                                 class="flex-1 sm:flex-none"
-                                :aria-label="t('proposals.mine.open', { number: String(draft.number) })"
+                                :aria-label="draft.editable ? t('proposals.mine.open', { number: String(draft.number) }) : t('proposals.mine.view_label', { number: String(draft.number) })"
                             >
-                                {{ t('proposals.mine.reopen') }}
+                                {{ draft.editable ? t('proposals.mine.reopen') : t('proposals.mine.view') }}
                             </Link>
                             <button
                                 type="button"
@@ -298,6 +301,7 @@ function confirmDelete(): void {
                                 {{ t('proposals.mine.duplicate') }}
                             </button>
                             <button
+                                v-if="draft.editable"
                                 type="button"
                                 class="flex size-11 items-center justify-center rounded-[10px] border border-line-strong text-muted hover:bg-accent-soft hover:text-accent focus-visible:outline-2 focus-visible:outline-accent"
                                 :aria-label="t('proposals.mine.delete', { number: String(draft.number) })"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, ArrowRight, Building2, Check, CloudOff, Copy, CopyCheck, Layers, Plus, RefreshCw, Search, Trash2, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Building2, Check, CircleX, CloudOff, Copy, CopyCheck, Layers, Plus, RefreshCw, Search, Send, Trash2, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -533,6 +533,34 @@ function addVariant(): void {
 
 const multipleVariants = computed(() => (props.draft?.variants.length ?? 0) > 1);
 
+// "Invia in approvazione" of the whole group (D-395; DM-03a): the pending changes go first, then the
+// server checks every variant again; the answer is the detail of the group.
+const confirmingSubmit = ref(false);
+const submitting = ref(false);
+const variantLetters = computed(() => props.draft?.variants.map((variant) => variant.letter).join(', ') ?? '');
+
+function submitGroup(): void {
+    const url = props.draft?.submitUrl;
+    if (!url || !online.value) {
+        return;
+    }
+    submitting.value = true;
+    save(() => {
+        leaving = true;
+        router.post(url, {}, {
+            preserveState: false,
+            onFinish: () => {
+                submitting.value = false;
+                confirmingSubmit.value = false;
+                leaving = false;
+            },
+        });
+    });
+    if (saveState.value === 'error') {
+        submitting.value = false;
+    }
+}
+
 const showCopied = ref(props.copied !== null);
 const showDuplicated = ref(props.duplicated !== null);
 
@@ -663,6 +691,31 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             aria-hidden="true"
                         />
                         <p>{{ t('proposals.offline') }}</p>
+                    </div>
+
+                    <div
+                        v-if="draft?.rejection"
+                        class="flex items-start gap-2.5 rounded-[10px] bg-accent-soft px-3.5 py-3 text-sm text-ink"
+                        role="status"
+                    >
+                        <CircleX
+                            :size="18"
+                            :stroke-width="2"
+                            class="mt-0.5 shrink-0 text-accent"
+                            aria-hidden="true"
+                        />
+                        <div>
+                            <p class="font-semibold">
+                                {{ t('proposals.rejection.title', { at: draft.rejection.at }) }}
+                                <template v-if="draft.rejection.by">
+                                    {{ t('proposals.rejection.by', { name: draft.rejection.by }) }}
+                                </template>
+                            </p>
+                            <p>{{ draft.rejection.reason ? t('proposals.rejection.reason', { reason: draft.rejection.reason }) : t('proposals.rejection.no_reason') }}</p>
+                            <p class="mt-1 text-muted">
+                                {{ t('proposals.rejection.hint') }}
+                            </p>
+                        </div>
                     </div>
 
                     <div
@@ -1265,6 +1318,20 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                         aria-hidden="true"
                                     />
                                 </button>
+                                <button
+                                    v-if="currentStep === lastStep && draft.submitUrl"
+                                    type="button"
+                                    :class="buttonClasses.primary"
+                                    :disabled="!online || draft.blocksSummary || draft.hasErrors"
+                                    @click="confirmingSubmit = true"
+                                >
+                                    <Send
+                                        :size="18"
+                                        :stroke-width="2"
+                                        aria-hidden="true"
+                                    />
+                                    {{ t('proposals.submit.action') }}
+                                </button>
                             </div>
                         </div>
                         <p
@@ -1357,6 +1424,26 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
             @cancel="copyOpen = false"
             @confirm="copyConfiguration"
         />
+
+        <ConfirmDialog
+            :open="confirmingSubmit"
+            :title="multipleVariants
+                ? t('proposals.submit.title_variants', { number: String(draft?.variants[0]?.number ?? draft?.number ?? ''), count: String(draft?.variants.length ?? 1) })
+                : t('proposals.submit.title', { number: String(draft?.number ?? '') })"
+            :confirm-label="t('proposals.submit.confirm')"
+            :processing="submitting"
+            :confirm-disabled="!online"
+            @cancel="confirmingSubmit = false"
+            @confirm="submitGroup"
+        >
+            <p>{{ multipleVariants ? t('proposals.submit.text_variants', { letters: variantLetters }) : t('proposals.submit.text') }}</p>
+            <p
+                v-if="!online"
+                class="text-accent"
+            >
+                {{ t('proposals.submit.offline') }}
+            </p>
+        </ConfirmDialog>
 
         <ConfirmDialog
             :open="confirmingDelete"

@@ -19,6 +19,7 @@ use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Proposals\ProposalClientController;
 use App\Http\Controllers\Proposals\ProposalController;
 use App\Http\Controllers\Proposals\ProposalCopyController;
+use App\Http\Controllers\Proposals\ProposalGroupController;
 use App\Http\Controllers\Proposals\ProposalVariantController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -257,7 +258,18 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('proposte/{proposal}/duplica', [ProposalCopyController::class, 'duplicate'])->whereNumber('proposal')->name('proposals.duplicate');
             // Variants of a group of proposals (D-396; DM-01): a copy of the draft in its group.
             Route::post('proposte/{proposal}/varianti', [ProposalVariantController::class, 'store'])->whereNumber('proposal')->name('proposals.variants.store');
+            // Sending of a group of variants for approval (D-395, D-412; DM-03a).
+            Route::post('proposte/gruppi/{group}/invio', [ProposalGroupController::class, 'submit'])->whereNumber('group')->name('proposals.groups.submit');
         });
+
+        // A group of variants (D-411; DM-03a): its detail for admin, manager and its agent
+        // (ProposalGroupPolicy::view); the rejection for admin and manager. The queue is the
+        // "proposte/da-approvare" page above.
+        Route::get('proposte/gruppi/{group}', [ProposalGroupController::class, 'show'])->whereNumber('group')->name('proposals.groups.show');
+        Route::post('proposte/gruppi/{group}/rifiuto', [ProposalGroupController::class, 'reject'])
+            ->middleware('can:'.Ability::ProposalsReview->value)
+            ->whereNumber('group')
+            ->name('proposals.groups.reject');
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.
         Route::get('catalogo/listini/{priceList}/club/{club}/benefit', [BenefitController::class, 'show'])

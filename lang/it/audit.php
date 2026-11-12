@@ -95,6 +95,8 @@ return [
         'proposal_draft_deleted' => 'Bozza di proposta eliminata',
         'proposal_draft_duplicated' => 'Proposta duplicata in una nuova bozza',
         'proposal_variant_added' => 'Variante di proposta aggiunta',
+        'proposal_submitted' => 'Proposta inviata in approvazione',
+        'proposal_rejected' => 'Proposta rifiutata',
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
     ],

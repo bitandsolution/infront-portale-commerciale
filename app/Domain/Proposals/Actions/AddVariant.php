@@ -32,7 +32,7 @@ final class AddVariant
 
     public function handle(Proposal $proposal, User $agent): ProposalDuplicated
     {
-        if (! $proposal->isDraft()) {
+        if (! $proposal->isEditable()) {
             throw ProposalsActionNotAllowed::notDraft($proposal->number);
         }
 

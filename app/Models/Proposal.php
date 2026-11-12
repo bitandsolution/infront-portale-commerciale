@@ -97,6 +97,21 @@ final class Proposal extends Model
     }
 
     /**
+     * The agent works on a draft and on a rejected proposal, which he corrects and sends again
+     * (D-099, D-412): the configurator, the copies, the variants and the deletion accept both.
+     */
+    public function isEditable(): bool
+    {
+        return $this->status === ProposalStatus::Draft || $this->status === ProposalStatus::Rejected;
+    }
+
+    /** The agent can send the proposal for approval (with its group, DM-03a). */
+    public function isSubmittable(): bool
+    {
+        return $this->isEditable();
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function agent(): BelongsTo

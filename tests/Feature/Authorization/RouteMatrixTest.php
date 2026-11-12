@@ -132,6 +132,11 @@ function routeMatrix(): array
         'proposals.duplicate' => ['method' => 'POST', 'expected' => $nobody],
         // DM-01: "Aggiungi variante" (D-396), on a draft of another agent
         'proposals.variants.store' => ['method' => 'POST', 'expected' => $nobody],
+        // DM-03a (D-411): the detail of a group of another agent is for admin and manager only; its
+        // sending is for its agent only; "Rifiuta" on a group still in draft goes back with the toast
+        'proposals.groups.show' => ['method' => 'GET', 'expected' => $backOffice],
+        'proposals.groups.submit' => ['method' => 'POST', 'expected' => $nobody],
+        'proposals.groups.reject' => ['method' => 'POST', 'expected' => $backOfficeForm],
         // M07 — review and every proposal (D-068)
         'pages.proposals_pending' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.proposals_all' => ['method' => 'GET', 'expected' => $backOffice],
@@ -378,6 +383,9 @@ function matrixParameters(string $route): array
         ],
         in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store'], true) => [
             'proposal' => Proposal::factory()->withWorkingVersion()->create()->id,
+        ],
+        str_starts_with($route, 'proposals.groups.') => [
+            'group' => Proposal::factory()->withWorkingVersion()->create()->proposal_group_id,
         ],
         in_array($route, ['clients.sectors.edit', 'clients.sectors.update'], true) => [
             'commoditySector' => CommoditySector::factory()->create()->id,

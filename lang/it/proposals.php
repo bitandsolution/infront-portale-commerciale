@@ -17,6 +17,8 @@ return [
         'duplicated' => 'Proposta n. :number creata come copia della n. :original',
         'variant_added' => 'Variante :letter creata (proposta n. :number)',
         'variant_deleted' => 'Variante :letter (proposta n. :number) eliminata',
+        'group_submitted' => 'Proposta n. :number inviata in approvazione',
+        'group_rejected' => 'Proposta n. :number rifiutata',
     ],
 
     // Rules of the configurator that refuse an operation (M06 §7): toasts.
@@ -24,10 +26,13 @@ return [
         'not_agent' => 'Le proposte le crea un agente attivo',
         'client_not_selectable' => 'Scegli uno dei tuoi clienti attivi',
         'season_not_selectable' => 'La stagione scelta è chiusa: scegline un\'altra',
-        'not_draft' => 'La proposta n. :number non è più una bozza: non si modifica dal configuratore',
+        'not_draft' => 'La proposta n. :number non è una bozza né una proposta rifiutata: non si modifica dal configuratore',
         'nothing_to_copy' => 'Scegli il club da copiare e almeno un altro club della proposta',
         'not_duplicable' => 'La proposta n. :number non si può duplicare',
         'too_many_variants' => 'Una proposta può avere al massimo :max varianti',
+        'group_not_ready' => 'Prima dell\'invio correggi la proposta: varianti con club in errore o senza elementi: :variants',
+        'group_not_submittable' => 'La proposta non si può inviare: è già in approvazione o è stata decisa',
+        'group_not_submitted' => 'La proposta non è più in approvazione: ricarica la pagina',
         'variants_share_header' => 'Le varianti di una proposta hanno lo stesso cliente e la stessa stagione: per cambiarli elimina prima le altre varianti',
     ],
 

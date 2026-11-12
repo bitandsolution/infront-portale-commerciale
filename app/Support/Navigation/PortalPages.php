@@ -11,6 +11,7 @@ use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Inventory\AvailabilityController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\Proposals\ProposalController;
+use App\Http\Controllers\Proposals\ProposalGroupController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -110,6 +111,7 @@ final class PortalPages
         'clients' => [ClientController::class, 'index'],
         'proposals_new' => [ProposalController::class, 'create'],
         'proposals_mine' => [ProposalController::class, 'mine'],
+        'proposals_pending' => [ProposalGroupController::class, 'pending'],
         'content_slides' => [SlideController::class, 'index'],
     ];
 

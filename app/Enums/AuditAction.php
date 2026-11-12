@@ -115,6 +115,9 @@ enum AuditAction: string
     case ProposalDraftDuplicated = 'proposal.draft_duplicated';
     // DM-01: a new variant of a group of proposals (D-396).
     case ProposalVariantAdded = 'proposal.variant_added';
+    // DM-03a: sending and rejection of a group (D-395, D-412), one event per variant.
+    case ProposalSubmitted = 'proposal.submitted';
+    case ProposalRejected = 'proposal.rejected';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';
