@@ -132,7 +132,7 @@ it('D-216: the approval waits while another approval holds the capacity, and wri
     expect(fn () => app(ApproveGroup::class)->handle($group, [], $this->admin))
         ->toThrow(QueryException::class, 'Lock wait timeout');
 
-    expect(Proposal::query()->where('proposal_group_id', $group->id)->value('status'))->toBe(ProposalStatus::Submitted->value)
+    expect(Proposal::query()->where('proposal_group_id', $group->id)->value('status'))->toBe(ProposalStatus::Submitted)
         ->and(InventoryCommitment::query()->count())->toBe(0);
 });
 
@@ -148,6 +148,6 @@ it('M07 §9: of two approvals on the last contract the first one wins, the secon
     expect(fn () => app(ApproveGroup::class)->handle($group, [], $this->admin))
         ->toThrow(ProposalsActionNotAllowed::class, 'Approvazione bloccata');
 
-    expect(Proposal::query()->where('proposal_group_id', $group->id)->value('status'))->toBe(ProposalStatus::Submitted->value)
+    expect(Proposal::query()->where('proposal_group_id', $group->id)->value('status'))->toBe(ProposalStatus::Submitted)
         ->and(InventoryCommitment::query()->count())->toBe(1);
 });
