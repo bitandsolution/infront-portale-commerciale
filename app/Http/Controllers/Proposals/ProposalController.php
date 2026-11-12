@@ -63,7 +63,7 @@ class ProposalController extends Controller
         $proposals = Proposal::query()
             ->visibleTo($actor)
             ->where('agent_id', $actor->id)
-            ->with(['client', 'season', 'workingVersion'])
+            ->with(['client', 'season', 'workingVersion', 'currentVersion'])
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->get();

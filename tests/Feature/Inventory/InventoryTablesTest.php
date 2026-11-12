@@ -7,6 +7,7 @@ use App\Models\InventoryPool;
 use App\Models\PartnershipTier;
 use App\Models\Season;
 use App\Models\User;
+use Database\Factories\InventoryCommitmentFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -23,13 +24,15 @@ use Illuminate\Support\Facades\Schema;
 function commitmentRow(array $overrides = []): int
 {
     $season = Season::factory()->create();
+    $club = Club::factory()->infront()->create();
+    $row = InventoryCommitmentFactory::proposalRow($season, $club);
 
     return DB::table('inventory_commitments')->insertGetId(array_merge([
         'season_id' => $season->id,
-        'club_id' => Club::factory()->infront()->create()->id,
-        'proposal_id' => 1,
-        'proposal_version_id' => 1,
-        'proposal_version_club_id' => 1,
+        'club_id' => $club->id,
+        'proposal_id' => $row->version->proposal_id,
+        'proposal_version_id' => $row->proposal_version_id,
+        'proposal_version_club_id' => $row->id,
         'resource_type' => 'pool',
         'inventory_pool_id' => InventoryPool::factory()->create()->id,
         'quantity' => 60,
@@ -76,6 +79,7 @@ it('C9: a commitment has exactly one resource, coherent with its type, a positiv
     'reason without forcing' => [fn () => ['forced_reason' => 'Motivo']],
     'released without reason' => [fn () => ['released_at' => now()]],
     'unknown release reason' => [fn () => ['released_at' => now(), 'release_reason' => 'other']],
+    'unknown proposal' => [fn () => ['proposal_id' => 999999]],
 ]);
 
 it('D-192: a commitment is never changed nor deleted, for every database user', function (array $change) {

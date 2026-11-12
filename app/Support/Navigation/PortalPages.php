@@ -112,6 +112,7 @@ final class PortalPages
         'proposals_new' => [ProposalController::class, 'create'],
         'proposals_mine' => [ProposalController::class, 'mine'],
         'proposals_pending' => [ProposalGroupController::class, 'pending'],
+        'proposals_all' => [ProposalGroupController::class, 'all'],
         'content_slides' => [SlideController::class, 'index'],
     ];
 

@@ -9,7 +9,9 @@ namespace App\Enums;
  * - submitted: waiting for approval (F5);
  * - approved: approved, with frozen versions and commitments (F5);
  * - rejected: rejected, the agent corrects and resubmits it (D-099, F5);
- * - cancelled: approved and then cancelled by the admin, commitments released (D-095, F5).
+ * - cancelled: approved and then cancelled by the admin, commitments released (D-095, F5);
+ * - not_chosen: approved variant of a group that the client did not choose, commitments released
+ *   (D-396, D-410; DM-03b).
  *
  * No "historical": nothing is migrated (D-227, D-376).
  */
@@ -20,6 +22,7 @@ enum ProposalStatus: string
     case Approved = 'approved';
     case Rejected = 'rejected';
     case Cancelled = 'cancelled';
+    case NotChosen = 'not_chosen';
 
     /**
      * Italian label (lang/it/proposals.php).

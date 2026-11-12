@@ -19,6 +19,8 @@ return [
         'variant_deleted' => 'Variante :letter (proposta n. :number) eliminata',
         'group_submitted' => 'Proposta n. :number inviata in approvazione',
         'group_rejected' => 'Proposta n. :number rifiutata',
+        'group_approved' => 'Proposta n. :number approvata',
+        'client_chosen' => 'Scelta del cliente registrata: variante :letter (proposta n. :number)',
     ],
 
     // Rules of the configurator that refuse an operation (M06 §7): toasts.
@@ -33,6 +35,11 @@ return [
         'group_not_ready' => 'Prima dell\'invio correggi la proposta: varianti con club in errore o senza elementi: :variants',
         'group_not_submittable' => 'La proposta non si può inviare: è già in approvazione o è stata decisa',
         'group_not_submitted' => 'La proposta non è più in approvazione: ricarica la pagina',
+        // DM-03b: approval (D-216, D-409) and choice of the client (D-410).
+        'approval_blocked' => 'Approvazione bloccata: :problems',
+        'discount_out_of_range' => 'Lo sconto va da 0 a 100% o da 0 al totale di listino',
+        'group_not_approved' => 'La scelta del cliente si registra solo su una proposta approvata con almeno due varianti, una volta sola',
+        'variant_not_in_group' => 'La variante scelta non appartiene a questa proposta',
         'variants_share_header' => 'Le varianti di una proposta hanno lo stesso cliente e la stessa stagione: per cambiarli elimina prima le altre varianti',
     ],
 
@@ -86,6 +93,7 @@ return [
         'approved' => 'Approvata',
         'rejected' => 'Rifiutata',
         'cancelled' => 'Annullata',
+        'not_chosen' => 'Non scelta',
     ],
 
     // Notes of the history (F4-05).
@@ -95,6 +103,28 @@ return [
     ],
 
     // History of the proposal (M07 F-10, D-199).
+    // DM-03b: problems that block the approval (D-216, D-409), in the toast and in the detail.
+    'approval_problems' => [
+        'period' => 'variante :letter senza periodo',
+        'variant' => 'variante :letter: :problem',
+        'club' => ':club: :message',
+        'no_clubs' => 'nessun club nella proposta',
+        'shortfall' => ':club, :resource: richiesti :requested, disponibili :remaining',
+        'shortfall_variants' => ':club, :resource: richiesti :requested dalle varianti :letters, disponibili :remaining',
+        'contract' => '1 contratto',
+        'contracts' => ':count contratti',
+        'seat' => '1 posto',
+        'seats' => ':count posti',
+    ],
+
+    // DM-03b: notes of the history.
+    'event_notes' => [
+        'discount_percent' => 'Sconto :value% (€ :amount): totale finale € :final',
+        'discount_amount' => 'Sconto € :amount (:percent%): totale finale € :final',
+        'chosen' => 'Il cliente ha scelto questa variante',
+        'not_chosen' => 'Il cliente ha scelto la variante :letter',
+    ],
+
     'event_types' => [
         'created' => 'Creata',
         'submitted' => 'Inviata in approvazione',
@@ -105,6 +135,7 @@ return [
         'forced' => 'Approvata con forzatura',
         'rejected' => 'Rifiutata',
         'resubmitted' => 'Reinviata in approvazione',
+        'client_chosen' => 'Scelta del cliente registrata',
         'new_version' => 'Nuova versione',
         'cancelled' => 'Annullata',
         'duplicated' => 'Duplicata',

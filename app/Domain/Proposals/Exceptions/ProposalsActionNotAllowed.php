@@ -76,6 +76,33 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.group_not_submitted'));
     }
 
+    /**
+     * DM-03b (D-216, D-409): a variant is not valid any more or the group asks more than the residual.
+     *
+     * @param  list<string>  $problems
+     */
+    public static function approvalBlocked(array $problems): self
+    {
+        return new self(Text::get('proposals.errors.approval_blocked', ['problems' => implode('; ', $problems)]));
+    }
+
+    /** M07 §8 (D-097, D-103): percentage 0…100, amount 0…list total. */
+    public static function discountOutOfRange(): self
+    {
+        return new self(Text::get('proposals.errors.discount_out_of_range'));
+    }
+
+    /** D-410: the choice of the client only on an approved group of two or more variants, once. */
+    public static function groupNotApproved(): self
+    {
+        return new self(Text::get('proposals.errors.group_not_approved'));
+    }
+
+    public static function variantNotInGroup(): self
+    {
+        return new self(Text::get('proposals.errors.variant_not_in_group'));
+    }
+
     public static function variantsShareHeader(): self
     {
         return new self(Text::get('proposals.errors.variants_share_header'));

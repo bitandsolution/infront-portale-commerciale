@@ -270,6 +270,15 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')
             ->name('proposals.groups.reject');
+        // Approval with the discounts and choice of the client (D-408…D-410; DM-03b): admin and manager.
+        Route::post('proposte/gruppi/{group}/approvazione', [ProposalGroupController::class, 'approve'])
+            ->middleware('can:'.Ability::ProposalsReview->value)
+            ->whereNumber('group')
+            ->name('proposals.groups.approve');
+        Route::post('proposte/gruppi/{group}/scelta', [ProposalGroupController::class, 'choose'])
+            ->middleware('can:'.Ability::ProposalsReview->value)
+            ->whereNumber('group')
+            ->name('proposals.groups.choose');
 
         // Benefit and on-top texts of a club (M03 F-08, F-10; D-335): admin and manager read them.
         Route::get('catalogo/listini/{priceList}/club/{club}/benefit', [BenefitController::class, 'show'])
