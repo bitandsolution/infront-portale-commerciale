@@ -151,7 +151,7 @@ it('D-395: sends every variant of the group together, with history and audit', f
             ->and(ProposalEvent::query()->where('proposal_id', $variant->id)->where('type', ProposalEventType::Submitted->value)->count())->toBe(1);
     }
 
-    $events = auditEvents(AuditAction::ProposalSubmitted);
+    $events = auditEventsOf(AuditAction::ProposalSubmitted);
     expect($events)->toHaveCount(2)
         ->and($events->first()?->old_values)->toBe(['status' => 'draft'])
         ->and($events->first()?->new_values)->toMatchArray(['status' => 'submitted', 'proposal_group_id' => $a->proposal_group_id, 'variant_letter' => 'A']);
@@ -168,7 +168,7 @@ it('D-395: refuses a group with a variant not ready and writes nothing', functio
     expect($a->refresh()->status)->toBe(ProposalStatus::Draft)
         ->and($b->refresh()->status)->toBe(ProposalStatus::Draft)
         ->and(ProposalEvent::query()->whereIn('type', [ProposalEventType::Submitted->value, ProposalEventType::Resubmitted->value])->count())->toBe(0)
-        ->and(auditEvents(AuditAction::ProposalSubmitted))->toHaveCount(0);
+        ->and(auditEventsOf(AuditAction::ProposalSubmitted))->toHaveCount(0);
 });
 
 it('D-395: a group already sent is not sent again', function () {
@@ -178,7 +178,7 @@ it('D-395: a group already sent is not sent again', function () {
     revSubmit($this->agent, $a)
         ->assertSessionHas('toast.message', 'La proposta non si può inviare: è già in approvazione o è stata decisa');
 
-    expect(auditEvents(AuditAction::ProposalSubmitted))->toHaveCount(1);
+    expect(auditEventsOf(AuditAction::ProposalSubmitted))->toHaveCount(1);
 });
 
 it('D-411: the group of an agent is not seen nor sent by another agent', function () {
@@ -272,7 +272,7 @@ it('D-412: the rejection applies to every variant of the group, with the reason'
             ->and($event->user_id)->toBe($this->admin->id);
     }
 
-    $events = auditEvents(AuditAction::ProposalRejected);
+    $events = auditEventsOf(AuditAction::ProposalRejected);
     expect($events)->toHaveCount(2)
         ->and($events->first()?->reason)->toBe('Prezzo da rivedere')
         ->and($events->first()?->new_values)->toMatchArray(['status' => 'rejected', 'variant_letter' => 'A']);
@@ -296,7 +296,7 @@ it('D-412: the reason is optional and a group no longer sent is not rejected aga
 
     revReject($this->admin, $a, 'Ancora')
         ->assertSessionHas('toast.message', 'La proposta non è più in approvazione: ricarica la pagina');
-    expect(auditEvents(AuditAction::ProposalRejected))->toHaveCount(1);
+    expect(auditEventsOf(AuditAction::ProposalRejected))->toHaveCount(1);
 });
 
 it('D-412: the agent does not reject and a draft is not rejected', function () {
@@ -328,7 +328,7 @@ it('M07-CA6: the rejected group is corrected and sent again with the same number
     $a->refresh();
     expect($a->status)->toBe(ProposalStatus::Submitted)
         ->and(ProposalEvent::query()->where('proposal_id', $a->id)->where('type', ProposalEventType::Resubmitted->value)->count())->toBe(1)
-        ->and(auditEvents(AuditAction::ProposalSubmitted)->last()?->old_values)->toBe(['status' => 'rejected']);
+        ->and(auditEventsOf(AuditAction::ProposalSubmitted)->last()?->old_values)->toBe(['status' => 'rejected']);
 });
 
 it('D-412: a rejected variant can be deleted, a sent one cannot (trigger)', function () {
