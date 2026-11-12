@@ -12,7 +12,9 @@ use App\Support\Text;
  * - club logo: same rules as the client logo (M02 F-05, D-230);
  * - slide image: PNG only, exactly 1920×1080, up to 10 MB (M08 §7, M08-CA8);
  * - calendar import: Excel .xlsx without macros, up to 5 MB (M02 F-09); cells are read in slice F1;
- * - generated PDF: produced by the portal itself (M09), only checked to be a PDF.
+ * - generated PDF: produced by the portal itself (M09), only checked to be a PDF;
+ * - thumbnail: JPEG derived by the portal from an image (stored_file_derivatives, D-420), at most
+ *   480 pixels per side and 1 MB; who sees the original sees its thumbnail.
  *
  * Logos accept at most 5000 pixels per side: beyond that a small file could ask for hundreds of
  * megabytes once decoded.
@@ -26,6 +28,7 @@ enum FilePurpose: string
     case SlideImage = 'slide_image';
     case CalendarImport = 'calendar_import';
     case GeneratedPdf = 'generated_pdf';
+    case Thumbnail = 'thumbnail';
 
     private const MEGABYTE = 1024 * 1024;
 
@@ -39,6 +42,7 @@ enum FilePurpose: string
             self::SlideImage => [FileType::Png],
             self::CalendarImport => [FileType::Xlsx],
             self::GeneratedPdf => [FileType::Pdf],
+            self::Thumbnail => [FileType::Jpeg],
         };
     }
 
@@ -53,6 +57,7 @@ enum FilePurpose: string
             self::SlideImage => 10 * self::MEGABYTE,
             self::CalendarImport => 5 * self::MEGABYTE,
             self::GeneratedPdf => null,
+            self::Thumbnail => self::MEGABYTE,
         };
     }
 
@@ -73,6 +78,7 @@ enum FilePurpose: string
     {
         return match ($this) {
             self::ClientLogo, self::ClubLogo => 5000,
+            self::Thumbnail => 480,
             default => null,
         };
     }

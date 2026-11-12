@@ -210,7 +210,7 @@ it('M06-CA1: step 3 offers only the Infront clubs with a published list and a pr
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('step', 3)
-            ->where('lastStep', 5)
+            ->where('lastStep', 6)
             ->has('clubOptions', 2)
             ->where('clubOptions.0.name', 'SS Lazio')
             ->where('clubOptions.1.name', 'Udinese Calcio')

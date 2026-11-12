@@ -194,7 +194,7 @@ it('M06-CA3: Bologna + Como from 01/10 to the end of the season count the home l
     $props = summPage($this->agent, summNetwork($this));
 
     expect($props['step'])->toBe(5)
-        ->and($props['lastStep'])->toBe(5)
+        ->and($props['lastStep'])->toBe(6)
         ->and($props['draft']['blocksSummary'])->toBeFalse()
         ->and($props['draft']['clubs'][0])->toMatchArray([
             'name' => 'Bologna FC',

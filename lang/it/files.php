@@ -12,6 +12,7 @@ return [
         'slide_image' => 'Immagine della slide',
         'calendar_import' => 'Calendario Excel',
         'generated_pdf' => 'Documento PDF',
+        'thumbnail' => 'Miniatura',
     ],
 
     'types' => [

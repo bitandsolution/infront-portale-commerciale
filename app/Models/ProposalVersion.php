@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Domain\Content\Data\DocumentSelection;
 use App\Domain\Proposals\Exceptions\ProposalImmutable;
 use App\Enums\DiscountType;
+use App\Enums\DocumentMode;
 use Database\Factories\ProposalVersionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -44,6 +46,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $total_matches
  * @property int|null $total_spots
  * @property int|null $top_matches
+ * @property DocumentMode|null $document_mode
+ * @property list<int>|null $excluded_slide_ids
  * @property bool $is_forced
  * @property string|null $forced_reason
  * @property bool $is_legacy
@@ -91,6 +95,8 @@ final class ProposalVersion extends Model
             'total_matches' => 'integer',
             'total_spots' => 'integer',
             'top_matches' => 'integer',
+            'document_mode' => DocumentMode::class,
+            'excluded_slide_ids' => 'array',
             'is_forced' => 'boolean',
             'is_legacy' => 'boolean',
             'snapshot' => 'array',
@@ -111,6 +117,15 @@ final class ProposalVersion extends Model
                 throw ProposalImmutable::version($version->id);
             }
         });
+    }
+
+    /**
+     * The slides chosen for the document, frozen with the version at the approval (D-419); complete
+     * without exclusions for the versions frozen before DM-05.
+     */
+    public function documentSelection(): DocumentSelection
+    {
+        return DocumentSelection::fromColumns($this->document_mode, $this->excluded_slide_ids);
     }
 
     public function isFrozen(): bool

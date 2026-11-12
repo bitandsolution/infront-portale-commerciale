@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Content\Data\DocumentSelection;
+use App\Enums\DocumentMode;
 use App\Models\Concerns\HasOwner;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,12 +16,16 @@ use Illuminate\Support\Carbon;
  * client and the same season, presented in one document. Every variant is a complete proposal with
  * its own number, dates, clubs and total; a single proposal is a group with one variant. Client and
  * season of the group follow those of its variants (SaveDraft keeps them aligned). The agent sees
- * only his own groups (HasOwner, column agent_id).
+ * only his own groups (HasOwner, column agent_id). The slides chosen for the document (mode and
+ * excluded slides, D-418, D-419) are the working choice of the group, copied on the frozen versions
+ * at the approval.
  *
  * @property int $id
  * @property int $agent_id
  * @property int|null $client_id
  * @property int|null $season_id
+ * @property DocumentMode $document_mode
+ * @property list<int>|null $excluded_slide_ids
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read User $agent
@@ -32,6 +38,34 @@ final class ProposalGroup extends Model
     use HasOwner;
 
     protected $guarded = ['id'];
+
+    /**
+     * Defaults of the columns, also before the first save.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'document_mode' => 'complete',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'document_mode' => DocumentMode::class,
+            'excluded_slide_ids' => 'array',
+        ];
+    }
+
+    /**
+     * The working choice of the slides of the document (D-419).
+     */
+    public function documentSelection(): DocumentSelection
+    {
+        return DocumentSelection::fromColumns($this->document_mode, $this->excluded_slide_ids);
+    }
 
     /** Same owner column as the proposals (D-376). */
     public function ownerColumn(): string

@@ -141,6 +141,9 @@ function routeMatrix(): array
         // empty choice, goes back with the toast or the errors)
         'proposals.groups.approve' => ['method' => 'POST', 'expected' => $backOfficeForm],
         'proposals.groups.choose' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        // DM-05: slides of the document (D-397): the agent of the group (here another agent, refused);
+        // admin and manager go back with the errors of the empty body
+        'proposals.groups.slides' => ['method' => 'PUT', 'expected' => $backOfficeForm],
         // DM-04: regeneration of the PDF document, admin only (D-125; a group not approved goes back
         // with the toast). The download goes through files.download (StoredFilePolicy).
         'documents.regenerate' => ['method' => 'POST', 'expected' => $adminForm],
@@ -311,6 +314,9 @@ function routeMatrix(): array
         // Stored files (D-218): each purpose follows its entity (StoredFilePolicy). Target: a client
         // logo stored by the system and used by no client, so only the admin sees it (F3-02)
         'files.download' => ['method' => 'GET', 'expected' => $admin],
+        // DM-05 (D-420): thumbnail of the image of an active slide, for every signed-in user (the agent
+        // sees the slides in the step "Documento")
+        'files.thumbnail' => ['method' => 'GET', 'expected' => $signedIn],
 
         // Queues panel (Horizon, progettazione-tecnica §5.2.7; PR-08): admin only, with the rules of
         // the portal pages (config/horizon.php). The page and the API calls without parameters
@@ -431,6 +437,13 @@ function matrixParameters(string $route): array
             })(),
         ],
         $route === 'files.download' => ['storedFile' => storeTestFile(FilePurpose::ClientLogo)->id],
+        $route === 'files.thumbnail' => [
+            'storedFile' => (function (): int {
+                (new ContentSystemDataSeeder)->run();
+
+                return (int) Slide::factory()->create()->image_file_id;
+            })(),
+        ],
         str_starts_with($route, 'horizon.monitoring-tag.') => ['tag' => 'matrice'],
         str_starts_with($route, 'horizon.') && str_ends_with($route, '.show'),
         $route === 'horizon.jobs-batches.retry' => ['id' => 'matrice'],

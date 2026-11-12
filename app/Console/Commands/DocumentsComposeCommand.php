@@ -72,6 +72,7 @@ final class DocumentsComposeCommand extends Command
                     }, $composed->instances)),
                     $composed->mandatory ? $yes : $no,
                     $composed->inSummary ? $yes : $no,
+                    $composed->included ? $yes : $no,
                 ], $composition->slides),
             );
         }
@@ -79,6 +80,11 @@ final class DocumentsComposeCommand extends Command
         $this->line(Text::get('content.compose_command.total', [
             'slides' => (string) count($composition->slides),
             'pages' => (string) $composition->pageCount(),
+        ]));
+        $this->line(Text::get('content.compose_command.mode', [
+            'mode' => $composition->selection->mode->label(),
+            'included' => (string) count($composition->includedSlides()),
+            'slides' => (string) count($composition->slides),
         ]));
 
         if ($composition->warnings !== []) {

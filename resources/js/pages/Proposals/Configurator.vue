@@ -10,6 +10,7 @@ import NoticeDialog from '@/components/NoticeDialog.vue';
 import ClubConfiguration from '@/components/proposals/ClubConfiguration.vue';
 import ClubPicker from '@/components/proposals/ClubPicker.vue';
 import CopyClubsDialog from '@/components/proposals/CopyClubsDialog.vue';
+import DocumentSlides from '@/components/proposals/DocumentSlides.vue';
 import DraftSummary from '@/components/proposals/DraftSummary.vue';
 import { formatLedDuration } from '@/components/proposals/ledDuration';
 import NewClientDialog from '@/components/proposals/NewClientDialog.vue';
@@ -18,6 +19,7 @@ import StatusPill from '@/components/StatusPill.vue';
 import { useTrans } from '@/composables/useTrans';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {
+    DocumentSlides as DocumentSlidesData,
     LayoutData,
     ProposalClientOption,
     ProposalClubFields,
@@ -34,7 +36,9 @@ import type {
  * Configurator of a proposal (M06 §4, §5; D-165, D-372…D-375; mockups "Periodo e club" and
  * "Configurazione per club", "Riepilogo"). F4-02 built steps 1 (Cliente) and 2 (Stagione e periodo),
  * F4-03 steps 3 (Club) and 4 (Configurazione per club), F4-04 step 5 (Riepilogo, DraftSummary): it
- * opens only when every club has at least one element (D-373).
+ * opens only when every club has at least one element (D-373), and so does step 6 (Documento,
+ * DM-05, D-397): the slides of the document of the group (DocumentSlides, saved on the group) and
+ * "Invia in approvazione".
  *
  * - "Nuova proposta" has no draft: the draft is born when the agent chooses (or creates) the client.
  * - Automatic save (D-372): 2 seconds after the last change and at every change of step, with the lock
@@ -70,6 +74,7 @@ const props = defineProps<{
     seasons: ProposalSeasonOption[];
     defaultSeasonId: string;
     clubOptions: ProposalClubOption[];
+    documentSlides: DocumentSlidesData | null;
     ledStepSeconds: number;
     hospitalityMaxSeats: number;
     createUrl: string;
@@ -80,7 +85,7 @@ const props = defineProps<{
 const { t } = useTrans();
 const page = usePage();
 
-const STEPS = ['client', 'period', 'clubs', 'configuration', 'summary'] as const;
+const STEPS = ['client', 'period', 'clubs', 'configuration', 'summary', 'document'] as const;
 const SAVE_DELAY_MS = 2000;
 const MAX_SUGGESTIONS = 8;
 
@@ -157,7 +162,7 @@ function save(after?: () => void): void {
     router.put(props.draft.saveUrl, { ...fields, lock_version: lockVersion.value }, {
         preserveState: true,
         preserveScroll: true,
-        only: ['draft', 'clubOptions'],
+        only: ['draft', 'clubOptions', 'documentSlides'],
         onSuccess: (response) => {
             const draft = response.props.draft as ProposalDraft | null;
             if (draft) {
@@ -545,7 +550,7 @@ function submitGroup(): void {
         return;
     }
     submitting.value = true;
-    save(() => {
+    const send = (): void => save(() => {
         leaving = true;
         router.post(url, {}, {
             preserveState: false,
@@ -556,6 +561,12 @@ function submitGroup(): void {
             },
         });
     });
+    // The choice of the slides still to save goes first (DM-05).
+    if (documentSlidesPanel.value) {
+        documentSlidesPanel.value.flush(send);
+    } else {
+        send();
+    }
     if (saveState.value === 'error') {
         submitting.value = false;
     }
@@ -564,8 +575,9 @@ function submitGroup(): void {
 const showCopied = ref(props.copied !== null);
 const showDuplicated = ref(props.duplicated !== null);
 
-// Step 5 shows the total in its table: no separate total column or bar there.
-const summaryStep = computed(() => currentStep.value === 5);
+// Steps 5 and 6 show the total in the summary table: no separate total column or bar there.
+const summaryStep = computed(() => currentStep.value >= 5);
+const documentSlidesPanel = ref<InstanceType<typeof DocumentSlides> | null>(null);
 
 // Prices recalculated since the last save (RB-12), until the agent closes the banner.
 const showReopened = ref(props.reopened !== null);
@@ -1269,6 +1281,13 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         :client-name="chosenClient?.name ?? null"
                         :sector="chosenClient?.sector ?? null"
                         @fix="goTo(4)"
+                    />
+
+                    <!-- Step 6: slides of the document of the group (DM-05, D-397) -->
+                    <DocumentSlides
+                        v-if="currentStep === 6 && documentSlides"
+                        ref="documentSlidesPanel"
+                        :slides="documentSlides"
                     />
 
                     <!-- Navigation between the steps -->

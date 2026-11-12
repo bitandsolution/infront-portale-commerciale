@@ -15,12 +15,14 @@ use App\Http\Controllers\Clients\CommoditySectorController;
 use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Documents\DocumentController;
 use App\Http\Controllers\Files\StoredFileDownloadController;
+use App\Http\Controllers\Files\StoredFileThumbnailController;
 use App\Http\Controllers\Inventory\CapacityController;
 use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Proposals\ProposalClientController;
 use App\Http\Controllers\Proposals\ProposalController;
 use App\Http\Controllers\Proposals\ProposalCopyController;
 use App\Http\Controllers\Proposals\ProposalGroupController;
+use App\Http\Controllers\Proposals\ProposalGroupDocumentController;
 use App\Http\Controllers\Proposals\ProposalVariantController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -115,6 +117,11 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->whereNumber('storedFile')
             ->middleware('can:view,storedFile')
             ->name('files.download');
+        // Thumbnail of a slide image (D-420; DM-05), for who may see the original.
+        Route::get('file/{storedFile}/miniatura', StoredFileThumbnailController::class)
+            ->whereNumber('storedFile')
+            ->middleware('can:view,storedFile')
+            ->name('files.thumbnail');
 
         // Users (M01 §5; D-139): admin only. The list is the "utenti" page above.
         Route::middleware('can:'.Ability::UsersManage->value)->group(function (): void {
@@ -280,6 +287,13 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')
             ->name('proposals.groups.choose');
+        // Slides chosen for the document of a group (D-397, D-419; DM-05): the agent of the group on
+        // drafts and rejected groups, admin and manager while it waits (ProposalGroupPolicy::editDocument
+        // in the request, statuses in SaveDocumentSlides).
+        Route::put('proposte/gruppi/{group}/slide', [ProposalGroupDocumentController::class, 'update'])
+            ->whereNumber('group')
+            ->middleware('throttle:60,1')
+            ->name('proposals.groups.slides');
         // Regeneration of the PDF document of an approved group (M09 F-05, D-125; DM-04): admin only.
         Route::post('proposte/gruppi/{group}/documento', [DocumentController::class, 'regenerate'])
             ->middleware('can:'.Ability::DocumentsRegenerate->value)

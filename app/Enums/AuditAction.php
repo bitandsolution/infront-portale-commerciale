@@ -120,6 +120,9 @@ enum AuditAction: string
     case ProposalRejected = 'proposal.rejected';
     case ProposalApproved = 'proposal.approved';
     case ProposalClientChosen = 'proposal.client_chosen';
+    // DM-05: slides chosen for the document of a group (D-397, D-418, D-419), one event on the
+    // first variant with the group.
+    case ProposalDocumentSlidesUpdated = 'proposal.document_slides_updated';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';

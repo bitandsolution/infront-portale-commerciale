@@ -779,3 +779,38 @@ export interface ProposalGroupRow {
     updatedAt: string | null;
     url: string;
 }
+
+/** A slide of the document of a group (DocumentSlidesPresenter; DM-05, D-397). */
+export interface DocumentSlide {
+    id: number;
+    title: string;
+    kind: 'static' | 'cover' | 'recap' | 'led';
+    note: string | null;
+    mandatory: boolean;
+    inSummary: boolean;
+    included: boolean;
+    excluded: boolean;
+    /** The tick cannot change: cover and recap, or the slides out of "Solo riepilogo". */
+    locked: boolean;
+    pages: number;
+    pagesLabel: string | null;
+    thumbnailUrl: string | null;
+}
+
+/** The slides of the document of a group, by section (DocumentSlidesPresenter; D-418, D-419). */
+export interface DocumentSlides {
+    mode: 'complete' | 'summary';
+    modes: Array<{ value: 'complete' | 'summary'; label: string; description: string }>;
+    documentLabel: string | null;
+    editable: boolean;
+    frozen: boolean;
+    saveUrl: string;
+    sections: Array<{ name: string; slides: DocumentSlide[] }>;
+    includedSlides: number;
+    totalSlides: number;
+    pages: number;
+    /** Missing system slides, for admin and manager. */
+    warnings: string[];
+    /** Neutral note for the agent when the library lacks a system slide. */
+    note: string | null;
+}
