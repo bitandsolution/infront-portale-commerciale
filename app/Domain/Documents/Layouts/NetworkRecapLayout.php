@@ -350,11 +350,16 @@ final class NetworkRecapLayout
             'strike' => false,
         ];
 
-        $values = [
-            'matches' => DocumentNumbers::integer($totals->matches),
-            'minutes' => DocumentNumbers::totalMinutes($totals->seconds),
-            'spots' => DocumentNumbers::integer($totals->spots),
-        ];
+        // Without LED in the variant (partnership or hospitality only) the three LED totals show "—",
+        // as the rows do: "0 partite" would read as an error to the client (DM-04 collaudo).
+        $none = Text::get('documents.network_recap.none');
+        $values = $totals->seconds > 0
+            ? [
+                'matches' => DocumentNumbers::integer($totals->matches),
+                'minutes' => DocumentNumbers::totalMinutes($totals->seconds),
+                'spots' => DocumentNumbers::integer($totals->spots),
+            ]
+            : ['matches' => $none, 'minutes' => $none, 'spots' => $none];
 
         foreach ($values as $column => $value) {
             $view['boxes'][] = self::box(self::COLUMNS[$column][0], $top, self::width($column), $height);

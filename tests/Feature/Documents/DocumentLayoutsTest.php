@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Documents\Data\NetworkRecap;
+use App\Domain\Documents\Data\RecapRow;
+use App\Domain\Documents\Data\RecapTotals;
 use App\Domain\Documents\Layouts\CoverLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Domain\Documents\Layouts\RecapStyle;
@@ -81,4 +84,16 @@ it('D-252: the cover writes the date at the top right and the logo in the box of
         ->and($network['logos'][0])->toMatchArray(['src' => 'logo.png', 'left' => 170, 'top' => 706, 'width' => 324, 'height' => 181])
         ->and($club['logos'][0])->toMatchArray(['left' => 37, 'top' => 536, 'width' => 549, 'height' => 181])
         ->and($withoutLogo['logos'])->toBe([]);
+});
+
+it('DM-04: without LED in the variant the three LED totals show "—" instead of zero', function () {
+    $recap = new NetworkRecap(
+        [new RecapRow('Premium Partner', null, '—', null, null, null, '120000.00')],
+        new RecapTotals(0, 0, 0, '120000.00', null, '120000.00'),
+    );
+    $view = layoutsRecapView(NetworkRecapLayout::pages($recap, '/sfondo.jpg', RecapStyle::club(null, 'AS Roma'))[0]->data);
+    $totalsTop = 559 + 60;
+    $cells = array_values(array_filter($view['texts'], fn (array $text): bool => $text['top'] === $totalsTop && $text['left'] >= NetworkRecapLayout::COLUMNS['matches'][0] && $text['left'] < NetworkRecapLayout::COLUMNS['price'][0]));
+
+    expect(array_column($cells, 'text'))->toBe(['—', '—', '—']);
 });
