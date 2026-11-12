@@ -9,8 +9,9 @@ use LogicException;
  * data are defined in code (docs/layout-dinamici.md). Slice S1 built the network recap (D-309).
  *
  * DM-02 adds the codes of the system slides of the library (D-405), so admin and manager can upload
- * their backgrounds: cover and club recap are drawn by DM-04, the LED simulation (a slide without
- * image, one page per club with the LED) by DM-06. Slice F7 adds the other KPI layouts.
+ * their backgrounds: cover and club recap are drawn by DM-04 (CoverLayout, NetworkRecapLayout with
+ * the club RecapStyle), the LED simulation (a slide without image, one page per club with the LED)
+ * by DM-06. Slice F7 adds the other KPI layouts.
  */
 enum DocumentLayout: string
 {
@@ -25,8 +26,8 @@ enum DocumentLayout: string
     public function view(): string
     {
         return match ($this) {
-            self::NetworkRecap => 'documents.layouts.network-recap',
-            self::Cover, self::ClubRecap, self::LedMockup => throw self::notBuilt($this),
+            self::Cover, self::NetworkRecap, self::ClubRecap => 'documents.layouts.positioned',
+            self::LedMockup => throw self::notBuilt($this),
         };
     }
 

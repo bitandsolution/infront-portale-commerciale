@@ -721,6 +721,10 @@ export interface ProposalGroupDetail {
     availability: ProposalGroupNeed[] | null;
     problems: string[];
     history: Array<{ at: string | null; variant: string | null; label: string; user: string; notes: string | null }>;
+    /** PDF document of the group (DM-04); null before the approval. */
+    document: GroupDocument | null;
+    /** Admin and manager, while the group waits: what the document would miss (D-416). */
+    documentWarnings: string[];
     canSubmit: boolean;
     submitUrl: string;
     canReject: boolean;
@@ -731,6 +735,31 @@ export interface ProposalGroupDetail {
     chooseUrl: string;
     backUrl: string;
     backLabel: string;
+}
+
+/** A generated document of a group (ProposalGroupsPresenter::documentEntry; DM-04). */
+export interface GroupDocumentEntry {
+    id: number;
+    status: 'queued' | 'generating' | 'ready' | 'failed';
+    statusLabel: string;
+    statusTone: StatusTone;
+    type: string;
+    /** Reason of a failure, for admin and manager only. */
+    error: string | null;
+    fileName: string | null;
+    pages: number | null;
+    size: string | null;
+    at: string | null;
+    downloadUrl: string | null;
+}
+
+export interface GroupDocument {
+    current: GroupDocumentEntry | null;
+    pending: boolean;
+    canRegenerate: boolean;
+    regenerateUrl: string;
+    /** Replaced documents, for the admin only (D-205). */
+    previous: GroupDocumentEntry[];
 }
 
 /** A row of "Proposte › Tutte" (ProposalGroupsPresenter::list; DM-03b). */

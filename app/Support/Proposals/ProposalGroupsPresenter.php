@@ -2,6 +2,7 @@
 
 namespace App\Support\Proposals;
 
+use App\Domain\Content\Services\DocumentComposer;
 use App\Domain\Proposals\Data\AppliedDiscount;
 use App\Domain\Proposals\Data\ApprovalReview;
 use App\Domain\Proposals\Data\DiscountInput;
@@ -13,8 +14,11 @@ use App\Domain\Proposals\Services\Discounts;
 use App\Domain\Proposals\Services\DraftEvaluator;
 use App\Domain\Proposals\Services\DraftRepricing;
 use App\Enums\DiscountType;
+use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Enums\ProposalStatus;
+use App\Enums\Role;
+use App\Models\Document;
 use App\Models\Proposal;
 use App\Models\ProposalEvent;
 use App\Models\ProposalGroup;
@@ -36,11 +40,15 @@ final class ProposalGroupsPresenter
 {
     private const TIMEZONE = 'Europe/Rome';
 
+    /** The current document and the last replaced ones shown in the detail (DM-04). */
+    private const DOCUMENTS_LIMIT = 10;
+
     public function __construct(
         private readonly DraftEvaluator $evaluator,
         private readonly ApprovalCheck $check,
         private readonly DraftRepricing $repricing,
         private readonly Discounts $discounts,
+        private readonly DocumentComposer $composer,
     ) {}
 
     /**
@@ -283,6 +291,8 @@ final class ProposalGroupsPresenter
             'availability' => $review !== null ? array_map(self::need(...), $review->needs) : null,
             'problems' => $review !== null ? $review->problems : [],
             'history' => $this->history($variants),
+            'document' => $this->document($group, $viewer, $status),
+            'documentWarnings' => $isReviewer && $waiting ? $this->composer->forGroup($group)->warnings : [],
             'canSubmit' => $isAgent && $variants->every(fn (Proposal $variant): bool => $variant->isEditable()),
             'submitUrl' => route('proposals.groups.submit', $group),
             'canReject' => $isReviewer && $waiting,
@@ -301,6 +311,63 @@ final class ProposalGroupsPresenter
                 $waiting => 'ui.proposals.groups.back_pending',
                 default => 'ui.proposals.groups.back_all',
             }),
+        ];
+    }
+
+    /**
+     * The PDF document of the group (DM-04): status, download, regeneration by the admin, the replaced
+     * documents for the admin only (D-205). The reason of a failure reaches admin and manager, who can
+     * fix the library (D-416); the agent reads that the document is not ready.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function document(ProposalGroup $group, User $viewer, ProposalStatus $status): ?array
+    {
+        $documents = $group->documents()->with(['file', 'group'])->limit(self::DOCUMENTS_LIMIT)->get();
+        /** @var Document|null $current */
+        $current = $documents->first(fn (Document $document): bool => $document->isCurrent());
+        $canRegenerate = $viewer->can('regenerate', Document::class) && $status === ProposalStatus::Approved;
+
+        if ($current === null && ! $canRegenerate) {
+            return null;
+        }
+
+        return [
+            'current' => $current !== null ? $this->documentEntry($current, $viewer) : null,
+            'pending' => $current !== null && $current->status->isPending(),
+            'canRegenerate' => $canRegenerate,
+            'regenerateUrl' => route('documents.regenerate', $group),
+            'previous' => $viewer->role === Role::Admin
+                ? array_values($documents->reject(fn (Document $document): bool => $document->isCurrent())
+                    ->map(fn (Document $document): array => $this->documentEntry($document, $viewer))
+                    ->all())
+                : [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function documentEntry(Document $document, User $viewer): array
+    {
+        $file = $document->isReady() ? $document->file : null;
+
+        return [
+            'id' => $document->id,
+            'status' => $document->status->value,
+            'statusLabel' => $document->status->label(),
+            'statusTone' => match ($document->status) {
+                DocumentStatus::Ready => 'success',
+                DocumentStatus::Failed => 'notice',
+                DocumentStatus::Queued, DocumentStatus::Generating => 'muted',
+            },
+            'type' => $document->document_type->label(),
+            'error' => $document->status === DocumentStatus::Failed && $viewer->can('review', ProposalGroup::class) ? $document->last_error : null,
+            'fileName' => $file?->downloadName(),
+            'pages' => $document->page_count,
+            'size' => $document->size_bytes !== null ? number_format($document->size_bytes / 1048576, 1, ',', '.') : null,
+            'at' => self::moment($document->generated_at ?? $document->created_at),
+            'downloadUrl' => $file !== null && $viewer->can('download', $document) ? route('files.download', $file) : null,
         ];
     }
 

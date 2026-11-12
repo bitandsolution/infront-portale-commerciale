@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Console\Development\DocumentsTryCommand;
 use App\Console\Development\FilesTryCommand;
+use App\Domain\Documents\Contracts\RendersPdf;
+use App\Domain\Documents\Services\PdfPipeline;
 use App\Domain\Settings\Services\Settings;
 use App\Domain\Sports\Services\CurrentSeason;
 use App\Enums\Ability;
@@ -29,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Season of the top bar (D-317, F1-01): resolved once per request.
         $this->app->scoped(CurrentSeason::class);
+
+        // PDF of the documents (DM-04): Chromium and qpdf; the feature tests bind a fake renderer.
+        $this->app->bind(RendersPdf::class, PdfPipeline::class);
     }
 
     /**

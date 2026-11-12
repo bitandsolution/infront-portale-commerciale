@@ -10,6 +10,7 @@ use App\Models\Club;
 use App\Models\CommoditySector;
 use App\Models\Competition;
 use App\Models\CompetitionSeason;
+use App\Models\Document;
 use App\Models\FixtureMatch;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
@@ -115,6 +116,15 @@ final readonly class AuditSubject
     public static function proposal(Proposal $proposal): self
     {
         return new self('proposal', $proposal->id, Text::get('proposals.label', ['number' => (string) $proposal->number]));
+    }
+
+    /**
+     * The document of a group (DM-04), by the number of its first proposal: e.g. "Documento della
+     * proposta n. 204".
+     */
+    public static function document(Document $document, Proposal $proposal): self
+    {
+        return new self('document', $document->id, Text::get('documents.label', ['number' => (string) $proposal->number]));
     }
 
     /**

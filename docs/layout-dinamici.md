@@ -198,7 +198,7 @@ Icone ed etichette nello sfondo. ❓ La somma del totale va confermata con Infro
 | Colonne | CLUB 56–510 · Format 510–790 · No di Match 790–994 · Min. / Partita 994–1198 · N.Spot / game 1198–1402 · PROPOSTA ECONOMICA 1402–1855 | Griglia completa di bordi neri da 1 px, fondo trasparente |
 | Intestazione | Top 226, alta 106, fondo #CC0033 | Titoli originali (CLUB, Format, No di Match, Min. / Partita, N.Spot / game, PROPOSTA ECONOMICA) in Interstate Bold 20 px **#FFFFFF** (nell'originale rosso su rosso, difetto 1 di §2.4) |
 | Righe | Da top 332, alte 45; logo 37 px a x = 68; nome a x = 136 | Nome del club **in maiuscolo**, valori centrati; Interstate Bold 20 px, #333333 |
-| Riga dei totali | Alta 91; "Totale / stagione" senza bordo, allineato a destra a x = 733 | Totali di match, minuti e spot in celle bordate, Interstate Bold 37,3 px |
+| Riga dei totali | Alta 91; "Totale / stagione" senza bordo, allineato a destra a x = 733 | Totali di match, minuti e spot in celle bordate, Interstate Bold 37,3 px; senza LED nella variante (solo partnership o hospitality) le tre celle mostrano "—" invece di zero (collaudo DM-04, confermato da Antonio il 12/11/2026) |
 | PROPOSTA ECONOMICA | **Cella unica** dalla prima riga al fondo dei totali | Totale finale in Interstate Black 46,7 px (Calibri sostituito, D-249). Con sconto: listino barrato in Interstate Bold 30 px **sopra** il totale finale, senza sovrapposizione (difetto 2 di §2.4) e senza riga "Sconto" |
 | Nota sulle squadre retrocesse | [56,935 1790×30], Interstate Bold 21,3 px, da `layout_texts` | Testo originale |
 | Nota IVA | Sotto la tabella, 12 px dopo i totali | Interstate Regular 16 px (§4.10) |
