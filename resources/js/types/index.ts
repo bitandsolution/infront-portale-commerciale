@@ -449,6 +449,9 @@ export interface ProposalDraft {
     canAddVariant: boolean;
     maxVariants: number;
     addVariantUrl: string;
+    /** DM-03a: "Invia in approvazione" of the group (D-395) and the last rejection (D-412). */
+    submitUrl: string | null;
+    rejection: { at: string; by: string | null; reason: string | null } | null;
 }
 
 /** An option of a club at step 4 (ProposalsPresenter::clubOptions): shown only when available or sold out. */
@@ -566,7 +569,13 @@ export interface ProposalDraftRow {
     listTotal: string;
     updatedAt: string;
     clientId: string;
-    editUrl: string;
+    /** DM-03a: status of the variant; drafts and rejected open in the configurator (editUrl), the others in the group (D-411). */
+    status: string;
+    statusLabel: string;
+    statusTone: StatusTone;
+    editable: boolean;
+    editUrl: string | null;
+    groupUrl: string | null;
     deleteUrl: string;
     duplicateUrl: string;
 }
@@ -630,4 +639,54 @@ export interface SlideFormOptions {
         boolean: boolean;
         values: Option[];
     }[];
+}
+
+/** A group in the queue "Da approvare" (ProposalGroupsPresenter::queue; DM-03a, M07 F-01). */
+export interface ProposalPendingGroup {
+    id: number;
+    number: number;
+    title: string;
+    submittedAt: string | null;
+    client: string | null;
+    agent: string;
+    variants: number;
+    clubs: string;
+    /** One total per variant; the letter only with more variants. */
+    totals: Array<{ letter: string | null; total: string }>;
+    /** Variants with clubs to check on the current list and residuals. */
+    problems: string[];
+    url: string;
+}
+
+/** The detail of a group of variants (ProposalGroupsPresenter::group; DM-03a, D-411). */
+export interface ProposalGroupDetail {
+    id: number;
+    number: number;
+    title: string;
+    client: string | null;
+    season: string | null;
+    agent: string;
+    status: string;
+    statusLabel: string;
+    statusTone: StatusTone;
+    documentLabel: string | null;
+    submittedAt: string | null;
+    decidedAt: string | null;
+    decidedBy: string | null;
+    rejectionReason: string | null;
+    variants: Array<{
+        id: number;
+        letter: string | null;
+        number: number;
+        statusLabel: string;
+        draft: ProposalDraft | null;
+        editUrl: string | null;
+    }>;
+    history: Array<{ at: string | null; variant: string | null; label: string; user: string | null; notes: string | null }>;
+    canSubmit: boolean;
+    submitUrl: string;
+    canReject: boolean;
+    rejectUrl: string;
+    backUrl: string;
+    backLabel: string;
 }

@@ -10,12 +10,14 @@ import type { ProposalDraft } from '@/types';
  * the campaign, a row per club (package, format, minutes, matches of the period, spots per match =
  * minutes × 4, hospitality, list price), the list total and the warnings. Every number comes from the
  * server (DraftEvaluator, MatchCounter, PriceCalculator): the page only shows it. No discount field
- * (D-011, D-086) and no "Invia in approvazione" before F5 (D-374).
+ * (D-011, D-086). "Invia in approvazione" is in the configurator (DM-03a).
  */
 const props = defineProps<{
     draft: ProposalDraft;
     clientName: string | null;
     sector: string | null;
+    /** DM-03a: the detail of a group shows the summary without the configurator's actions (D-411). */
+    readOnly?: boolean;
 }>();
 
 const emit = defineEmits<{ fix: [] }>();
@@ -53,7 +55,10 @@ function hasProblems(errors: Record<string, string>): boolean {
                     · {{ t('proposals.summary.sector', { sector }) }}
                 </template>
             </p>
-            <p class="text-sm leading-relaxed text-muted">
+            <p
+                v-if="!readOnly"
+                class="text-sm leading-relaxed text-muted"
+            >
                 {{ t('proposals.summary.intro') }}
             </p>
         </div>
@@ -66,6 +71,7 @@ function hasProblems(errors: Record<string, string>): boolean {
         >
             <p>{{ t('proposals.summary.blocked') }}</p>
             <button
+                v-if="!readOnly"
                 type="button"
                 :class="buttonClasses.secondary"
                 @click="emit('fix')"
@@ -176,6 +182,7 @@ function hasProblems(errors: Record<string, string>): boolean {
                 </li>
             </ul>
             <button
+                v-if="!readOnly"
                 type="button"
                 :class="buttonClasses.secondary"
                 class="self-start"

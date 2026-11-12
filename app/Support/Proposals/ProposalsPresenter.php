@@ -16,6 +16,7 @@ use App\Domain\Proposals\Services\ProposalVariants;
 use App\Domain\Settings\Services\Settings;
 use App\Domain\Sports\Data\MatchCount;
 use App\Enums\CompetitionType;
+use App\Enums\ProposalStatus;
 use App\Models\Client;
 use App\Models\Club;
 use App\Models\ClubEnrollment;
@@ -265,6 +266,10 @@ final class ProposalsPresenter
             'deleteUrl' => route('proposals.destroy', $proposal),
             'newClientUrl' => route('proposals.clients.update', $proposal),
             'copyUrl' => route('proposals.copy-clubs', $proposal),
+            // DM-03a: "Invia in approvazione" of the whole group (D-395) and the last rejection, shown
+            // while the agent corrects the proposal (D-412).
+            'submitUrl' => $proposal->proposal_group_id !== null ? route('proposals.groups.submit', $proposal->proposal_group_id) : null,
+            'rejection' => self::rejection($proposal),
             ...self::variants($proposal),
         ];
     }
@@ -492,9 +497,36 @@ final class ProposalsPresenter
             'listTotal' => Amounts::italian($version !== null ? $version->list_total : '0'),
             'updatedAt' => $proposal->updated_at->copy()->setTimezone(self::TIMEZONE)->format('d/m/Y H:i'),
             'clientId' => $proposal->client_id !== null ? (string) $proposal->client_id : '',
-            'editUrl' => route('proposals.edit', $proposal),
+            // DM-03a: every status; drafts and rejected proposals open in the configurator, the
+            // others in the detail of their group (D-411).
+            'status' => $proposal->status->value,
+            'statusLabel' => $proposal->status->label(),
+            'statusTone' => ProposalGroupsPresenter::tone($proposal->status),
+            'editable' => $proposal->isEditable(),
+            'editUrl' => $proposal->isEditable() ? route('proposals.edit', $proposal) : null,
+            'groupUrl' => $proposal->proposal_group_id !== null ? route('proposals.groups.show', $proposal->proposal_group_id) : null,
             'deleteUrl' => route('proposals.destroy', $proposal),
             'duplicateUrl' => route('proposals.duplicate', $proposal),
+        ];
+    }
+
+    /**
+     * The last rejection of a rejected proposal (D-099, D-412): when, by whom and why.
+     *
+     * @return array{at: string, by: string|null, reason: string|null}|null
+     */
+    public static function rejection(Proposal $proposal): ?array
+    {
+        if ($proposal->status !== ProposalStatus::Rejected || $proposal->decided_at === null) {
+            return null;
+        }
+
+        $by = $proposal->decided_by !== null ? User::query()->find($proposal->decided_by) : null;
+
+        return [
+            'at' => $proposal->decided_at->copy()->setTimezone(self::TIMEZONE)->format('d/m/Y H:i'),
+            'by' => $by !== null ? $by->first_name.' '.$by->last_name : null,
+            'reason' => $proposal->last_rejection_reason,
         ];
     }
 

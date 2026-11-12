@@ -77,7 +77,7 @@ final class SaveDraft
             /** @var Proposal $locked */
             $locked = Proposal::query()->whereKey($proposal->id)->lockForUpdate()->firstOrFail();
 
-            if (! $locked->isDraft()) {
+            if (! $locked->isEditable()) {
                 throw ProposalsActionNotAllowed::notDraft($locked->number);
             }
 

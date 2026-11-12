@@ -8,6 +8,7 @@ use App\Domain\Catalog\Services\PriceCalculator;
 use App\Domain\Inventory\Data\ClubSellability;
 use App\Domain\Inventory\Data\SellableOption;
 use App\Domain\Inventory\Services\SellableOptions;
+use App\Domain\Proposals\Actions\SaveDraft;
 use App\Domain\Proposals\Data\CampaignKpis;
 use App\Domain\Proposals\Data\ClubEvaluation;
 use App\Domain\Proposals\Data\DraftClubData;
@@ -20,6 +21,7 @@ use App\Models\Club;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
 use App\Models\PartnershipTier;
+use App\Models\Proposal;
 use App\Models\Season;
 use App\Support\LedDuration;
 use App\Support\Text;
@@ -58,6 +60,26 @@ final class DraftEvaluator
         private readonly Settings $settings,
         private readonly MatchCounter $matchCounter,
     ) {}
+
+    /**
+     * The clubs saved on the working version of a proposal, evaluated on the current list and
+     * residuals (configurator, sending and review of a group, DM-03a). Null without a working version.
+     */
+    public function evaluateProposal(Proposal $proposal): ?DraftEvaluation
+    {
+        $version = $proposal->workingVersion;
+
+        if ($version === null) {
+            return null;
+        }
+
+        return $this->evaluate(
+            $proposal->season,
+            $version->starts_on?->toDateString(),
+            $version->ends_on?->toDateString(),
+            SaveDraft::fromRows(SaveDraft::rows($version)),
+        );
+    }
 
     /**
      * @param  list<DraftClubData>  $clubs

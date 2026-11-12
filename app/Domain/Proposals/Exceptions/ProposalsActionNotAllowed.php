@@ -56,6 +56,26 @@ final class ProposalsActionNotAllowed extends RuntimeException
     }
 
     /** D-396 (DM-01): the variants of a group share client and season. */
+    /**
+     * DM-03a: the group goes for approval only when every variant can (M06 RB-11, D-373).
+     *
+     * @param  list<string>  $letters
+     */
+    public static function groupNotReady(array $letters): self
+    {
+        return new self(Text::get('proposals.errors.group_not_ready', ['variants' => implode(', ', $letters)]));
+    }
+
+    public static function groupNotSubmittable(): self
+    {
+        return new self(Text::get('proposals.errors.group_not_submittable'));
+    }
+
+    public static function groupNotSubmitted(): self
+    {
+        return new self(Text::get('proposals.errors.group_not_submitted'));
+    }
+
     public static function variantsShareHeader(): self
     {
         return new self(Text::get('proposals.errors.variants_share_header'));

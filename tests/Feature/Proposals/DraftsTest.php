@@ -380,26 +380,33 @@ it('RB-14: the agent opens, saves and deletes only his own drafts', function () 
         ->and($proposal->refresh()->lock_version)->toBe(0);
 });
 
-it('D-374: "Le mie proposte" lists the drafts of the agent, the most recent first', function () {
+it('D-374, D-411: "Le mie proposte" lists the proposals of the agent, the most recent first', function () {
     $agent = User::factory()->agent()->create();
     $first = draftsCreate($agent, Client::factory()->ownedBy($agent)->named('Prima Srl')->create());
     $this->travel(5)->minutes();
     $second = draftsCreate($agent, Client::factory()->ownedBy($agent)->named('Seconda Srl')->create());
     draftsCreate(User::factory()->agent()->create());
-    Proposal::factory()->ownedBy($agent)->withWorkingVersion()->status(ProposalStatus::Submitted)->create();
+    $this->travel(5)->minutes();
+    $submitted = Proposal::factory()->ownedBy($agent)->withWorkingVersion()->status(ProposalStatus::Submitted)->create();
 
     $this->actingAs($agent)
         ->get(PortalPages::url('proposals_mine'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Proposals/Mine')
-            ->has('drafts', 2)
-            ->where('drafts.0.number', $second->number)
-            ->where('drafts.0.client', 'Seconda Srl')
-            ->where('drafts.0.season', '2027-28')
-            ->where('drafts.0.period', 'Dal 01/07/2027 al 30/06/2028')
-            ->where('drafts.0.editUrl', route('proposals.edit', $second))
-            ->where('drafts.1.number', $first->number));
+            ->has('drafts', 3)
+            ->where('drafts.0.number', $submitted->number)
+            ->where('drafts.0.statusLabel', 'In approvazione')
+            ->where('drafts.0.editable', false)
+            ->where('drafts.0.editUrl', null)
+            ->where('drafts.0.groupUrl', route('proposals.groups.show', $submitted->proposal_group_id))
+            ->where('drafts.1.number', $second->number)
+            ->where('drafts.1.client', 'Seconda Srl')
+            ->where('drafts.1.season', '2027-28')
+            ->where('drafts.1.period', 'Dal 01/07/2027 al 30/06/2028')
+            ->where('drafts.1.statusLabel', 'Bozza')
+            ->where('drafts.1.editUrl', route('proposals.edit', $second))
+            ->where('drafts.2.number', $first->number));
 });
 
 it('M07 RB-08, D-372: the agent deletes a draft with its version and history; the number is traced', function () {

@@ -30,12 +30,15 @@ final class DeleteDraft
             /** @var Proposal $locked */
             $locked = Proposal::query()->whereKey($proposal->id)->lockForUpdate()->firstOrFail();
 
-            if (! $locked->isDraft()) {
+            if (! $locked->isEditable()) {
                 throw ProposalsActionNotAllowed::notDraft($locked->number);
             }
 
             $version = $locked->workingVersion;
             $values = $version !== null ? ProposalsAuditValues::draft($locked, $version) : ['number' => $locked->number];
+            // DM-03a: the letter of a variant, so the audit tells which variant of the group went.
+            $values['variant_letter'] = $locked->variant_letter;
+            $values['status'] = $locked->status->value;
 
             $this->audit->record(AuditAction::ProposalDraftDeleted, $actor, AuditSubject::proposal($locked), $values, []);
 

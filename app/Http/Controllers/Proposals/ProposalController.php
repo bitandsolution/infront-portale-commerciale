@@ -12,7 +12,6 @@ use App\Domain\Proposals\Services\DraftEvaluator;
 use App\Domain\Proposals\Services\DraftRepricing;
 use App\Domain\Proposals\Services\ProposalPeriod;
 use App\Domain\Settings\Services\Settings;
-use App\Enums\ProposalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Proposals\CreateDraftRequest;
 use App\Http\Requests\Proposals\SaveDraftRequest;
@@ -64,14 +63,13 @@ class ProposalController extends Controller
         $proposals = Proposal::query()
             ->visibleTo($actor)
             ->where('agent_id', $actor->id)
-            ->where('status', ProposalStatus::Draft->value)
             ->with(['client', 'season', 'workingVersion'])
             ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->get();
 
         // D-396: the variants of a group stay together, in the order of their letter; the groups in
-        // the order of their most recent change.
+        // the order of their most recent change. DM-03a: every status (D-411).
         $drafts = $proposals
             ->groupBy(fn (Proposal $proposal): string => $proposal->proposal_group_id !== null ? 'g'.$proposal->proposal_group_id : 'p'.$proposal->id)
             ->flatMap(/** @param Collection<int, Proposal> $variants */ function (Collection $variants): array {
@@ -197,15 +195,10 @@ class ProposalController extends Controller
      */
     private static function evaluation(Proposal $proposal): DraftEvaluation
     {
-        /** @var ProposalVersion $version */
-        $version = $proposal->workingVersion;
+        /** @var DraftEvaluation $evaluation */
+        $evaluation = app(DraftEvaluator::class)->evaluateProposal($proposal);
 
-        return app(DraftEvaluator::class)->evaluate(
-            $proposal->season,
-            $version->starts_on?->toDateString(),
-            $version->ends_on?->toDateString(),
-            SaveDraft::fromRows(SaveDraft::rows($version)),
-        );
+        return $evaluation;
     }
 
     private static function repricing(Proposal $proposal, DraftEvaluation $evaluation): ?DraftPriceChanges

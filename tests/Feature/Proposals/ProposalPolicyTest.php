@@ -37,7 +37,7 @@ it('RB-14: the agent sees, changes, deletes and duplicates only his own drafts',
         ->and($agent->can('duplicate', $other))->toBeFalse();
 });
 
-it('M07 RB-08, D-091: outside the draft the agent no longer changes nor deletes, but still duplicates', function (ProposalStatus $status) {
+it('M07 RB-08, D-091, D-412: outside the draft and the rejected proposal the agent no longer changes nor deletes, but still duplicates', function (ProposalStatus $status) {
     $agent = User::factory()->agent()->create();
     $proposal = Proposal::factory()->ownedBy($agent)->status($status)->create();
 
@@ -45,7 +45,7 @@ it('M07 RB-08, D-091: outside the draft the agent no longer changes nor deletes,
         ->and($agent->can('update', $proposal))->toBeFalse()
         ->and($agent->can('delete', $proposal))->toBeFalse()
         ->and($agent->can('duplicate', $proposal))->toBeTrue();
-})->with([ProposalStatus::Submitted, ProposalStatus::Approved, ProposalStatus::Rejected, ProposalStatus::Cancelled]);
+})->with([ProposalStatus::Submitted, ProposalStatus::Approved, ProposalStatus::Cancelled]);
 
 it('M06 §3, D-374: admin and manager consult every proposal and never work on the drafts of the agents', function (string $role) {
     $user = User::factory()->state(['role' => $role])->create();
