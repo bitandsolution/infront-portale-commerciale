@@ -1423,6 +1423,7 @@ return [
                 'bold' => 'Grassetto',
                 'bullet' => 'Elenco puntato',
                 'characters' => ':count / :max caratteri',
+                'characters_limit' => 'Hai raggiunto il massimo di :max caratteri',
             ],
             'table' => [
                 'header_hint' => 'La prima riga è l\'intestazione.',

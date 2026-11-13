@@ -872,11 +872,18 @@ const smallButton = 'inline-flex min-h-11 items-center gap-1.5 rounded-[10px] bo
                                 :maxlength="options.limits.text"
                                 :placeholder="t('proposals.custom_slides.blocks.text_placeholder')"
                                 :aria-label="`${index + 1} · ${typeLabel(block.type)}`"
+                                :aria-invalid="(block.text ?? '').length >= options.limits.text ? 'true' : undefined"
                                 :disabled="!editable"
                                 @input="schedule"
                             />
-                            <p class="text-right text-[12px] text-muted">
-                                {{ t('proposals.custom_slides.blocks.characters', { count: String((block.text ?? '').length), max: String(options.limits.text) }) }}
+                            <p
+                                class="text-right text-[12px]"
+                                :class="(block.text ?? '').length >= options.limits.text ? 'font-semibold text-accent' : 'text-muted'"
+                                aria-live="polite"
+                            >
+                                {{ (block.text ?? '').length >= options.limits.text
+                                    ? t('proposals.custom_slides.blocks.characters_limit', { max: String(options.limits.text) })
+                                    : t('proposals.custom_slides.blocks.characters', { count: String((block.text ?? '').length), max: String(options.limits.text) }) }}
                             </p>
                         </div>
 
