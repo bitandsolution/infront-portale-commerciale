@@ -613,7 +613,7 @@ const smallButton = 'inline-flex min-h-11 items-center gap-1.5 rounded-[10px] bo
                     v-if="editable"
                     class="flex flex-wrap items-center gap-2"
                 >
-                    <label :class="[smallButton, 'cursor-pointer']">
+                    <label :class="[smallButton, 'relative cursor-pointer focus-within:outline-2 focus-within:outline-accent']">
                         <ImagePlus
                             :size="16"
                             :stroke-width="2"
@@ -801,7 +801,7 @@ const smallButton = 'inline-flex min-h-11 items-center gap-1.5 rounded-[10px] bo
                                 v-if="editable"
                                 class="flex flex-wrap items-center gap-2"
                             >
-                                <label :class="[smallButton, 'cursor-pointer']">
+                                <label :class="[smallButton, 'relative cursor-pointer focus-within:outline-2 focus-within:outline-accent']">
                                     <ImagePlus
                                         :size="16"
                                         :stroke-width="2"
