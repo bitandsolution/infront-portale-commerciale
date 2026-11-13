@@ -2,7 +2,7 @@
 
 Raccolta delle funzionalità **fuori MVP**: rinviate, predisposte nell'architettura o proposte come miglioramento. Si aggiorna durante l'analisi (D-133) e si consegna completa al termine.
 
-Ultimo aggiornamento: 2026-11-10 (EV-26)
+Ultimo aggiornamento: 2026-11-13 (EV-27)
 
 Legenda stato:
 - **Predisposta:** l'architettura MVP la prevede, va solo attivata o sviluppata.
@@ -37,3 +37,4 @@ Legenda stato:
 | EV-24 | **Archivio PDF delle proposte del vecchio sistema** consultabile nel portale | M09 | Rinviata | D-228 | I PDF vanno generati in blocco dal vecchio sistema (che non li salva, D-149) e riscritti con qpdf in import; tabella `legacy_documents` |
 | EV-25 | **Copia dei benefit da un club a un altro**, come base da rivedere | M03 | Rinviata | D-335 | M03 F-13; i benefit non sono usati nei documenti del rilascio 1.0 (D-117) |
 | EV-26 | **Foto reale del logo sul LED** per i clienti già attivi, caricata al posto della simulazione | M08, M09 | Proposta | D-398 | Richiesta di Infront del 10/11/2026 ("fotografia vera"); da appurare alla demo del 4/12/2026 |
+| EV-27 | **Editor visuale del testo** delle slide composte a blocchi (grassetto ed elenchi visti mentre si scrive, senza i segni `**` e "- ") | M08 | Proposta | D-437 | Scelta per la demo: campo di testo con segni semplici e pulsanti (DM-07) |
