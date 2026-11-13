@@ -22,6 +22,9 @@ final class DemoData
 
     public const KICKOFF = '20:45';
 
+    /** Header of the fictitious calendar file, in the layout D-017 (recognized by the import, D-325). */
+    public const CALENDAR_HEADERS = ['Stagione', 'Competizione', 'Giornata', 'Data', 'Ora', 'Squadra casa', 'Squadra ospite', 'Stadio'];
+
     public const SERIE_A = 'SERIE_A';
 
     public const SERIE_B = 'SERIE_B';

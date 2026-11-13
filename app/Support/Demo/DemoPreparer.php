@@ -28,13 +28,13 @@ use App\Domain\Proposals\Data\DraftClubData;
 use App\Domain\Proposals\Data\DraftData;
 use App\Domain\Sports\Actions\AddCompetitionToSeason;
 use App\Domain\Sports\Actions\ChangeClubLogo;
+use App\Domain\Sports\Actions\ConfirmCalendarImport;
 use App\Domain\Sports\Actions\CreateClub;
 use App\Domain\Sports\Actions\CreateSeason;
 use App\Domain\Sports\Actions\CreateStadium;
 use App\Domain\Sports\Actions\EnrollClubs;
-use App\Domain\Sports\Actions\SaveMatch;
+use App\Domain\Sports\Actions\UploadCalendar;
 use App\Domain\Sports\Data\ClubData;
-use App\Domain\Sports\Data\MatchData;
 use App\Domain\Sports\Data\SeasonData;
 use App\Domain\Sports\Data\StadiumData;
 use App\Enums\CustomSlideLayout;
@@ -42,7 +42,6 @@ use App\Enums\DiscountType;
 use App\Enums\DocumentLayout;
 use App\Enums\InventoryResource;
 use App\Enums\LedPhotoKind;
-use App\Enums\MatchdayStage;
 use App\Enums\PriceKind;
 use App\Enums\Role;
 use App\Enums\SeasonStatus;
@@ -70,6 +69,8 @@ use App\Support\Text;
 use Closure;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 use RuntimeException;
 use Throwable;
 
@@ -237,7 +238,10 @@ final class DemoPreparer
     /**
      * Double round robin (circle method) on the clubs in order of code, one matchday a week from
      * Sunday 22/08/2027; never more than two home or away matches in a row (script of the milestone A,
-     * docs/dev/collaudo-milestone-a.md §8.1), 19 home matches per club.
+     * docs/dev/collaudo-milestone-a.md §8.1), 19 home matches per club. The calendar is loaded as the
+     * admin does, with the import of an Excel file in the layout D-017 (UploadCalendar,
+     * ConfirmCalendarImport): only a confirmed import marks the calendar as loaded, otherwise the
+     * matches would be prorated from the standard number (D-187).
      */
     private function calendar(): void
     {
@@ -276,20 +280,32 @@ final class DemoPreparer
 
         usort($matches, fn (array $x, array $y): int => $x[0] <=> $y[0]);
 
+        $base = (string) tempnam(sys_get_temp_dir(), 'demo');
+        $path = $base.'.xlsx';
+        array_push($this->temporaryFiles, $base, $path);
+        $writer = new Writer;
+        $writer->openToFile($path);
+        $writer->addRow(Row::fromValues(DemoData::CALENDAR_HEADERS));
+
         foreach ($matches as [$matchday, $home, $away]) {
-            app(SaveMatch::class)->handle(null, new MatchData(
-                $edition->id,
-                MatchdayStage::Regular,
+            $writer->addRow(Row::fromValues([
+                DemoData::SEASON_CODE,
+                '',
                 $matchday,
-                $first->copy()->addWeeks($matchday - 1),
+                $first->copy()->addWeeks($matchday - 1)->format('d/m/Y'),
                 DemoData::KICKOFF,
-                $this->clubs[$home]->id,
-                $this->clubs[$away]->id,
-                null,
-            ), $this->admin);
+                $this->clubs[$home]->short_name,
+                $this->clubs[$away]->short_name,
+                '',
+            ]));
         }
 
-        $this->report[] = Text::get('demo.console.calendar', ['matches' => (string) count($matches)]);
+        $writer->close();
+
+        $import = app(UploadCalendar::class)->handle($edition, $this->upload((string) file_get_contents($path), 'calendario-fittizio-serie-a-2027-28.xlsx'), $this->admin);
+        $import = app(ConfirmCalendarImport::class)->handle($import, $this->admin);
+
+        $this->report[] = Text::get('demo.console.calendar', ['matches' => (string) $import->inserted_count]);
     }
 
     private function catalog(): void

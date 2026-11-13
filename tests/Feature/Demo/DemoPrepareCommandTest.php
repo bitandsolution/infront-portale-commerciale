@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CalendarImportStatus;
 use App\Enums\DocumentLayout;
 use App\Enums\LedPhotoKind;
 use App\Enums\PriceListStatus;
@@ -7,6 +8,7 @@ use App\Enums\ProposalStatus;
 use App\Enums\SeasonStatus;
 use App\Jobs\GenerateDocument;
 use App\Models\AuditEvent;
+use App\Models\CalendarImport;
 use App\Models\Client;
 use App\Models\Club;
 use App\Models\ClubEnrollment;
@@ -81,8 +83,10 @@ it('D-400: demo:prepare prepares season, clubs, calendar, catalog, clients, slid
         ->and(Club::query()->where('is_top_match_opponent', true)->orderBy('code')->pluck('code')->all())->toBe(['INTER', 'JUVENTUS', 'LAZIO', 'MILAN', 'NAPOLI', 'ROMA'])
         ->and(Club::query()->where('is_infront', true)->whereNull('logo_file_id')->count())->toBe(0);
 
-    // 380 matches, 19 at home for every club.
-    expect(FixtureMatch::query()->count())->toBe(380);
+    // 380 matches from a confirmed import (calendar loaded, D-187), 19 at home for every club.
+    expect(FixtureMatch::query()->count())->toBe(380)
+        ->and($serieA->calendar_loaded_at)->not->toBeNull()
+        ->and(CalendarImport::query()->where('status', CalendarImportStatus::Confirmed->value)->count())->toBe(1);
 
     foreach (Club::all() as $club) {
         expect(FixtureMatch::query()->where('home_club_id', $club->id)->count())->toBe(19);
@@ -105,7 +109,7 @@ it('D-400: demo:prepare prepares season, clubs, calendar, catalog, clients, slid
         ->and($output)->toContain('UDINESE_FILA1 assente');
 
     // Everything written through the Actions: audit events of the admin and of the agent.
-    expect(AuditEvent::query()->where('action', 'match.created')->count())->toBe(380)
+    expect(AuditEvent::query()->where('action', 'calendar_import.confirmed')->count())->toBe(1)
         ->and(AuditEvent::query()->where('action', 'slide.created')->count())->toBe(52);
 });
 
@@ -195,7 +199,7 @@ it('D-400: demo:prepare refuses a portal with data or without an admin', functio
         ->and(Club::query()->count())->toBe(0);
 
     Season::query()->delete();
-    $this->admin->forceFill(['is_active' => false])->save();
+    $this->admin->forceFill(['is_active' => false, 'deactivated_at' => now()])->save();
 
     [$code, $output] = demoRun();
     expect($code)->toBe(1)->and($output)->toContain('users:create-admin');
