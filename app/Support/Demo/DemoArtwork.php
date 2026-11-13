@@ -48,9 +48,9 @@ final class DemoArtwork
         $this->text($image, 'INFRONT', 56, 44, 26, [255, 255, 255], 900);
 
         [$left, $top, $width, $height] = CoverLayout::LOGO_BOXES[$type];
-        $left = $type === 'club' ? 640 : 560;
-        $lines = $this->title($image, $title, $left, 300, 96, $text);
-        $this->text($image, $subtitle, $left, 300 + (int) ($lines * 96 * 1.1) - 20, 40, $text, 700);
+        $titleLeft = $type === 'club' ? 640 : 560;
+        $lines = $this->title($image, $title, $titleLeft, 300, 96, $text);
+        $this->text($image, $subtitle, $titleLeft, 300 + (int) ($lines * 96 * 1.1) - 20, 40, $text, 700);
         imagefilledrectangle($image, $left - 24, $top - 24, $left + $width + 24, $top + $height + 24, $this->color($image, [255, 255, 255]));
         imagefilledpolygon($image, [1700, self::HEIGHT - 1, self::WIDTH - 1, 820, self::WIDTH - 1, self::HEIGHT - 1], $this->color($image, self::RED));
         $this->note($image, $text);
@@ -60,12 +60,12 @@ final class DemoArtwork
 
     /**
      * Light background of the recap or of the composed slide: page 246 grey, pill in the accent
-     * colour and title at the top left, corner at the bottom right; with a club, its name in a band
-     * of its colour above the table of the club recap.
+     * colour and title at the top left, corner at the bottom right (the club recap already heads its
+     * table with the name of the club, D-415).
      *
      * @param  array{int, int, int}  $accent
      */
-    public function light(string $title, array $accent, ?string $club = null): string
+    public function light(string $title, array $accent): string
     {
         $image = $this->canvas([246, 246, 246]);
         $color = $this->color($image, $accent);
@@ -73,11 +73,6 @@ final class DemoArtwork
         imagefilledellipse($image, 89, 91, 26, 26, $color);
         imagefilledellipse($image, 162, 91, 26, 26, $color);
         $this->text($image, mb_strtoupper($title), 76, 182, 50, [17, 17, 17], 900);
-
-        if ($club !== null) {
-            imagefilledrectangle($image, 56, 260, 1846, 400, $color);
-            $this->text($image, mb_strtoupper($club), 96, 352, 64, $this->onColor($accent), 900);
-        }
 
         imagefilledpolygon($image, [1845, self::HEIGHT - 1, self::WIDTH - 1, 985, self::WIDTH - 1, self::HEIGHT - 1], $color);
         $this->note($image, [120, 120, 120]);

@@ -449,7 +449,7 @@ final class DemoPreparer
         $definitions[] = ['HOSPITALITY', 'BENEFIT', 10, null, [SlideConditionType::HasHospitality->value => ['true']], $slide('hospitality')];
         $definitions[] = ['SIMULAZIONE', 'BRAND_EXPOSURE', 20, DocumentLayout::LedMockup, [], fn (): string => ''];
         $definitions[] = ['PERSONALIZZATA', 'BRAND_EXPOSURE', 90, DocumentLayout::CustomBlocks, [], fn (): string => $this->artwork->light($text('custom_title'), $accent)];
-        $definitions[] = ['RECAP', 'RECAP', 10, $club !== null ? DocumentLayout::ClubRecap : DocumentLayout::NetworkRecap, [], fn (): string => $this->artwork->light($text('recap_title'), $accent, $club?->name)];
+        $definitions[] = ['RECAP', 'RECAP', 10, $club !== null ? DocumentLayout::ClubRecap : DocumentLayout::NetworkRecap, [], fn (): string => $this->artwork->light($text('recap_title'), $accent)];
         $definitions[] = ['CHIUSURA', 'CLOSING', 10, null, [], $slide('closing')];
 
         return $definitions;
