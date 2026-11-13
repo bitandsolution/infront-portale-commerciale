@@ -24,7 +24,7 @@ Portale web in cui gli agenti commerciali di **Infront Italy** configurano offer
 | UX | `docs/ux-architettura.md` + mockup (link in `docs/README.md`) | Navigazione per ruolo, stati, errori, breakpoint |
 | Layout dei documenti | `docs/layout-dinamici.md` | Misure, font e regole dei 9 layout dinamici |
 | Piano | `docs/pianificazione.md` | Fette, ordine, milestone, PR della fetta corrente |
-| Fuori perimetro | `docs/features-evolutive.md` | EV-01…EV-26: **non si sviluppano** |
+| Fuori perimetro | `docs/features-evolutive.md` | EV-01…EV-27: **non si sviluppano** |
 
 **Se manca un'informazione o due fonti non si conciliano, non decidere da solo.** Fermati e scrivi la domanda nella descrizione della PR o nella risposta ad Antonio, con le opzioni e una raccomandazione. Non inventare requisiti, campi, stati o regole di calcolo.
 
@@ -330,7 +330,7 @@ Termini nuovi: aggiungili qui nella stessa PR che li introduce.
 2. Branch: `feat/<fetta>-<breve-descrizione>` (es. `feat/f0-two-factor`), `fix/…`, `docs/…`. **Mai push su `main`.**
 3. Ogni PR contiene: obiettivo; criteri di accettazione coperti (es. `M01-CA2`) con i test che li verificano; decisioni applicate (`D-xxx`); domande aperte; istruzioni di collaudo manuale; **elenco dei file creati e modificati con percorso**.
 4. La CI deve essere verde prima della revisione.
-5. Se durante lo sviluppo emerge un'idea fuori perimetro, aggiungila in `docs/features-evolutive.md` (ultima: EV-26) e **non svilupparla**.
+5. Se durante lo sviluppo emerge un'idea fuori perimetro, aggiungila in `docs/features-evolutive.md` (ultima: EV-27) e **non svilupparla**.
 6. Se una decisione approvata va cambiata, non cambiarla nel codice: proponila ad Antonio. Il registro si aggiorna solo con la sua conferma.
 
 ## 11. Test
@@ -396,7 +396,7 @@ Una funzione è fatta quando:
 
 - Non usare `float` per importi o minuti.
 - Non cambiare stack, versioni o architettura.
-- Non sviluppare le evolutive (EV-01…EV-26) né le funzioni del rilascio 1.1 (D-236, D-237) durante la 1.0.
+- Non sviluppare le evolutive (EV-01…EV-27) né le funzioni del rilascio 1.1 (D-236, D-237) durante la 1.0.
 - Non introdurre tabelle di permessi configurabili: i ruoli sono fissi (D-208).
 - Non installare i font nel sistema e non committarli.
 - Non usare risorse esterne (CDN, font web, immagini remote) nei documenti PDF.
