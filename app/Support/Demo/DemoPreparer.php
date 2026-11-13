@@ -63,6 +63,7 @@ use App\Models\Proposal;
 use App\Models\ProposalGroup;
 use App\Models\Season;
 use App\Models\SlideSection;
+use App\Models\Stadium;
 use App\Models\User;
 use App\Support\Amounts;
 use App\Support\Text;
@@ -196,6 +197,7 @@ final class DemoPreparer
             SeasonStatus::Open,
         ), $this->admin);
 
+        /** @var array<string, Stadium> $stadiums */
         $stadiums = [];
 
         foreach (DemoData::STADIUMS as [$key, $name, $city]) {
@@ -244,6 +246,7 @@ final class DemoPreparer
             ->where('competition_id', $this->competition(DemoData::SERIE_A)->id)
             ->firstOrFail();
 
+        /** @var array<int, string> $teams */
         $teams = array_keys($this->clubs);
         sort($teams);
 
@@ -267,6 +270,7 @@ final class DemoPreparer
                 $matches[] = [$round + 1 + $rounds, $away, $home];
             }
 
+            /** @var array<int, string> $teams */
             $teams = [$teams[0], $teams[$count - 1], ...array_slice($teams, 1, $count - 2)];
         }
 
@@ -543,7 +547,7 @@ final class DemoPreparer
         $proposal->refresh();
 
         app(SaveDraft::class)->handle($proposal, new DraftData(
-            $proposal->client_id,
+            (int) $proposal->client_id,
             $this->season->id,
             $startsOn ?? DemoData::SEASON_START,
             DemoData::SEASON_END,
