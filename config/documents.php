@@ -54,6 +54,11 @@ return [
     // by "documents:try --samples" on the VM; never in the repository.
     'samples_path' => env('DOCUMENT_SAMPLES_PATH') ?: null,
 
+    // Development only (D-400, D-438, D-439; DM-08): folder of the material of the demo on the VM,
+    // read by "demo:prepare": campi/ (photos of the fields), loghi/ (club logos), slide/ (slides
+    // that replace the drawn ones); never in the repository.
+    'demo_assets_path' => env('DEMO_ASSETS_PATH') ?: null,
+
     // Command-line tools of the checks and of the optimisation (R1, D-308).
     'qpdf_binary' => env('DOCUMENT_QPDF_BINARY', 'qpdf'),
     'pdffonts_binary' => env('DOCUMENT_PDFFONTS_BINARY', 'pdffonts'),

@@ -20,6 +20,7 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 | `dev/pr-f3.md` | Elenco delle PR della fetta F3 (D-356) |
 | `dev/pr-f4.md` | Elenco delle PR della fetta F4 (D-370) |
 | `dev/pr-demo.md` | Elenco delle PR della fetta DM, demo del 4/12/2026 (D-394) |
+| `dev/prova-generale-demo.md` | Dati della demo (`demo:prepare`), materiale sulla VM, prova generale e istantanea (DM-08, D-400) |
 | `dev/collaudo-milestone-a.md` | Checklist del collaudo della milestone A e traccia del caricamento di R0 (D-353) |
 
 **Mockup UX**: canvas "Portale Infront – Configuratore", 13 tavole → https://claude.ai/artifact/WnoZA4zUgQMJBHLJvF4B3c (privato).

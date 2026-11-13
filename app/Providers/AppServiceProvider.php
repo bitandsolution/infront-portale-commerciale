@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Development\DemoPrepareCommand;
 use App\Console\Development\DocumentsTryCommand;
 use App\Console\Development\FilesTryCommand;
 use App\Domain\Documents\Contracts\RendersPdf;
@@ -48,9 +49,9 @@ class AppServiceProvider extends ServiceProvider
         // reset and change of the password.
         Password::defaults(fn (): Password => Password::min(12)->uncompromised());
 
-        // Development commands (PR-06, S1-02): never registered in production.
+        // Development commands (PR-06, S1-02, DM-08): never registered in production.
         if ($this->app->runningInConsole() && $this->app->environment('local', 'testing')) {
-            $this->commands([FilesTryCommand::class, DocumentsTryCommand::class]);
+            $this->commands([FilesTryCommand::class, DocumentsTryCommand::class, DemoPrepareCommand::class]);
         }
     }
 
