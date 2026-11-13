@@ -23,7 +23,8 @@ use Closure;
  *   the image of the slide on the left (42% of the area, never cut) and the blocks on the right.
  * - Blocks stacked from the top: title (Interstate Black), text (Regular, bold, bulleted items),
  *   table (header in the red of the recaps, the cells fitted on one line like the recap,
- *   layout-dinamici §6.3), image (whole width of the column, at most 420 px high), image with text
+ *   layout-dinamici §6.3), image (whole width of the column; at most 420 px high with one column,
+ *   up to the height of the area with two columns or the image on the left), image with text
  *   (the image on 38% of the column).
  * - Too much content (D-431): everything is reduced together, in steps of 5%, down to 70%; beyond
  *   that what does not fit is cut at the bottom of the area: the last line kept ends with "…", an
@@ -81,6 +82,11 @@ final class CustomBlocksLayout
 
     public const BORDER_COLOR = '#000000';
 
+    /**
+     * Highest image of a block in the layout "one_column": wider than tall images would cover the
+     * whole slide. In the other layouts the image takes the whole width of its column, up to the
+     * height of the area.
+     */
     public const IMAGE_MAX_HEIGHT = 420;
 
     /** Block "image_text": share of the column for the image, its highest size, gap to the text. */
@@ -190,10 +196,11 @@ final class CustomBlocksLayout
             $columns[] = [$areaLeft, $areaWidth, array_keys($slide->blocks)];
         }
 
+        $imageMaxHeight = $slide->layout === CustomSlideLayout::OneColumn ? self::IMAGE_MAX_HEIGHT : $areaHeight;
         $scale = 1.0;
 
         while (true) {
-            [$elements, $height] = self::columns($slide, $columns, $scale, $sizes, $fitter);
+            [$elements, $height] = self::columns($slide, $columns, $scale, $sizes, $fitter, $imageMaxHeight);
 
             if ($height <= $areaHeight) {
                 return new CustomArrangement(self::offset([...$fixed, ...$elements], $areaTop), false, $scale);
@@ -214,7 +221,7 @@ final class CustomBlocksLayout
      * @param  array<int, array{int, int}>  $sizes
      * @return array{list<array<string, mixed>>, float} elements (top relative to the area), height
      */
-    private static function columns(CustomSlide $slide, array $columns, float $scale, array $sizes, TextFitter $fitter): array
+    private static function columns(CustomSlide $slide, array $columns, float $scale, array $sizes, TextFitter $fitter, int $imageMaxHeight): array
     {
         $elements = [];
         $height = 0.0;
@@ -224,7 +231,7 @@ final class CustomBlocksLayout
             $first = true;
 
             foreach ($indexes as $index) {
-                [$blockElements, $blockHeight] = self::block($slide->blocks[$index], $index, $left, $width, $scale, $sizes, $fitter);
+                [$blockElements, $blockHeight] = self::block($slide->blocks[$index], $index, $left, $width, $scale, $sizes, $fitter, $imageMaxHeight);
 
                 if ($blockHeight <= 0) {
                     continue;
@@ -257,7 +264,7 @@ final class CustomBlocksLayout
      * @param  array<int, array{int, int}>  $sizes
      * @return array{list<array<string, mixed>>, float}
      */
-    private static function block(array $block, int $index, int $left, int $width, float $scale, array $sizes, TextFitter $fitter): array
+    private static function block(array $block, int $index, int $left, int $width, float $scale, array $sizes, TextFitter $fitter, int $imageMaxHeight): array
     {
         $type = CustomBlockType::tryFrom(is_string($block['type'] ?? null) ? $block['type'] : '');
         $text = is_string($block['text'] ?? null) ? $block['text'] : '';
@@ -268,7 +275,7 @@ final class CustomBlocksLayout
             CustomBlockType::Title => self::title($text, $index, $left, $width, $scale, $fitter),
             CustomBlockType::Text => self::text($text, $index, $left, $width, $scale, $fitter),
             CustomBlockType::Table => self::table(is_array($block['rows'] ?? null) ? $block['rows'] : [], $index, $left, $width, $scale, $fitter),
-            CustomBlockType::Image => $size !== null ? self::image($fileId, $size, $index, $left, $width, self::IMAGE_MAX_HEIGHT * $scale) : [[], 0.0],
+            CustomBlockType::Image => $size !== null ? self::image($fileId, $size, $index, $left, $width, $imageMaxHeight * $scale) : [[], 0.0],
             CustomBlockType::ImageText => self::imageText($fileId, $size, $text, $index, $left, $width, $scale, $fitter),
             null => [[], 0.0],
         };

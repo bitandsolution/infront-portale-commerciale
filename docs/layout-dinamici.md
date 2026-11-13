@@ -236,7 +236,7 @@ Nuova rispetto ai documenti attuali: la compone l'agente nel passo "Documento" (
   - titolo: Interstate Black 52 px, interlinea 1,15, #000000, a capo su più righe;
   - testo: Interstate Regular 28 px, interlinea 1,4, #333333; grassetto in Bold; elenco puntato con "•" e rientro di 1,2 volte il corpo; una riga vuota lascia 0,7 volte il corpo;
   - tabella: righe di 2,2 volte il corpo (24 px), celle di uguale larghezza con bordo #000000; prima riga d'intestazione su #CC0033 in Bold bianco; il testo della cella si riduce e si taglia come al §6.3;
-  - immagine: larga quanto la colonna, al massimo 420 px di altezza, allineata a sinistra;
+  - immagine: larga quanto la colonna, allineata a sinistra; con una colonna al massimo 420 px di altezza, con due colonne o con l'immagine a sinistra fino all'altezza dell'area;
   - immagine con testo: immagine sul 38% della colonna (al massimo 320 px di altezza), testo a destra a 28 px dall'immagine.
 - **Contenuto che non entra** (D-431): tutto si riduce insieme a passi del 5% fino al 70%; oltre, quello che supera il fondo dell'area si taglia: l'ultima riga tenuta finisce con "…", un'immagine si riduce allo spazio rimasto (sotto 80 px non compare), righe di tabella e blocchi successivi non compaiono. Il passo "Documento" lo segnala, con le stesse misure del PDF.
 - **Anteprima** (D-432): la stessa pagina resa da Chromium, a richiesta.

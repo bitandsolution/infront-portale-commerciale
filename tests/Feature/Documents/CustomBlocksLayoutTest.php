@@ -82,7 +82,7 @@ it('D-431: more content is reduced in steps of 5% down to 70%, then cut at the b
         ->and(str_ends_with($runs[array_key_last($runs)]['text'], '…'))->toBeTrue();
 });
 
-it('D-399: two columns place the blocks on their side; with "image_text" the image of the slide is on the left', function () {
+it('D-399, D-434: two columns place the blocks on their side, an image fills its column; with "image_text" the image of the slide is on the left', function () {
     $fitter = app(TextFitter::class);
     [$left, , $width] = CustomBlocksLayout::AREA;
 
@@ -96,7 +96,15 @@ it('D-399: two columns place the blocks on their side; with "image_text" the ima
 
     expect($columns->elements[0]['left'])->toBe((float) $left)
         ->and($image['left'])->toBe($left + $columnWidth + CustomBlocksLayout::COLUMN_GAP)
-        ->and($image['height'])->toBeLessThanOrEqual((float) CustomBlocksLayout::IMAGE_MAX_HEIGHT);
+        ->and($image['width'])->toBe((float) $columnWidth)
+        ->and($image['height'])->toBe(round($columnWidth * 900 / 1600, 1));
+
+    // With one column the image stays at most 420 px high.
+    $oneColumn = CustomBlocksLayout::arrange(cblSlide([
+        ['key' => 'b', 'type' => 'image', 'file_id' => 9],
+    ]), [9 => [1600, 900]], $fitter);
+
+    expect(collect($oneColumn->elements)->firstWhere('kind', 'image')['height'])->toBe((float) CustomBlocksLayout::IMAGE_MAX_HEIGHT);
 
     $imageText = CustomBlocksLayout::arrange(cblSlide([
         ['key' => 'a', 'type' => 'text', 'text' => 'Testo a destra'],
