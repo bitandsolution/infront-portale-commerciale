@@ -86,7 +86,7 @@ Esito atteso: `DEMO_ASSETS_PATH=/var/www/html/storage/app/demo`, `DOCUMENT_CHROM
    sail artisan demo:prepare
    ```
 
-   Dura circa un minuto. Esito atteso: le fasi ("Stagione, stadi, club ed edizioni…" … "Proposte…"), poi l'elenco con i loghi, "Calendario fittizio della Serie A: 380 partite", "Libreria slide: 52 slide", le sei simulazioni LED "dalla cartella della demo", le proposte **204…206** (Birra Aurora, in approvazione), **207** e **208** (Vela, € 187.600,00 e € 166.000,00) e **209** (Caffè Monteverde, approvata) e "Dati della demo pronti". Se il comando si ferma con "Il portale contiene già stagioni o club", il `migrate:fresh --seed` non è stato fatto.
+   Dura uno o due minuti. Esito atteso: le fasi ("Stagione, stadi, club ed edizioni…" … "Proposte…"), poi l'elenco con i loghi, "Calendario fittizio della Serie A: 380 partite", "Libreria slide: 52 slide", le sei simulazioni LED "dalla cartella della demo", le proposte **204…206** (Birra Aurora, in approvazione), **207** e **208** (Vela, € 187.600,00 e € 166.000,00) e **209** (Caffè Monteverde, approvata) e "Dati della demo pronti". Se il comando si ferma con "Il portale contiene già stagioni o club", il `migrate:fresh --seed` non è stato fatto. ⚠️ Le aree dell'Udinese sono misurate su foto di 1768×726: se il comando si ferma con un errore sulle aree del LED "fuori dalla foto", la foto ha altre misure (mandami `file storage/app/demo/campi/UDINESE_*`).
 5. **Controlli**:
 
    ```bash
