@@ -22,6 +22,7 @@ use App\Http\Controllers\PlaceholderPageController;
 use App\Http\Controllers\Proposals\ProposalClientController;
 use App\Http\Controllers\Proposals\ProposalController;
 use App\Http\Controllers\Proposals\ProposalCopyController;
+use App\Http\Controllers\Proposals\ProposalCustomSlideController;
 use App\Http\Controllers\Proposals\ProposalGroupController;
 use App\Http\Controllers\Proposals\ProposalGroupDocumentController;
 use App\Http\Controllers\Proposals\ProposalVariantController;
@@ -310,6 +311,31 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->whereNumber('group')
             ->middleware('throttle:60,1')
             ->name('proposals.groups.slides');
+        // Slides composed with blocks of a group (D-399, D-428…D-432; DM-07): same permissions as the
+        // choice of the slides (ProposalGroupPolicy::editDocument, statuses in the Actions); the
+        // preview for who may see the group. At most 60 saves a minute, like the drafts; every route
+        // has its own counter (third parameter), so the automatic saves never use up the previews.
+        Route::middleware('can:editDocument,group')->scopeBindings()->group(function (): void {
+            Route::post('proposte/gruppi/{group}/slide-personalizzate', [ProposalCustomSlideController::class, 'store'])
+                ->whereNumber('group')
+                ->name('proposals.groups.custom-slides.store');
+            Route::put('proposte/gruppi/{group}/slide-personalizzate/{customSlide}', [ProposalCustomSlideController::class, 'update'])
+                ->whereNumber(['group', 'customSlide'])
+                ->middleware('throttle:60,1,custom-slides')
+                ->name('proposals.groups.custom-slides.update');
+            Route::delete('proposte/gruppi/{group}/slide-personalizzate/{customSlide}', [ProposalCustomSlideController::class, 'destroy'])
+                ->whereNumber(['group', 'customSlide'])
+                ->name('proposals.groups.custom-slides.destroy');
+            Route::post('proposte/gruppi/{group}/slide-personalizzate/{customSlide}/immagine', [ProposalCustomSlideController::class, 'image'])
+                ->whereNumber(['group', 'customSlide'])
+                ->middleware('throttle:30,1,custom-slide-images')
+                ->name('proposals.groups.custom-slides.image');
+        });
+        Route::get('proposte/gruppi/{group}/slide-personalizzate/{customSlide}/anteprima', [ProposalCustomSlideController::class, 'preview'])
+            ->whereNumber(['group', 'customSlide'])
+            ->scopeBindings()
+            ->middleware(['can:view,group', 'throttle:30,1,custom-slide-previews'])
+            ->name('proposals.groups.custom-slides.preview');
         // Regeneration of the PDF document of an approved group (M09 F-05, D-125; DM-04): admin only.
         Route::post('proposte/gruppi/{group}/documento', [DocumentController::class, 'regenerate'])
             ->middleware('can:'.Ability::DocumentsRegenerate->value)

@@ -2,7 +2,9 @@
 import { router } from '@inertiajs/vue3';
 import { CircleAlert, FileImage, Info, Layers, Lock } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import CustomSlides from '@/components/proposals/CustomSlides.vue';
 import { useTrans } from '@/composables/useTrans';
+import { createVisitQueue } from '@/composables/visitQueue';
 import type { DocumentSlide, DocumentSlides } from '@/types';
 
 /**
@@ -16,6 +18,8 @@ import type { DocumentSlide, DocumentSlides } from '@/types';
  *   is reloaded); flush() lets the parent wait for it before sending the group.
  * - The list and the counts come from the server (DocumentComposer); the page only shows what a
  *   tick does until the answer arrives.
+ * - DM-07: the slides composed with blocks are listed in their section with their tick, and their
+ *   editor (CustomSlides) follows the list; all the saves go one at a time (visitQueue).
  */
 const props = withDefaults(defineProps<{
     slides: DocumentSlides;
@@ -25,30 +29,37 @@ const props = withDefaults(defineProps<{
 
 const { t } = useTrans();
 
+// The saves of this panel and of the slides composed with blocks go one at a time (DM-07).
+const queue = createVisitQueue();
+const customPanel = ref<InstanceType<typeof CustomSlides> | null>(null);
+
 const mode = ref(props.slides.mode);
-const excluded = ref(new Set(excludedOf(props.slides)));
+const excluded = ref(new Set(excludedOf(props.slides, false)));
+const excludedCustom = ref(new Set(excludedOf(props.slides, true)));
 const state = ref<'idle' | 'saving' | 'saved' | 'error' | 'offline'>('idle');
 
 let timer: ReturnType<typeof setTimeout> | undefined;
-let saving = false;
-let queued = false;
-let waiting: Array<() => void> = [];
 
-function excludedOf(slides: DocumentSlides): number[] {
-    return slides.sections.flatMap((section) => section.slides.filter((slide) => slide.excluded).map((slide) => slide.id));
+function excludedOf(slides: DocumentSlides, custom: boolean): number[] {
+    return slides.sections.flatMap((section) => section.slides.filter((slide) => slide.custom === custom && slide.excluded).map((slide) => slide.id));
 }
 
 // A new answer of the server (another save, the automatic save of the draft) is shown, unless the
 // user has ticked something not saved yet.
 watch(() => props.slides, (slides) => {
-    if (timer === undefined && !saving) {
+    if (timer === undefined && !queue.busy()) {
         mode.value = slides.mode;
-        excluded.value = new Set(excludedOf(slides));
+        excluded.value = new Set(excludedOf(slides, false));
+        excludedCustom.value = new Set(excludedOf(slides, true));
     }
 });
 
 const editable = computed(() => props.slides.editable);
 const summaryOnly = computed(() => mode.value === 'summary');
+
+function setOf(slide: DocumentSlide): Set<number> {
+    return slide.custom ? excludedCustom.value : excluded.value;
+}
 
 function included(slide: DocumentSlide): boolean {
     if (slide.mandatory) {
@@ -58,7 +69,7 @@ function included(slide: DocumentSlide): boolean {
         return false;
     }
 
-    return !excluded.value.has(slide.id);
+    return !setOf(slide).has(slide.id);
 }
 
 function locked(slide: DocumentSlide): boolean {
@@ -73,13 +84,17 @@ function toggle(slide: DocumentSlide): void {
     if (locked(slide)) {
         return;
     }
-    const next = new Set(excluded.value);
+    const next = new Set(setOf(slide));
     if (next.has(slide.id)) {
         next.delete(slide.id);
     } else {
         next.add(slide.id);
     }
-    excluded.value = next;
+    if (slide.custom) {
+        excludedCustom.value = next;
+    } else {
+        excluded.value = next;
+    }
     schedule();
 }
 
@@ -100,45 +115,35 @@ function schedule(): void {
 }
 
 function save(): void {
-    if (saving) {
-        queued = true;
-
-        return;
-    }
-    saving = true;
     state.value = 'saving';
-    let failed = false;
+    queue.run('document-slides', (done) => {
+        let failed = false;
+        router.put(props.slides.saveUrl, {
+            mode: mode.value,
+            excluded_slide_ids: [...excluded.value],
+            excluded_custom_slide_ids: [...excludedCustom.value],
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['documentSlides'],
+            onError: () => {
+                failed = true;
+                state.value = 'error';
+            },
+            onNetworkError: () => {
+                failed = true;
+                state.value = 'offline';
+                window.addEventListener('online', retry, { once: true });
 
-    router.put(props.slides.saveUrl, { mode: mode.value, excluded_slide_ids: [...excluded.value] }, {
-        preserveState: true,
-        preserveScroll: true,
-        only: ['documentSlides'],
-        onError: () => {
-            failed = true;
-            state.value = 'error';
-        },
-        onNetworkError: () => {
-            failed = true;
-            state.value = 'offline';
-            window.addEventListener('online', retry, { once: true });
-
-            return false;
-        },
-        onFinish: () => {
-            saving = false;
-            if (queued) {
-                queued = false;
-                save();
-
-                return;
-            }
-            if (!failed) {
-                state.value = 'saved';
-            }
-            const callbacks = waiting;
-            waiting = [];
-            callbacks.forEach((callback) => callback());
-        },
+                return false;
+            },
+            onFinish: () => {
+                if (!failed) {
+                    state.value = 'saved';
+                }
+                done();
+            },
+        });
     });
 }
 
@@ -148,22 +153,18 @@ function retry(): void {
     }
 }
 
-/** Runs the callback once the pending choice is saved (the parent sends the group after it). */
+/**
+ * Runs the callback once the pending choice and the pending changes of the slides composed with
+ * blocks are saved (the parent sends or approves the group after it).
+ */
 function flush(callback: () => void): void {
     if (timer !== undefined) {
         clearTimeout(timer);
         timer = undefined;
-        waiting.push(callback);
         save();
-
-        return;
     }
-    if (saving) {
-        waiting.push(callback);
-
-        return;
-    }
-    callback();
+    customPanel.value?.flush();
+    queue.whenIdle(callback);
 }
 
 defineExpose({ flush });
@@ -311,7 +312,7 @@ function modeClass(selected: boolean): string {
             <ul class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
                 <li
                     v-for="slide in section.slides"
-                    :key="slide.id"
+                    :key="`${slide.custom ? 'c' : 's'}-${slide.id}`"
                 >
                     <label
                         class="flex h-full flex-col overflow-hidden rounded-[12px] border transition-opacity"
@@ -391,5 +392,13 @@ function modeClass(selected: boolean): string {
                 </li>
             </ul>
         </div>
+
+        <!-- Slides composed with blocks (DM-07, D-399) -->
+        <CustomSlides
+            ref="customPanel"
+            :custom="slides.custom"
+            :queue="queue"
+            :frozen="slides.frozen"
+        />
     </section>
 </template>

@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * season of the group follow those of its variants (SaveDraft keeps them aligned). The agent sees
  * only his own groups (HasOwner, column agent_id). The slides chosen for the document (mode and
  * excluded slides, D-418, D-419) are the working choice of the group, copied on the frozen versions
- * at the approval.
+ * at the approval, like its slides composed with blocks (DM-07, D-399).
  *
  * @property int $id
  * @property int $agent_id
@@ -105,6 +105,16 @@ final class ProposalGroup extends Model
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class)->orderBy('variant_letter');
+    }
+
+    /**
+     * The slides composed with blocks (D-399; DM-07), in the order they were added.
+     *
+     * @return HasMany<ProposalCustomSlide, $this>
+     */
+    public function customSlides(): HasMany
+    {
+        return $this->hasMany(ProposalCustomSlide::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /**

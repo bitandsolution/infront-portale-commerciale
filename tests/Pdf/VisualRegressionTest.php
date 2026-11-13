@@ -1,13 +1,17 @@
 <?php
 
+use App\Domain\Content\Data\CustomSlide;
+use App\Domain\Content\Services\CustomSlideContent;
 use App\Domain\Documents\Data\DocumentPage;
 use App\Domain\Documents\Data\StaticSlidePage;
 use App\Domain\Documents\Layouts\CoverLayout;
+use App\Domain\Documents\Layouts\CustomBlocksLayout;
 use App\Domain\Documents\Layouts\LedMockupLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Domain\Documents\Layouts\RecapStyle;
 use App\Domain\Documents\Services\LogoStripColor;
 use App\Domain\Documents\Services\PdfPipeline;
+use App\Enums\CustomSlideLayout;
 use App\Enums\DocumentType;
 use App\Support\Documents\SampleDeck;
 use Illuminate\Support\Facades\File;
@@ -19,7 +23,8 @@ use Illuminate\Support\Facades\File;
 | (1920×1080), so the thin borders of the grids are visible when Antonio approves them; the static
 | slide is kept reduced, since a full-size photo-like PNG would weigh megabytes. Cases: 2 clubs, discount with hospitality, 12 clubs on two slides, long
 | names, static slide; DM-04: network and club cover, club recap, title of a variant on a recap; DM-06:
-| LED simulation (Jumbo, Domination, perspective). DejaVu substitute font, so CI and the VM draw the same pictures.
+| LED simulation (Jumbo, Domination, perspective); DM-07: slides composed with blocks (one column,
+| image on the left, content cut). DejaVu substitute font, so CI and the VM draw the same pictures.
 |
 | A missing reference is written by the CI job "pdf" (VISUAL_REFERENCES_WRITE_MISSING=true) and
 | committed to the branch of the pull request: Antonio approves it by looking at the image in the
@@ -83,6 +88,41 @@ function visualCasePage(string $case, string $folder): DocumentPage
             LogoStripColor::of($folder.'/logo-led.png'),
             85,
             30,
+        );
+    }
+
+    // DM-07: slides composed with blocks (D-399, D-431): one column with title, text, bullets and
+    // table; the image of the slide on the left with an image block and its text; too much text,
+    // cut with "…".
+    if (str_starts_with($case, 'custom_')) {
+        file_put_contents($folder.'/sfondo-personalizzata.png', SampleDeck::background('Slide personalizzata'));
+        file_put_contents($folder.'/campo.png', SampleDeck::fieldPhoto());
+        file_put_contents($folder.'/logo.png', SampleDeck::clientLogo());
+        $long = str_repeat('Un testo molto lungo che occupa la slide per intero e va oltre lo spazio disponibile. ', 11);
+        [$layout, $imageFileId, $blocks] = match ($case) {
+            'custom_blocks' => [CustomSlideLayout::OneColumn, null, [
+                ['key' => 'a', 'type' => 'title', 'text' => 'La proposta per Atletico Borgoverde'],
+                ['key' => 'b', 'type' => 'text', 'text' => "Un pacchetto **su misura** per il marchio del cliente.\n- Visibilità LED su **tutte** le partite in casa\n- Hospitality Premium per 4 ospiti"],
+                ['key' => 'c', 'type' => 'table', 'rows' => [['Club', 'Format', 'Minuti a partita'], ['Atletico Borgoverde', '1ª fila', '2′'], ['Sporting Valleverde', 'Jumbo', '1′30″']]],
+            ]],
+            'custom_image_text' => [CustomSlideLayout::ImageText, 1, [
+                ['key' => 'a', 'type' => 'title', 'text' => 'Il marchio allo stadio'],
+                ['key' => 'b', 'type' => 'image_text', 'file_id' => 2, 'text' => "Il logo ripetuto sul LED di bordocampo.\n- **90 minuti** di visibilità"],
+            ]],
+            default => [CustomSlideLayout::TwoColumns, null, [
+                ['key' => 'a', 'type' => 'text', 'text' => $long, 'column' => 'left'],
+                ['key' => 'b', 'type' => 'text', 'text' => $long, 'column' => 'left'],
+                ['key' => 'c', 'type' => 'text', 'text' => $long, 'column' => 'right'],
+                ['key' => 'd', 'type' => 'text', 'text' => $long, 'column' => 'right'],
+                ['key' => 'e', 'type' => 'text', 'text' => $long, 'column' => 'left'],
+                ['key' => 'f', 'type' => 'text', 'text' => $long, 'column' => 'right'],
+            ]],
+        };
+
+        return CustomBlocksLayout::page(
+            $folder.'/sfondo-personalizzata.png',
+            new CustomSlide(1, 'Prova', $layout, 'BRAND_EXPOSURE', $imageFileId, CustomSlideContent::normalize($blocks)),
+            [1 => ['path' => $folder.'/campo.png', 'width' => 1768, 'height' => 726], 2 => ['path' => $folder.'/logo.png', 'width' => 600, 'height' => 200]],
         );
     }
 
@@ -227,4 +267,7 @@ it('layout §6.5 (D-311): the rendering matches the approved reference', functio
     'led_rows',
     'led_domination',
     'led_perspective',
+    'custom_blocks',
+    'custom_image_text',
+    'custom_cut',
 ]);

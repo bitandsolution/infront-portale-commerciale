@@ -123,6 +123,11 @@ enum AuditAction: string
     // DM-05: slides chosen for the document of a group (D-397, D-418, D-419), one event on the
     // first variant with the group.
     case ProposalDocumentSlidesUpdated = 'proposal.document_slides_updated';
+    // DM-07: slides composed with blocks of a group (D-399), one event on the first variant with
+    // the group; the upload of an image is part of the change of its slide.
+    case ProposalCustomSlideCreated = 'proposal.custom_slide_created';
+    case ProposalCustomSlideUpdated = 'proposal.custom_slide_updated';
+    case ProposalCustomSlideDeleted = 'proposal.custom_slide_deleted';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';

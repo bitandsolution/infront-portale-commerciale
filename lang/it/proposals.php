@@ -21,6 +21,26 @@ return [
         'group_rejected' => 'Proposta n. :number rifiutata',
         'group_approved' => 'Proposta n. :number approvata',
         'client_chosen' => 'Scelta del cliente registrata: variante :letter (proposta n. :number)',
+        // DM-07 (D-399).
+        'custom_slide_deleted' => 'Slide personalizzata «:title» eliminata',
+    ],
+
+    // Slides composed with blocks (D-399, D-428…D-432; DM-07): default title, errors under the fields
+    // of the editor, warnings of the content.
+    'custom_slides' => [
+        'default_title' => 'Slide personalizzata :number',
+        'validation' => [
+            'title_required' => 'Dai un titolo alla slide: è il nome con cui compare nell\'elenco.',
+            'too_many_blocks' => 'Una slide ha al massimo :max blocchi.',
+            'too_many_images' => 'Una slide ha al massimo :max immagini, compresa quella dello schema "Immagine a sinistra".',
+            'table_rows' => 'La tabella ha al massimo :max righe.',
+            'table_columns' => 'La tabella ha al massimo :max colonne.',
+            'image_unknown' => 'Immagine non trovata: caricala di nuovo.',
+            'image_required' => 'Scegli un\'immagine JPEG o PNG.',
+        ],
+        'overflow' => 'Il contenuto non entra nella slide: nel PDF viene ridotto al 70% e la parte che non entra viene tagliata con "…".',
+        'reduced' => 'Contenuto ridotto al :percent% per entrare nella slide.',
+        'no_background' => 'Lo sfondo della slide personalizzata non è ancora nella libreria: la slide entra nel documento quando Infront lo aggiunge.',
     ],
 
     // Rules of the configurator that refuse an operation (M06 §7): toasts.
@@ -43,6 +63,10 @@ return [
         'variants_share_header' => 'Le varianti di una proposta hanno lo stesso cliente e la stessa stagione: per cambiarli elimina prima le altre varianti',
         // DM-05: slides of the document (D-397, D-419).
         'document_not_editable' => 'Le slide del documento si scelgono finché la proposta è in bozza o, per chi approva, in approvazione: ricarica la pagina',
+        // DM-07 (D-399, D-430).
+        'too_many_custom_slides' => 'Una proposta ha al massimo :max slide personalizzate',
+        'too_many_custom_images' => 'Una slide personalizzata ha al massimo :max immagini',
+        'custom_image_target' => 'L\'immagine non ha più il suo blocco nella slide: ricarica la pagina',
     ],
 
     // Errors under the fields of step 2 (M06 §8) and dialog of a draft changed elsewhere (D-165).

@@ -783,8 +783,10 @@ export interface ProposalGroupRow {
 /** A slide of the document of a group (DocumentSlidesPresenter; DM-05, D-397). */
 export interface DocumentSlide {
     id: number;
+    /** A slide composed with blocks of the group (DM-07): its tick is saved on the slide itself. */
+    custom: boolean;
     title: string;
-    kind: 'static' | 'cover' | 'recap' | 'led';
+    kind: 'static' | 'cover' | 'recap' | 'led' | 'custom';
     note: string | null;
     mandatory: boolean;
     inSummary: boolean;
@@ -813,6 +815,67 @@ export interface DocumentSlides {
     warnings: string[];
     /** Neutral note for the agent when the library lacks a system slide. */
     note: string | null;
+    /** Editor of the slides composed with blocks (DM-07). */
+    custom: CustomSlides;
+}
+
+export type CustomBlockType = 'title' | 'text' | 'table' | 'image' | 'image_text';
+
+/** A block of a slide composed with blocks (CustomSlideContent; D-399, D-430). */
+export interface CustomBlock {
+    key: string;
+    type: CustomBlockType;
+    column: 'left' | 'right';
+    text?: string;
+    rows?: string[][];
+    file_id?: number | null;
+    /** Thumbnail of the image, from the server. */
+    imageUrl?: string | null;
+}
+
+/** A slide composed with blocks of a group (CustomSlidesPresenter; DM-07). */
+export interface CustomSlideData {
+    id: number;
+    title: string;
+    layout: 'one_column' | 'two_columns' | 'image_text';
+    section: string;
+    included: boolean;
+    imageFileId: number | null;
+    imageUrl: string | null;
+    blocks: CustomBlock[];
+    /** Null when the slide cannot be changed (read only, frozen). */
+    updateUrl: string | null;
+    deleteUrl: string | null;
+    uploadUrl: string | null;
+    previewUrl: string;
+    /** D-431: the content does not fit even at 70% and is cut. */
+    warning: string | null;
+    /** D-431: the content is reduced to fit. */
+    reduced: string | null;
+}
+
+/** The editor of the slides composed with blocks of a group (CustomSlidesPresenter; DM-07). */
+export interface CustomSlides {
+    editable: boolean;
+    max: number;
+    canAdd: boolean;
+    storeUrl: string;
+    limits: {
+        blocks: number;
+        images: number;
+        rows: number;
+        columns: number;
+        title: number;
+        text: number;
+        cell: number;
+        slideTitle: number;
+    };
+    layouts: Option[];
+    blockTypes: Option[];
+    sections: Option[];
+    /** The background of the library is missing: the slides do not enter the document yet. */
+    noBackground: string | null;
+    slides: CustomSlideData[];
 }
 
 /** A kind of photo of the LED simulation in "Contenuti › Simulazioni LED" (DM-06, D-398). */

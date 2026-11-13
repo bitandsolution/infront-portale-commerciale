@@ -7,6 +7,7 @@ use App\Enums\FilePurpose;
 use App\Enums\Role;
 use App\Models\Client;
 use App\Models\Document;
+use App\Models\ProposalGroupFile;
 use App\Models\Slide;
 use App\Models\StoredFile;
 use App\Models\StoredFileDerivative;
@@ -27,6 +28,8 @@ use App\Models\User;
  *   images of the active slides, which the step "Documento" shows for his groups (DM-05; the slides
  *   are material of Infront, not data of a client);
  * - thumbnail: who may see its original (stored_file_derivatives, D-420);
+ * - custom slide image: who may see the group it was uploaded for (proposal_group_files, DM-07):
+ *   admin and manager every group, the agent his own;
  * - generated PDF: who can download its document (DocumentPolicy::download, DM-04): admin and manager
  *   the current documents, the agent those of his own groups, the replaced ones only the admin
  *   (D-205); a PDF without a document (the proof of documents:try) only the admin.
@@ -50,6 +53,7 @@ class StoredFilePolicy
             // DM-06: photos of the fields of the LED simulation, Infront material; the agent sees
             // their thumbnail in the step "Documento" (D-426).
             FilePurpose::FieldPhoto => Ability::ContentManage->allows($user->role) || Ability::ProposalsOwn->allows($user->role),
+            FilePurpose::CustomSlideImage => $this->viewsGroup($user, $file),
         };
     }
 
@@ -58,6 +62,13 @@ class StoredFilePolicy
         $original = StoredFileDerivative::query()->with('original')->where('derivative_file_id', $file->id)->first()?->original;
 
         return $original !== null && $this->view($user, $original);
+    }
+
+    private function viewsGroup(User $user, StoredFile $file): bool
+    {
+        $group = ProposalGroupFile::query()->with('group')->where('stored_file_id', $file->id)->first()?->group;
+
+        return $group !== null && $user->can('view', $group);
     }
 
     private function downloadsDocument(User $user, StoredFile $file): bool

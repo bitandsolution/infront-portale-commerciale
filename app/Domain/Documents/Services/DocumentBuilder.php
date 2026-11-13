@@ -4,6 +4,7 @@ namespace App\Domain\Documents\Services;
 
 use App\Domain\Content\Data\ComposedSlide;
 use App\Domain\Content\Data\CompositionInput;
+use App\Domain\Content\Data\CustomSlide;
 use App\Domain\Content\Data\SlideInstance;
 use App\Domain\Content\Services\DocumentComposer;
 use App\Domain\Content\Services\LedMockups;
@@ -17,6 +18,7 @@ use App\Domain\Documents\Data\RecapTotals;
 use App\Domain\Documents\Data\StaticSlidePage;
 use App\Domain\Documents\Exceptions\DocumentNotComposable;
 use App\Domain\Documents\Layouts\CoverLayout;
+use App\Domain\Documents\Layouts\CustomBlocksLayout;
 use App\Domain\Documents\Layouts\LedMockupLayout;
 use App\Domain\Documents\Layouts\NetworkRecapLayout;
 use App\Domain\Documents\Layouts\RecapStyle;
@@ -32,6 +34,7 @@ use App\Models\ProposalVersion;
 use App\Models\ProposalVersionClub;
 use App\Models\ProposalVersionClubSeat;
 use App\Models\Season;
+use App\Models\Slide;
 use App\Models\StoredFile;
 use App\Support\Amounts;
 use App\Support\Documents\DocumentNumbers;
@@ -54,6 +57,8 @@ use Illuminate\Support\Str;
  * - LED simulation (DM-06, D-398, D-423…D-425): one page per pair of club and format, the photo of
  *   the club (or the generic one of Infront) with the frozen logo of the client on the LED; without
  *   a configuration or a logo the page is skipped and listed in the page model (D-427).
+ * - Slides composed with blocks (DM-07, D-399, D-428): the content frozen with the versions drawn on
+ *   the background "Slide personalizzata" of the library (CustomBlocksLayout).
  *
  * A missing cover or recap, or a background without its image, stops the generation with a clear
  * message (DocumentNotComposable, D-416).
@@ -69,6 +74,7 @@ final class DocumentBuilder
     public function __construct(
         private readonly DocumentComposer $composer,
         private readonly LedMockups $ledMockups,
+        private readonly CustomSlideImages $customImages,
     ) {}
 
     public function build(ProposalGroup $group): BuiltDocument
@@ -127,7 +133,8 @@ final class DocumentBuilder
                 array_push($pages, ...$built);
                 $model[] = [
                     'slide_id' => $composed->slide->id,
-                    'title' => $composed->slide->title,
+                    'custom_slide_id' => $composed->custom?->id,
+                    'title' => $composed->title(),
                     'layout' => $composed->slide->layout_code?->value,
                     'variant' => $instance->variantLetter,
                     'club_id' => $instance->clubId,
@@ -159,7 +166,11 @@ final class DocumentBuilder
                 'document_mode' => $composition->selection->mode->value,
                 'excluded_slide_ids' => array_values(array_map(
                     fn (ComposedSlide $composed): int => $composed->slide->id,
-                    array_filter($composition->slides, fn (ComposedSlide $composed): bool => ! $composed->included),
+                    array_filter($composition->slides, fn (ComposedSlide $composed): bool => ! $composed->included && $composed->custom === null),
+                )),
+                'excluded_custom_slide_ids' => array_values(array_map(
+                    fn (ComposedSlide $composed): int => (int) $composed->custom?->id,
+                    array_filter($composition->slides, fn (ComposedSlide $composed): bool => ! $composed->included && $composed->custom !== null),
                 )),
                 'slides' => $model,
                 'skipped' => $skipped,
@@ -204,6 +215,10 @@ final class DocumentBuilder
     private function pages(ComposedSlide $composed, SlideInstance $instance, DocumentType $type, array $versions, array $rows, ProposalVersion $firstVersion): ?array
     {
         $slide = $composed->slide;
+
+        if ($composed->custom !== null) {
+            return [$this->customPage($composed->custom, $slide)];
+        }
 
         if ($slide->kind === SlideKind::Static || $slide->layout_code === null) {
             return [new StaticSlidePage($this->slideImage($slide->image_file_id, $slide->title))];
@@ -531,6 +546,15 @@ final class DocumentBuilder
             logoHeightPercent: $setting->logo_height_percent,
             spacing: $setting->spacing,
         );
+    }
+
+    /**
+     * A slide composed with blocks on its background (D-428): the images that are missing on the disk
+     * are left out by the layout.
+     */
+    private function customPage(CustomSlide $custom, Slide $background): LayoutPage
+    {
+        return CustomBlocksLayout::page($this->slideImage($background->image_file_id, $background->title), $custom, $this->customImages->files($custom));
     }
 
     /**

@@ -93,6 +93,23 @@ return [
         'network_recap' => 'Recap economico network',
         'club_recap' => 'Recap economico club',
         'led_mockup' => 'Simulazione LED',
+        'custom_blocks' => 'Sfondo della slide personalizzata',
+    ],
+
+    // Slides composed with blocks (D-399, D-428…D-432; DM-07).
+    'custom_slides' => [
+        'layouts' => [
+            'one_column' => 'Una colonna',
+            'two_columns' => 'Due colonne',
+            'image_text' => 'Immagine a sinistra, testo a destra',
+        ],
+        'blocks' => [
+            'title' => 'Titolo',
+            'text' => 'Testo',
+            'table' => 'Tabella',
+            'image' => 'Immagine',
+            'image_text' => 'Immagine con testo',
+        ],
     ],
 
     'conditions' => [
@@ -122,6 +139,8 @@ return [
         'missing_closing' => 'Manca una slide attiva nella sezione Chiusura per il :document',
         // DM-06 (D-427): the page is skipped, the document is generated anyway.
         'missing_led_mockup' => 'Simulazione LED non configurata per :club (:photo): la pagina non entra nel documento',
+        // DM-07 (D-428): the slides composed with blocks need the background of the library.
+        'missing_custom_background' => 'Manca lo sfondo attivo della slide personalizzata per il :document: le slide personalizzate non entrano nel documento',
     ],
 
     // Server command documents:compose.
@@ -133,6 +152,7 @@ return [
         'columns' => ['Sezione', 'Ord.', 'Slide', 'Tipo', 'Istanze', 'Obbligatoria', 'Solo riepilogo', 'Nel documento'],
         'yes' => 'sì',
         'no' => '—',
+        'custom' => 'Personalizzata',
         'variant' => 'Proposta :letter',
         'warnings' => 'Avvisi:',
         'total' => ':slides slide della libreria, :pages pagine previste.',

@@ -64,6 +64,15 @@ final readonly class DocumentSelection
     }
 
     /**
+     * Whether a slide composed with blocks enters the document (D-399, DM-07): its own tick, never
+     * in "Solo riepilogo" (only cover, recap and closing, D-397).
+     */
+    public function includesCustom(bool $ticked): bool
+    {
+        return $this->mode !== DocumentMode::Summary && $ticked;
+    }
+
+    /**
      * The two values for the columns.
      *
      * @return array{document_mode: string, excluded_slide_ids: list<int>}
