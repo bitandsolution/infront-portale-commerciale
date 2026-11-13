@@ -1,6 +1,6 @@
 # Pianificazione e MVP (Fase 6) — Portale Commerciale Infront
 
-Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1, F1, F2, F3 e F4 completate; fetta DM "Demo del 4/12/2026" in corso (D-394): DM-00…DM-06 completate** · ultimo aggiornamento 2026-11-12
+Stato: **Fase 6 aperta (D-233)** · 6.1 approvato (D-234…D-239) · 6.2 approvato (D-243…D-247) · 6.3 approvato (D-249…D-254) · **6.4 in corso (D-259): F0, S1, F1, F2, F3 e F4 completate; fetta DM "Demo del 4/12/2026" in corso (D-394): DM-00…DM-07 completate** · ultimo aggiornamento 2026-11-13
 
 Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 
@@ -10,7 +10,7 @@ Legenda: ✅ confermato · 💡 proposta · ❓ da chiarire · ⚠️ rischio
 | 6.1 | Perimetro MVP e ordine dei moduli | ✅ Approvato (D-234…D-239) |
 | 6.2 | Stime e milestone, data di avvio, uso del vecchio sistema dopo l'avvio | ✅ Approvato (D-243…D-247) |
 | 6.3 | Preparazione del repository (`CLAUDE.md`, `docs/`, CI, verifica layout D-226) | ✅ Approvato (D-249…D-254) |
-| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352), F3 il 7/11/2026 (PR #70…#78, D-356…D-369); **A1** della milestone A eseguito il 7/11/2026 sulla VM, tutto ✅ (`docs/dev/collaudo-milestone-a.md` §7); **F4** il 10/11/2026 (piano D-370…D-376; PR #82, #84, #86, #89, #93, #95; D-377…D-393); richieste di Infront del 10/11/2026 analizzate: **fetta DM "Demo del 4/12/2026"** approvata (D-394…D-401, `docs/dev/pr-demo.md`): varianti A…E, slide scelte dall'agente, simulazione del logo sul LED, slide composta a blocchi, con libreria slide minima, invio e approvazione minima e documento PDF; DM-00…DM-06 completate il 12/11/2026 (PR #97…#116, D-402…D-427); prossimi passi: DM-07 e DM-08, demo il 4/12/2026, poi A2 con il calendario reale, R0, F5 |
+| 6.4 | Avvio dello sviluppo dalla fetta F0 | 🔄 In corso (D-259): F0 e S1 completate il 25/10/2026, F1 il 2/11/2026, F2 il 4/11/2026 (PR #57…#66, D-330…D-352), F3 il 7/11/2026 (PR #70…#78, D-356…D-369); **A1** della milestone A eseguito il 7/11/2026 sulla VM, tutto ✅ (`docs/dev/collaudo-milestone-a.md` §7); **F4** il 10/11/2026 (piano D-370…D-376; PR #82, #84, #86, #89, #93, #95; D-377…D-393); richieste di Infront del 10/11/2026 analizzate: **fetta DM "Demo del 4/12/2026"** approvata (D-394…D-401, `docs/dev/pr-demo.md`): varianti A…E, slide scelte dall'agente, simulazione del logo sul LED, slide composta a blocchi, con libreria slide minima, invio e approvazione minima e documento PDF; DM-00…DM-06 completate il 12/11/2026 (PR #97…#116, D-402…D-427), DM-07 il 13/11/2026 (PR #117…#119, D-428…D-437); prossimi passi: DM-08, demo il 4/12/2026, poi A2 con il calendario reale, R0, F5 |
 
 ---
 
