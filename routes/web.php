@@ -25,6 +25,7 @@ use App\Http\Controllers\Proposals\ProposalCopyController;
 use App\Http\Controllers\Proposals\ProposalCustomSlideController;
 use App\Http\Controllers\Proposals\ProposalGroupController;
 use App\Http\Controllers\Proposals\ProposalGroupDocumentController;
+use App\Http\Controllers\Proposals\ProposalReviewController;
 use App\Http\Controllers\Proposals\ProposalVariantController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -316,6 +317,16 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')
             ->name('proposals.groups.review.release');
+        // Change of a variant waiting for approval in review mode (D-445, D-454…D-457; F5-02): admin
+        // and manager (ProposalPolicy::review), only with the lock of the work (SaveDraft::review).
+        Route::middleware('can:'.Ability::ProposalsReview->value)->group(function (): void {
+            Route::get('proposte/{proposal}/revisione', [ProposalReviewController::class, 'open'])->whereNumber('proposal')->name('proposals.review.edit');
+            Route::put('proposte/{proposal}/revisione', [ProposalReviewController::class, 'save'])
+                ->whereNumber('proposal')
+                ->middleware('throttle:60,1')
+                ->name('proposals.review.update');
+            Route::post('proposte/{proposal}/revisione/copia-club', [ProposalReviewController::class, 'copyClubs'])->whereNumber('proposal')->name('proposals.review.copy-clubs');
+        });
         // Slides chosen for the document of a group (D-397, D-419; DM-05): the agent of the group on
         // drafts and rejected groups, admin and manager while it waits (ProposalGroupPolicy::editDocument
         // in the request, statuses in SaveDocumentSlides).

@@ -164,7 +164,11 @@ class ProposalController extends Controller
         ));
     }
 
-    private function configurator(User $actor, ?Proposal $proposal, int $step, ?DraftEvaluation $evaluation = null): Response
+    /**
+     * The configurator page; $review (F5-02, D-445, D-454): admin or manager change a variant waiting
+     * for approval: steps 2 to 5, client and season fixed, no step "Documento", back to the group.
+     */
+    protected function configurator(User $actor, ?Proposal $proposal, int $step, ?DraftEvaluation $evaluation = null, bool $review = false): Response
     {
         $period = app(ProposalPeriod::class);
         $settings = app(Settings::class);
@@ -173,10 +177,15 @@ class ProposalController extends Controller
         $season = $proposal?->season;
 
         return Inertia::render('Proposals/Configurator', [
-            'layout' => LayoutProps::for($actor, $proposal === null ? 'proposals_new' : 'proposals_mine'),
+            'layout' => LayoutProps::for($actor, match (true) {
+                $review => 'proposals_pending',
+                $proposal === null => 'proposals_new',
+                default => 'proposals_mine',
+            }),
             'step' => $step,
-            'lastStep' => self::LAST_STEP,
-            'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $actor, $evaluation ?? self::evaluation($proposal)) : null,
+            'lastStep' => $review ? self::SUMMARY_STEP : self::LAST_STEP,
+            'review' => $review && $proposal !== null ? ProposalsPresenter::reviewMode($proposal) : null,
+            'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $review ? $proposal->agent : $actor, $evaluation ?? self::evaluation($proposal), $review) : null,
             // Prices recalculated since the last save (RB-12): only when the page is opened.
             'reopened' => fn (): ?array => $proposal !== null ? ProposalsPresenter::repricing(self::repricing($proposal, $evaluation ?? self::evaluation($proposal))) : null,
             // Outcome of "Copia su altri club" and of "Duplica proposta" (F4-05), flashed by
@@ -186,11 +195,11 @@ class ProposalController extends Controller
             // Selectable clubs of the season of the draft with their options (step 3 and 4).
             // Slides of the document of the group (step 6, DM-05): reloaded with the draft, because a
             // change of the clubs changes the slides whose conditions hold.
-            'documentSlides' => fn (): ?array => $proposal !== null && $proposal->group !== null ? app(DocumentSlidesPresenter::class)->forGroup($proposal->group, $actor) : null,
+            'documentSlides' => fn (): ?array => ! $review && $proposal !== null && $proposal->group !== null ? app(DocumentSlidesPresenter::class)->forGroup($proposal->group, $actor) : null,
             'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season) : []),
             'ledStepSeconds' => $settings->ledStepSeconds(),
             'hospitalityMaxSeats' => $settings->hospitalityMaxSeats(),
-            'clients' => ProposalsPresenter::clientOptions($actor),
+            'clients' => $review ? [] : ProposalsPresenter::clientOptions($actor),
             'sectors' => ClientsPresenter::sectorOptions(),
             'seasons' => ProposalsPresenter::seasonOptions($period),
             'defaultSeasonId' => $defaultSeason !== null ? (string) $defaultSeason->id : '',
@@ -203,7 +212,7 @@ class ProposalController extends Controller
     /**
      * The clubs of the draft evaluated on the current list and residuals (DraftEvaluator).
      */
-    private static function evaluation(Proposal $proposal): DraftEvaluation
+    protected static function evaluation(Proposal $proposal): DraftEvaluation
     {
         /** @var DraftEvaluation $evaluation */
         $evaluation = app(DraftEvaluator::class)->evaluateProposal($proposal);
@@ -219,7 +228,7 @@ class ProposalController extends Controller
         return app(DraftRepricing::class)->compare(SaveDraft::rows($version), $version->list_total, $evaluation);
     }
 
-    private function actor(Request $request): User
+    protected function actor(Request $request): User
     {
         /** @var User $user */
         $user = $request->user();

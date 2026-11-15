@@ -150,6 +150,11 @@ function routeMatrix(): array
         'proposals.groups.withdraw' => ['method' => 'POST', 'expected' => $nobody],
         'proposals.groups.review.take-over' => ['method' => 'POST', 'expected' => $adminForm],
         'proposals.groups.review.release' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        // F5-02: review mode of the configurator, admin and manager on a variant waiting for approval
+        // only (here a draft: refused to every role; the agent is refused by the area)
+        'proposals.review.edit' => ['method' => 'GET', 'expected' => $nobody],
+        'proposals.review.update' => ['method' => 'PUT', 'expected' => $nobody],
+        'proposals.review.copy-clubs' => ['method' => 'POST', 'expected' => $nobody],
         // DM-05: slides of the document (D-397): the agent of the group (here another agent, refused);
         // admin and manager go back with the errors of the empty body
         'proposals.groups.slides' => ['method' => 'PUT', 'expected' => $backOfficeForm],

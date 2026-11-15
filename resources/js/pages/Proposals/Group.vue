@@ -641,6 +641,18 @@ function reject(): void {
                             />
                             {{ t('proposals.groups.open_configurator') }}
                         </Link>
+                        <Link
+                            v-if="variant.reviewUrl"
+                            :href="variant.reviewUrl"
+                            :class="buttonClasses.secondary"
+                        >
+                            <Pencil
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                            {{ t('proposals.groups.edit_review') }}
+                        </Link>
                     </div>
                     <div
                         v-if="variant.repricing"

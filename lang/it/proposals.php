@@ -73,6 +73,8 @@ return [
         'custom_image_target' => 'L\'immagine non ha più il suo blocco nella slide: ricarica la pagina',
         // F5-01: lock of the work and withdrawal (D-446).
         'review_locked' => 'La proposta è in lavorazione da :name: ricarica la pagina',
+        'not_in_review' => 'La proposta n. :number non è in approvazione: non si modifica in revisione',
+        'review_header_fixed' => 'Durante l\'approvazione cliente e stagione della proposta non cambiano',
         'withdraw_locked' => 'La proposta è in lavorazione da :name e non si può ritirare ora: riprova più tardi',
     ],
 

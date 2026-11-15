@@ -141,6 +141,18 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.review_locked', ['name' => $name]));
     }
 
+    /** F5-02 (D-445): only a proposal waiting for approval is changed in review mode. */
+    public static function notInReview(int $number): self
+    {
+        return new self(Text::get('proposals.errors.not_in_review', ['number' => (string) $number]));
+    }
+
+    /** F5-02 (D-445, D-454): in review mode client and season of the proposal do not change. */
+    public static function reviewHeaderFixed(): self
+    {
+        return new self(Text::get('proposals.errors.review_header_fixed'));
+    }
+
     /** F5-01 (M07 §9, D-446): the group is being worked by admin or manager. */
     public static function withdrawLocked(string $name): self
     {

@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\Ability;
+use App\Enums\ProposalStatus;
 use App\Enums\Role;
 use App\Models\Proposal;
 use App\Models\User;
@@ -36,6 +37,15 @@ class ProposalPolicy
     public function update(User $user, Proposal $proposal): bool
     {
         return $proposal->isEditable() && $this->ownsAsAgent($user, $proposal);
+    }
+
+    /**
+     * F5-02 (M07 §4, D-445): admin and manager change a proposal waiting for approval in the
+     * configurator, in review mode; the lock of the work is checked by the Actions (ReviewLock).
+     */
+    public function review(User $user, Proposal $proposal): bool
+    {
+        return $proposal->status === ProposalStatus::Submitted && Ability::ProposalsReview->allows($user->role);
     }
 
     /** Only drafts and rejected proposals are deleted, by their agent (M07 RB-08, D-412). */

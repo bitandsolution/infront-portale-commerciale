@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\DB;
  *   whole. Kept seats that would exceed the maximum per club with the copied ones are taken away.
  * - The draft is then saved by SaveDraft, in the same transaction: lock version, prices calculated by
  *   the server and one audit event proposal.draft_updated with the changed clubs (D-372).
+ * - Review mode ($review; F5-02, D-457): admin and manager copy on a variant waiting for approval,
+ *   with the lock of the work (SaveDraft::lockForReview) and the save of the review (SaveDraft::review).
  */
 final class CopyClubConfiguration
 {
@@ -41,14 +43,18 @@ final class CopyClubConfiguration
     /**
      * @param  list<int>  $targetClubIds
      */
-    public function handle(Proposal $proposal, int $sourceClubId, array $targetClubIds, int $lockVersion, User $actor): ClubsCopied
+    public function handle(Proposal $proposal, int $sourceClubId, array $targetClubIds, int $lockVersion, User $actor, bool $review = false): ClubsCopied
     {
-        return DB::transaction(function () use ($proposal, $sourceClubId, $targetClubIds, $lockVersion, $actor): ClubsCopied {
-            /** @var Proposal $locked */
-            $locked = Proposal::query()->whereKey($proposal->id)->lockForUpdate()->firstOrFail();
+        return DB::transaction(function () use ($proposal, $sourceClubId, $targetClubIds, $lockVersion, $actor, $review): ClubsCopied {
+            if ($review) {
+                $locked = $this->saveDraft->lockForReview($proposal, $actor);
+            } else {
+                /** @var Proposal $locked */
+                $locked = Proposal::query()->whereKey($proposal->id)->lockForUpdate()->firstOrFail();
 
-            if (! $locked->isEditable()) {
-                throw ProposalsActionNotAllowed::notDraft($locked->number);
+                if (! $locked->isEditable()) {
+                    throw ProposalsActionNotAllowed::notDraft($locked->number);
+                }
             }
 
             if ($locked->lock_version !== $lockVersion) {
@@ -107,13 +113,16 @@ final class CopyClubConfiguration
                 }
             }
 
-            $result = $this->saveDraft->handle($locked, new DraftData(
+            $data = new DraftData(
                 clientId: (int) $locked->client_id,
                 seasonId: $locked->season_id,
                 startsOn: $version->starts_on?->toDateString(),
                 endsOn: $version->ends_on?->toDateString(),
                 clubs: $clubs,
-            ), $lockVersion, $actor);
+            );
+            $result = $review
+                ? $this->saveDraft->review($locked, $data, $lockVersion, $actor)
+                : $this->saveDraft->handle($locked, $data, $lockVersion, $actor);
 
             return new ClubsCopied($result->lockVersion, $copied, $skipped, $result->changed);
         });

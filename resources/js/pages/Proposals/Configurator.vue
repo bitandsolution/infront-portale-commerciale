@@ -28,6 +28,7 @@ import type {
     ProposalDraft,
     ProposalDuplicatedNotice,
     ProposalRepricing,
+    ProposalReviewMode,
     ProposalSeasonOption,
     SectorOption,
 } from '@/types';
@@ -60,11 +61,15 @@ import type {
  * - Variants (D-396; DM-01): the bar under the title opens the other variants of the group (at the
  *   same step, after saving the pending changes) and adds a variant as a copy of this one; while the
  *   group has more variants, client and season are shared and shown read-only.
+ * - Review mode (prop "review"; F5-02, D-445, D-454…D-457): admin and manager change a variant waiting
+ *   for approval, with the lock of the work. Steps 2 to 5 only (lastStep = 5), season fixed, no
+ *   deletion and no new variants; the way back leads to the detail of the group.
  */
 const props = defineProps<{
     layout: LayoutData;
     step: number;
     lastStep: number;
+    review: ProposalReviewMode | null;
     draft: ProposalDraft | null;
     reopened: ProposalRepricing | null;
     copied: ProposalCopied | null;
@@ -90,6 +95,8 @@ const SAVE_DELAY_MS = 2000;
 const MAX_SUGGESTIONS = 8;
 
 const currentStep = ref(props.draft === null ? 1 : props.step);
+// F5-02 (D-454): in review mode the client step is not available.
+const firstStep = computed(() => (props.review !== null ? 2 : 1));
 const errors = computed(() => (page.props.errors ?? {}) as Record<string, string | undefined>);
 
 // Fields of the draft as the agent edits them; the server's copy only gives the lock version and the
@@ -262,7 +269,7 @@ const saveText = computed(() => {
     }
 
     return {
-        saved: t('proposals.save.saved_at', { time: savedAt.value }),
+        saved: props.review !== null ? t('proposals.review.saved_at', { time: savedAt.value }) : t('proposals.save.saved_at', { time: savedAt.value }),
         pending: t('proposals.save.pending'),
         saving: t('proposals.save.saving'),
         error: t('proposals.save.error'),
@@ -278,7 +285,7 @@ function stepUrl(step: number): string {
 }
 
 function canOpen(step: number): boolean {
-    if (step > props.lastStep || (step > 1 && (props.draft === null || fields.client_id === ''))) {
+    if (step < firstStep.value || step > props.lastStep || (step > 1 && (props.draft === null || fields.client_id === ''))) {
         return false;
     }
     if (step >= 3 && fields.season_id === '') {
@@ -445,7 +452,7 @@ const confirmingDelete = ref(false);
 const deleting = ref(false);
 
 function deleteDraft(): void {
-    if (props.draft === null) {
+    if (props.draft === null || props.draft.deleteUrl === null) {
         return;
     }
     leaving = true;
@@ -454,7 +461,8 @@ function deleteDraft(): void {
     deleting.value = true;
     // A variant of a group leads to another variant of the group (D-396).
     const variant = props.draft.variants.length > 1;
-    router.delete(props.draft.deleteUrl, {
+    const url = props.draft.deleteUrl;
+    router.delete(url, {
         data: variant ? { stay_in_group: true, step: currentStep.value } : {},
         onFinish: () => {
             deleting.value = false;
@@ -596,7 +604,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                 <div class="flex min-w-0 flex-col gap-5">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <Link
-                            :href="mineUrl"
+                            :href="review?.groupUrl ?? mineUrl"
                             class="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-ink-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-accent"
                         >
                             <ArrowLeft
@@ -604,7 +612,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                 :stroke-width="2"
                                 aria-hidden="true"
                             />
-                            {{ t('proposals.back_mine') }}
+                            {{ review ? t('proposals.review.back') : t('proposals.back_mine') }}
                         </Link>
                         <p
                             class="text-sm text-muted"
@@ -621,9 +629,21 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         </h2>
                         <StatusPill
                             v-if="draft"
-                            :label="t('proposals.draft_badge')"
-                            tone="muted"
+                            :label="review ? t('proposals.review.badge') : t('proposals.draft_badge')"
+                            :tone="review ? 'notice' : 'muted'"
                         />
+                    </div>
+
+                    <!-- Review mode (F5-02, D-445) -->
+                    <div
+                        v-if="review"
+                        class="flex flex-col gap-1 rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
+                        role="note"
+                    >
+                        <p class="font-semibold">
+                            {{ t('proposals.review.title') }}
+                        </p>
+                        <p>{{ t('proposals.review.text', { agent: review.agent }) }}</p>
                     </div>
 
                     <!-- Variants of the group (D-396) -->
@@ -679,7 +699,10 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             </button>
                         </div>
                         <p class="text-[13px] leading-relaxed text-muted">
-                            <template v-if="!draft.canAddVariant">
+                            <template v-if="review">
+                                {{ t('proposals.review.variants') }}
+                            </template>
+                            <template v-else-if="!draft.canAddVariant">
                                 {{ t('proposals.variants.max_reached', { max: String(draft.maxVariants) }) }}
                             </template>
                             <template v-else-if="multipleVariants">
@@ -911,7 +934,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                     <span class="hidden min-w-0 leading-tight md:inline">{{ t(`proposals.steps.${key}`) }}</span>
                                     <span class="sr-only md:hidden">{{ t(`proposals.steps.${key}`) }}</span>
                                     <span
-                                        v-if="index + 1 > lastStep"
+                                        v-if="index + 1 > lastStep && !review"
                                         class="sr-only"
                                     >{{ t('proposals.steps.not_yet') }}</span>
                                 </button>
@@ -1144,13 +1167,16 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                     :options="seasons"
                                     :placeholder="fields.season_id === '' ? t('proposals.period.season_placeholder') : undefined"
                                     :error="errors.season_id"
-                                    :disabled="multipleVariants"
+                                    :disabled="multipleVariants || review !== null"
                                 />
                                 <p class="text-[13px] text-muted">
                                     <template v-if="chosenSeason">
                                         {{ chosenSeason.range }} ·
                                     </template>
-                                    <template v-if="multipleVariants">
+                                    <template v-if="review">
+                                        {{ t('proposals.review.season_fixed') }}
+                                    </template>
+                                    <template v-else-if="multipleVariants">
                                         {{ t('proposals.variants.shared_season') }}
                                     </template>
                                     <template v-else>
@@ -1297,6 +1323,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                     >
                         <div class="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <button
+                                v-if="draft.deleteUrl"
                                 type="button"
                                 :class="buttonClasses.danger"
                                 @click="confirmingDelete = true"
@@ -1308,9 +1335,9 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                 />
                                 {{ multipleVariants ? t('proposals.variants.delete') : t('proposals.delete.action') }}
                             </button>
-                            <div class="flex flex-col-reverse gap-2 sm:flex-row">
+                            <div class="flex flex-col-reverse gap-2 sm:ml-auto sm:flex-row">
                                 <button
-                                    v-if="currentStep > 1"
+                                    v-if="currentStep > firstStep"
                                     type="button"
                                     :class="buttonClasses.secondary"
                                     @click="goTo(currentStep - 1)"

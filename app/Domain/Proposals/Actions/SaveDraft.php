@@ -14,8 +14,11 @@ use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
 use App\Domain\Proposals\Services\DraftEvaluator;
 use App\Domain\Proposals\Services\DraftRowsWriter;
 use App\Domain\Proposals\Services\ProposalPeriod;
+use App\Domain\Proposals\Services\ReviewLock;
 use App\Domain\Settings\Services\Settings;
 use App\Enums\AuditAction;
+use App\Enums\ProposalEventType;
+use App\Enums\ProposalStatus;
 use App\Enums\SeasonStatus;
 use App\Models\Client;
 use App\Models\Club;
@@ -23,6 +26,7 @@ use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
 use App\Models\PartnershipTier;
 use App\Models\Proposal;
+use App\Models\ProposalEvent;
 use App\Models\ProposalGroup;
 use App\Models\ProposalVersion;
 use App\Models\ProposalVersionClub;
@@ -61,6 +65,13 @@ use Illuminate\Validation\ValidationException;
  * - Variants (D-396, DM-01): the variants of a group share client and season. While the group has
  *   other variants they cannot change (ProposalsActionNotAllowed); the draft alone in its group can
  *   change them, and the group follows.
+ * - Review mode (review(); F5-02, D-445, D-454…D-457): admin and manager change a variant waiting for
+ *   approval with the same checks. Group and variants are locked like the other Actions of the life
+ *   cycle (group, then variants by id, D-216); the lock of the work is taken again if it expired and
+ *   refused if another user holds it (ReviewLock, D-446); client and season do not change
+ *   (reviewHeaderFixed). The history gets one "Modificata in approvazione" (edited_in_review) per
+ *   variant and work: written when the last event of the variant is not already an edited_in_review
+ *   of the same user (D-456); the audit event proposal.draft_updated is written at every save.
  */
 final class SaveDraft
 {
@@ -69,16 +80,60 @@ final class SaveDraft
         private readonly DraftEvaluator $evaluator,
         private readonly Settings $settings,
         private readonly DraftRowsWriter $rowsWriter,
+        private readonly TakeReviewLock $takeReviewLock,
     ) {}
 
     public function handle(Proposal $proposal, DraftData $data, int $lockVersion, User $actor): DraftSaved
     {
-        return DB::transaction(function () use ($proposal, $data, $lockVersion, $actor): DraftSaved {
-            /** @var Proposal $locked */
-            $locked = Proposal::query()->whereKey($proposal->id)->lockForUpdate()->firstOrFail();
+        return $this->save($proposal, $data, $lockVersion, $actor, false);
+    }
 
-            if (! $locked->isEditable()) {
-                throw ProposalsActionNotAllowed::notDraft($locked->number);
+    /** F5-02: the save of admin or manager on a variant waiting for approval. */
+    public function review(Proposal $proposal, DraftData $data, int $lockVersion, User $actor): DraftSaved
+    {
+        return $this->save($proposal, $data, $lockVersion, $actor, true);
+    }
+
+    /**
+     * F5-02 (D-216, D-446): locks group and variants in the order of the life cycle, checks that the
+     * proposal waits for approval and that the actor holds the lock of the work (taken again if it
+     * expired). Called inside the transaction of the caller; returns the locked proposal.
+     */
+    public function lockForReview(Proposal $proposal, User $actor): Proposal
+    {
+        $group = $proposal->proposal_group_id !== null
+            ? ProposalGroup::query()->whereKey($proposal->proposal_group_id)->lockForUpdate()->first()
+            : null;
+
+        if ($group === null) {
+            throw ProposalsActionNotAllowed::notInReview($proposal->number);
+        }
+
+        $variants = Proposal::query()->where('proposal_group_id', $group->id)->orderBy('id')->lockForUpdate()->get();
+        $locked = $variants->firstWhere('id', $proposal->id);
+
+        if (! $locked instanceof Proposal || $locked->status !== ProposalStatus::Submitted) {
+            throw ProposalsActionNotAllowed::notInReview($proposal->number);
+        }
+
+        $this->takeReviewLock->handle($group, $actor);
+        ReviewLock::guard($variants, $actor);
+
+        return $locked;
+    }
+
+    private function save(Proposal $proposal, DraftData $data, int $lockVersion, User $actor, bool $review): DraftSaved
+    {
+        return DB::transaction(function () use ($proposal, $data, $lockVersion, $actor, $review): DraftSaved {
+            if ($review) {
+                $locked = $this->lockForReview($proposal, $actor);
+            } else {
+                /** @var Proposal $locked */
+                $locked = Proposal::query()->whereKey($proposal->id)->lockForUpdate()->firstOrFail();
+
+                if (! $locked->isEditable()) {
+                    throw ProposalsActionNotAllowed::notDraft($locked->number);
+                }
             }
 
             if ($locked->lock_version !== $lockVersion) {
@@ -94,6 +149,10 @@ final class SaveDraft
                 'list_total' => $version->list_total,
                 ...ProposalsAuditValues::campaign($version),
             ];
+
+            if ($review && ($data->clientId !== (int) $locked->client_id || $data->seasonId !== $locked->season_id)) {
+                throw ProposalsActionNotAllowed::reviewHeaderFixed();
+            }
 
             $client = $this->client($locked, $data->clientId);
             $season = $this->season($locked, $data->seasonId);
@@ -152,8 +211,29 @@ final class SaveDraft
 
             $this->audit->record(AuditAction::ProposalDraftUpdated, $actor, AuditSubject::proposal($locked), $old, $new);
 
+            if ($review) {
+                self::recordEditedInReview($locked, $version, $actor);
+            }
+
             return new DraftSaved(true, $locked->lock_version, $locked->updated_at);
         });
+    }
+
+    /** D-456: one "Modificata in approvazione" per variant and work of the same user. */
+    private static function recordEditedInReview(Proposal $proposal, ProposalVersion $version, User $actor): void
+    {
+        $last = ProposalEvent::query()->where('proposal_id', $proposal->id)->orderByDesc('id')->first();
+
+        if ($last !== null && $last->type === ProposalEventType::EditedInReview && $last->user_id === $actor->id) {
+            return;
+        }
+
+        ProposalEvent::query()->create([
+            'proposal_id' => $proposal->id,
+            'proposal_version_id' => $version->id,
+            'type' => ProposalEventType::EditedInReview,
+            'user_id' => $actor->id,
+        ]);
     }
 
     /**
