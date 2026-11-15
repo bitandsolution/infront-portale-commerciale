@@ -457,7 +457,7 @@ it('D-427: without a configuration the LED page is skipped, who approves is warn
             'Simulazione LED non configurata per SS Lazio (2ª fila): la pagina non entra nel documento',
         ]));
 
-    dslApprove($this->admin, $proposal);
+    dslApprove($this->manager, $proposal);
 
     $document = Document::query()->where('proposal_group_id', $proposal->proposal_group_id)->whereNull('superseded_at')->sole();
 

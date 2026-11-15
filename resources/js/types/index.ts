@@ -655,6 +655,8 @@ export interface ProposalPendingGroup {
     totals: Array<{ letter: string | null; total: string }>;
     /** Variants with clubs to check on the current list and residuals. */
     problems: string[];
+    /** Who holds the lock of the work (F5-01, D-446). */
+    lockedBy: string | null;
     url: string;
 }
 
@@ -727,6 +729,16 @@ export interface ProposalGroupDetail {
     documentWarnings: string[];
     canSubmit: boolean;
     submitUrl: string;
+    /** Lock of the work while the group waits (F5-01, D-446): holder, last action, held by the viewer. */
+    reviewLock: { holder: string; since: string | null; mine: boolean } | null;
+    canTakeOver: boolean;
+    takeOverUrl: string;
+    canRelease: boolean;
+    releaseUrl: string;
+    /** The agent withdraws the group (D-100); blocked while it is worked (M07 §9). */
+    canWithdraw: boolean;
+    withdrawBlocked: boolean;
+    withdrawUrl: string;
     canReject: boolean;
     rejectUrl: string;
     canApprove: boolean;

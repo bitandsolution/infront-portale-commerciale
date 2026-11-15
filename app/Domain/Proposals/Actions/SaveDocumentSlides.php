@@ -8,6 +8,7 @@ use App\Domain\Content\Data\ComposedSlide;
 use App\Domain\Content\Data\DocumentSelection;
 use App\Domain\Content\Services\DocumentComposer;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
+use App\Domain\Proposals\Services\ReviewLock;
 use App\Enums\AuditAction;
 use App\Enums\DocumentMode;
 use App\Enums\ProposalStatus;
@@ -52,6 +53,10 @@ final class SaveDocumentSlides
         return DB::transaction(function () use ($group, $mode, $excludedSlideIds, $actor, $excludedCustomSlideIds): DocumentSelection {
             $locked = ProposalGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
             $variants = Proposal::query()->where('proposal_group_id', $locked->id)->orderBy('variant_letter')->get();
+
+            if ($actor->can('review', ProposalGroup::class) && ! $locked->isOwnedBy($actor)) {
+                ReviewLock::guard($variants, $actor);
+            }
 
             if (! self::editableBy($actor, $locked, $variants->all())) {
                 throw ProposalsActionNotAllowed::documentNotEditable();
@@ -149,7 +154,9 @@ final class SaveDocumentSlides
         }
 
         if ($actor->can('review', ProposalGroup::class)) {
-            return collect($variants)->every(fn (Proposal $variant): bool => $variant->status === ProposalStatus::Submitted);
+            // F5-01 (D-446): not while another user holds the lock of the work.
+            return collect($variants)->every(fn (Proposal $variant): bool => $variant->status === ProposalStatus::Submitted)
+                && ! ReviewLock::heldByOther($variants, $actor);
         }
 
         return false;

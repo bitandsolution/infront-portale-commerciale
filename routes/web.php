@@ -285,6 +285,8 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             Route::post('proposte/{proposal}/varianti', [ProposalVariantController::class, 'store'])->whereNumber('proposal')->name('proposals.variants.store');
             // Sending of a group of variants for approval (D-395, D-412; DM-03a).
             Route::post('proposte/gruppi/{group}/invio', [ProposalGroupController::class, 'submit'])->whereNumber('group')->name('proposals.groups.submit');
+            // Withdrawal of a group waiting for approval (D-100, D-444; F5-01).
+            Route::post('proposte/gruppi/{group}/ritiro', [ProposalGroupController::class, 'withdraw'])->whereNumber('group')->name('proposals.groups.withdraw');
         });
 
         // A group of variants (D-411; DM-03a): its detail for admin, manager and its agent
@@ -304,6 +306,16 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')
             ->name('proposals.groups.choose');
+        // Lock of the work on a group waiting for approval (D-446, D-452; F5-01): the admin takes it
+        // over from another user (ProposalGroupPolicy::takeOverReview), its holder leaves it.
+        Route::post('proposte/gruppi/{group}/lavorazione/subentro', [ProposalGroupController::class, 'takeOver'])
+            ->middleware('can:'.Ability::ProposalsReview->value)
+            ->whereNumber('group')
+            ->name('proposals.groups.review.take-over');
+        Route::post('proposte/gruppi/{group}/lavorazione/rilascio', [ProposalGroupController::class, 'release'])
+            ->middleware('can:'.Ability::ProposalsReview->value)
+            ->whereNumber('group')
+            ->name('proposals.groups.review.release');
         // Slides chosen for the document of a group (D-397, D-419; DM-05): the agent of the group on
         // drafts and rejected groups, admin and manager while it waits (ProposalGroupPolicy::editDocument
         // in the request, statuses in SaveDocumentSlides).

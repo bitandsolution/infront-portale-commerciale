@@ -1500,6 +1500,7 @@ return [
             'count_one' => '1 proposta in approvazione',
             'empty_title' => 'Nessuna proposta da approvare',
             'empty_message' => 'Quando un agente invia una proposta, compare qui.',
+            'locked' => 'In lavorazione da :name',
             'columns' => [
                 'number' => 'N.',
                 'submitted' => 'Inviata',
@@ -1532,6 +1533,22 @@ return [
             'history_empty' => 'Nessun evento.',
             'history_variant' => 'Variante :letter',
             'read_only' => 'In approvazione: la proposta non si modifica finché non viene decisa.',
+            // F5-01: lock of the work (D-446, D-450, D-452) and withdrawal (D-100).
+            'lock' => [
+                'mine' => 'La stai lavorando tu: gli altri la vedono in sola lettura fino all\'esito o per 30 minuti dalla tua ultima azione.',
+                'other' => 'In lavorazione da :name (ultima azione :since): la proposta è in sola lettura.',
+                'agent' => 'In lavorazione da :name: per ora non si può ritirare.',
+                'take_over' => 'Subentra',
+                'take_over_title' => 'Prendere in lavorazione la proposta n. :number?',
+                'take_over_text' => ':name perde la lavorazione: le sue modifiche non ancora salvate non verranno applicate.',
+                'release' => 'Lascia la lavorazione',
+            ],
+            'withdraw' => [
+                'action' => 'Ritira dall\'approvazione',
+                'title' => 'Ritirare la proposta n. :number dall\'approvazione?',
+                'text' => 'Tutte le varianti tornano in bozza: le puoi modificare nel configuratore e inviare di nuovo.',
+                'confirm' => 'Ritira',
+            ],
             'reject' => [
                 'action' => 'Rifiuta',
                 'title' => 'Rifiutare la proposta n. :number?',

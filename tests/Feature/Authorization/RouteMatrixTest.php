@@ -144,6 +144,12 @@ function routeMatrix(): array
         // empty choice, goes back with the toast or the errors)
         'proposals.groups.approve' => ['method' => 'POST', 'expected' => $backOfficeForm],
         'proposals.groups.choose' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        // F5-01: withdrawal for the agent of the group (here another agent, refused); "Subentra" for the
+        // admin only (the group is a draft: back with the toast); "Lascia la lavorazione" for admin and
+        // manager (nothing to free: back to the queue)
+        'proposals.groups.withdraw' => ['method' => 'POST', 'expected' => $nobody],
+        'proposals.groups.review.take-over' => ['method' => 'POST', 'expected' => $adminForm],
+        'proposals.groups.review.release' => ['method' => 'POST', 'expected' => $backOfficeForm],
         // DM-05: slides of the document (D-397): the agent of the group (here another agent, refused);
         // admin and manager go back with the errors of the empty body
         'proposals.groups.slides' => ['method' => 'PUT', 'expected' => $backOfficeForm],

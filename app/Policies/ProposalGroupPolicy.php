@@ -16,6 +16,7 @@ use App\Models\User;
  * - editDocument (slides of the document, DM-05, D-397): the agent of the group and admin and
  *   manager; the statuses (agent on drafts and rejected groups, reviewers on groups waiting for
  *   approval) are checked by SaveDocumentSlides.
+ * - takeOverReview (F5-01, D-446): the admin only takes the lock of the work held by another user.
  * Deactivated users are already refused by Gate::before.
  */
 class ProposalGroupPolicy
@@ -33,6 +34,11 @@ class ProposalGroupPolicy
     public function review(User $user): bool
     {
         return Ability::ProposalsReview->allows($user->role);
+    }
+
+    public function takeOverReview(User $user): bool
+    {
+        return $user->role === Role::Admin && $this->review($user);
     }
 
     public function editDocument(User $user, ProposalGroup $group): bool

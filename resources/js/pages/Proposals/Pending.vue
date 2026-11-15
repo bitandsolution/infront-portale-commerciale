@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { CheckCircle2, ClipboardCheck, TriangleAlert } from '@lucide/vue';
+import { CheckCircle2, ClipboardCheck, Lock, TriangleAlert } from '@lucide/vue';
 import { computed } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import EmptyState from '@/components/states/EmptyState.vue';
@@ -167,6 +167,17 @@ const count = computed(() => (props.groups.length === 1 ? t('proposals.pending.c
                                     />
                                     {{ t('proposals.pending.problems', { clubs: group.problems.join('; ') }) }}
                                 </span>
+                                <span
+                                    v-if="group.lockedBy"
+                                    class="mt-1 flex items-center gap-1.5 text-[13px] text-muted"
+                                >
+                                    <Lock
+                                        :size="14"
+                                        :stroke-width="2"
+                                        aria-hidden="true"
+                                    />
+                                    {{ t('proposals.pending.locked', { name: group.lockedBy }) }}
+                                </span>
                             </td>
                             <td class="px-4 py-2 text-right">
                                 <Link
@@ -217,6 +228,12 @@ const count = computed(() => (props.groups.length === 1 ? t('proposals.pending.c
                                 :class="group.problems.length === 0 ? 'text-success' : 'text-notice'"
                             >
                                 {{ group.problems.length === 0 ? `${t('proposals.pending.columns.check')}: ${t('proposals.pending.ok')}` : t('proposals.pending.problems', { clubs: group.problems.join('; ') }) }}
+                            </p>
+                            <p
+                                v-if="group.lockedBy"
+                                class="mt-1 text-[13px] text-muted"
+                            >
+                                {{ t('proposals.pending.locked', { name: group.lockedBy }) }}
                             </p>
                         </div>
                         <Link

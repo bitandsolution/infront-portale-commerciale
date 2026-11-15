@@ -24,6 +24,10 @@ final class GroupDocumentLock
         $locked = ProposalGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
         $variants = Proposal::query()->where('proposal_group_id', $locked->id)->orderBy('variant_letter')->get();
 
+        if ($actor->can('review', ProposalGroup::class) && ! $locked->isOwnedBy($actor)) {
+            ReviewLock::guard($variants, $actor);
+        }
+
         if (! SaveDocumentSlides::editableBy($actor, $locked, $variants->all())) {
             throw ProposalsActionNotAllowed::documentNotEditable();
         }
