@@ -423,7 +423,7 @@ function matrixParameters(string $route): array
         in_array($route, ['clients.edit', 'clients.update', 'clients.reassign', 'clients.deactivate', 'clients.reactivate', 'clients.merge'], true) => [
             'client' => Client::factory()->create()->id,
         ],
-        in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store'], true) => [
+        in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store', 'proposals.review.edit', 'proposals.review.update', 'proposals.review.copy-clubs'], true) => [
             'proposal' => Proposal::factory()->withWorkingVersion()->create()->id,
         ],
         str_starts_with($route, 'proposals.groups.custom-slides.') && $route !== 'proposals.groups.custom-slides.store' => (function (): array {
