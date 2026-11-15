@@ -135,6 +135,18 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.variants_share_header'));
     }
 
+    /** F5-01 (D-446): another user holds the lock of the work on the group. */
+    public static function reviewLocked(string $name): self
+    {
+        return new self(Text::get('proposals.errors.review_locked', ['name' => $name]));
+    }
+
+    /** F5-01 (M07 §9, D-446): the group is being worked by admin or manager. */
+    public static function withdrawLocked(string $name): self
+    {
+        return new self(Text::get('proposals.errors.withdraw_locked', ['name' => $name]));
+    }
+
     public function render(): RedirectResponse
     {
         return back()->with('toast', Toast::error($this->getMessage()));

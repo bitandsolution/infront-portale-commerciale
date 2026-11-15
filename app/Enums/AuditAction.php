@@ -128,6 +128,12 @@ enum AuditAction: string
     case ProposalCustomSlideCreated = 'proposal.custom_slide_created';
     case ProposalCustomSlideUpdated = 'proposal.custom_slide_updated';
     case ProposalCustomSlideDeleted = 'proposal.custom_slide_deleted';
+    // F5-01: lock of the work on a group waiting for approval (D-446, D-451), one event on the first
+    // variant with the group (renewals are not recorded); withdrawal by the agent, one per variant.
+    case ProposalReviewLockTaken = 'proposal.review_lock_taken';
+    case ProposalReviewLockTakenOver = 'proposal.review_lock_taken_over';
+    case ProposalReviewLockReleased = 'proposal.review_lock_released';
+    case ProposalWithdrawn = 'proposal.withdrawn';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';

@@ -21,6 +21,10 @@ return [
         'group_rejected' => 'Proposta n. :number rifiutata',
         'group_approved' => 'Proposta n. :number approvata',
         'client_chosen' => 'Scelta del cliente registrata: variante :letter (proposta n. :number)',
+        // F5-01 (D-100, D-446).
+        'group_withdrawn' => 'Proposta n. :number ritirata: è di nuovo in bozza',
+        'review_taken_over' => 'Hai preso in lavorazione la proposta n. :number',
+        'review_released' => 'Hai lasciato la lavorazione della proposta n. :number',
         // DM-07 (D-399).
         'custom_slide_deleted' => 'Slide personalizzata «:title» eliminata',
     ],
@@ -67,6 +71,9 @@ return [
         'too_many_custom_slides' => 'Una proposta ha al massimo :max slide personalizzate',
         'too_many_custom_images' => 'Una slide personalizzata ha al massimo :max immagini',
         'custom_image_target' => 'L\'immagine non ha più il suo blocco nella slide: ricarica la pagina',
+        // F5-01: lock of the work and withdrawal (D-446).
+        'review_locked' => 'La proposta è in lavorazione da :name: ricarica la pagina',
+        'withdraw_locked' => 'La proposta è in lavorazione da :name e non si può ritirare ora: riprova più tardi',
     ],
 
     // Errors under the fields of step 2 (M06 §8) and dialog of a draft changed elsewhere (D-165).

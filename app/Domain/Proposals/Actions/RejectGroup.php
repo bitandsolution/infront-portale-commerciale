@@ -5,6 +5,7 @@ namespace App\Domain\Proposals\Actions;
 use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
+use App\Domain\Proposals\Services\ReviewLock;
 use App\Enums\AuditAction;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
@@ -42,6 +43,8 @@ final class RejectGroup
                 throw ProposalsActionNotAllowed::groupNotSubmitted();
             }
 
+            // F5-01 (D-446): refused while another user holds the lock of the work; freed below.
+            ReviewLock::guard($variants, $actor);
             $now = now();
 
             foreach ($variants as $variant) {
@@ -50,6 +53,8 @@ final class RejectGroup
                     'decided_at' => $now,
                     'decided_by' => $actor->id,
                     'last_rejection_reason' => $reason,
+                    'review_locked_by' => null,
+                    'review_locked_at' => null,
                     'lock_version' => $variant->lock_version + 1,
                 ])->save();
 

@@ -15,6 +15,7 @@ use App\Domain\Proposals\Services\ApprovalCheck;
 use App\Domain\Proposals\Services\Discounts;
 use App\Domain\Proposals\Services\DraftRowsWriter;
 use App\Domain\Proposals\Services\GroupInventory;
+use App\Domain\Proposals\Services\ReviewLock;
 use App\Enums\AuditAction;
 use App\Enums\DiscountType;
 use App\Enums\InventoryResource;
@@ -90,6 +91,9 @@ final class ApproveGroup
                 throw ProposalsActionNotAllowed::groupNotSubmitted();
             }
 
+            // F5-01 (D-446): refused while another user holds the lock of the work; freed below.
+            ReviewLock::guard($variants, $actor);
+
             /** @var Proposal $first */
             $first = $variants->first();
             $season = $first->season;
@@ -162,6 +166,8 @@ final class ApproveGroup
             'decided_at' => $now,
             'decided_by' => $actor->id,
             'current_version_id' => $version->id,
+            'review_locked_by' => null,
+            'review_locked_at' => null,
             'lock_version' => $variant->lock_version + 1,
         ])->save();
 

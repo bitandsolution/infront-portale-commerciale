@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Proposals;
 use App\Domain\Proposals\Actions\ApproveGroup;
 use App\Domain\Proposals\Actions\RecordClientChoice;
 use App\Domain\Proposals\Actions\RejectGroup;
+use App\Domain\Proposals\Actions\ReleaseReviewLock;
 use App\Domain\Proposals\Actions\SubmitGroup;
+use App\Domain\Proposals\Actions\TakeReviewLock;
+use App\Domain\Proposals\Actions\WithdrawGroup;
 use App\Enums\ProposalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Proposals\ApproveGroupRequest;
@@ -34,7 +37,9 @@ use Inertia\Response;
  * - the detail of a group, read only, for admin and manager and for the agent of the group;
  * - "Invia in approvazione" (agent), "Rifiuta" and "Approva" with the discounts (admin and manager,
  *   DM-03b), "Registra la scelta del cliente" on an approved group of more variants (D-410);
- * - the slides of the document (DM-05, D-397): admin and manager change them while the group waits.
+ * - the slides of the document (DM-05, D-397): admin and manager change them while the group waits;
+ * - F5-01: the lock of the work taken on opening (D-446), "Subentra" (admin), "Lascia la lavorazione",
+ *   "Ritira dall'approvazione" (agent, D-100).
  *
  * The detail previews the typed discounts: the page reloads the prop "group" with the query
  * parameter "sconti" (proposal id → type and value), calculated by the server (D-408).
@@ -87,10 +92,17 @@ class ProposalGroupController extends Controller
         ]);
     }
 
-    public function show(Request $request, ProposalGroup $group, ProposalGroupsPresenter $presenter, DocumentSlidesPresenter $slides): Response
+    public function show(Request $request, ProposalGroup $group, ProposalGroupsPresenter $presenter, DocumentSlidesPresenter $slides, TakeReviewLock $takeReviewLock): Response
     {
         Gate::authorize('view', $group);
         $actor = $this->actor($request);
+
+        // F5-01 (D-446): admin and manager take the lock of the work on a group waiting for approval
+        // when they open it, and renew it with every reload (discount preview, slides, D-450).
+        if ($actor->can('review', ProposalGroup::class) && ! $group->isOwnedBy($actor)) {
+            $takeReviewLock->handle($group, $actor);
+        }
+
         $page = match (true) {
             $actor->can('submit', $group) => 'proposals_mine',
             ProposalGroupsPresenter::status($group->proposals()->get()) === ProposalStatus::Submitted => 'proposals_pending',
@@ -116,6 +128,45 @@ class ProposalGroupController extends Controller
 
         return redirect()->route('proposals.groups.show', $group)->with('toast', Toast::success(
             Text::get('proposals.toasts.group_submitted', ['number' => (string) $this->firstNumber($group)]),
+        ));
+    }
+
+    /**
+     * "Ritira dall'approvazione" (D-100, D-444; F5-01): the agent brings every variant back to draft.
+     */
+    public function withdraw(Request $request, ProposalGroup $group, WithdrawGroup $withdrawGroup): RedirectResponse
+    {
+        Gate::authorize('submit', $group);
+        $withdrawGroup->handle($group, $this->actor($request));
+
+        return redirect()->route('proposals.groups.show', $group)->with('toast', Toast::success(
+            Text::get('proposals.toasts.group_withdrawn', ['number' => (string) $this->firstNumber($group)]),
+        ));
+    }
+
+    /**
+     * "Subentra" (D-446; F5-01): the admin takes the lock of the work held by another user.
+     */
+    public function takeOver(Request $request, ProposalGroup $group, TakeReviewLock $takeReviewLock): RedirectResponse
+    {
+        Gate::authorize('takeOverReview', ProposalGroup::class);
+        $takeReviewLock->takeOver($group, $this->actor($request));
+
+        return redirect()->route('proposals.groups.show', $group)->with('toast', Toast::success(
+            Text::get('proposals.toasts.review_taken_over', ['number' => (string) $this->firstNumber($group)]),
+        ));
+    }
+
+    /**
+     * "Lascia la lavorazione" (D-452; F5-01): the holder frees the lock and goes back to the queue.
+     */
+    public function release(Request $request, ProposalGroup $group, ReleaseReviewLock $releaseReviewLock): RedirectResponse
+    {
+        Gate::authorize('review', ProposalGroup::class);
+        $releaseReviewLock->handle($group, $this->actor($request));
+
+        return redirect()->route('pages.proposals_pending')->with('toast', Toast::success(
+            Text::get('proposals.toasts.review_released', ['number' => (string) $this->firstNumber($group)]),
         ));
     }
 

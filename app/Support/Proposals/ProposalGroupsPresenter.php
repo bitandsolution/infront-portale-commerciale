@@ -13,6 +13,7 @@ use App\Domain\Proposals\Services\ApprovalCheck;
 use App\Domain\Proposals\Services\Discounts;
 use App\Domain\Proposals\Services\DraftEvaluator;
 use App\Domain\Proposals\Services\DraftRepricing;
+use App\Domain\Proposals\Services\ReviewLock;
 use App\Enums\DiscountType;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
@@ -125,6 +126,8 @@ final class ProposalGroupsPresenter
                     'total' => Amounts::italian(self::listTotal($review->evaluation($variant))),
                 ], $review->variants),
                 'problems' => $review->problems,
+                // F5-01 (D-446): who is working the group.
+                'lockedBy' => ($holder = ReviewLock::holderId($variants)) !== null ? ReviewLock::name($holder) : null,
                 'url' => route('proposals.groups.show', $group),
             ];
         }
@@ -232,6 +235,9 @@ final class ProposalGroupsPresenter
         $isReviewer = $viewer->can('review', ProposalGroup::class);
         $waiting = $status === ProposalStatus::Submitted;
         $many = $variants->count() > 1;
+        // F5-01 (D-446): who holds the lock of the work; another holder makes the page read only.
+        $lockHolder = $waiting ? ReviewLock::holderId($variants) : null;
+        $lockedByOther = $lockHolder !== null && $lockHolder !== $viewer->id;
         $review = $waiting && $isReviewer ? $this->check->review($variants) : null;
         $decidedBy = $first->decided_by !== null ? User::query()->find($first->decided_by) : null;
         $entries = [];
@@ -295,9 +301,21 @@ final class ProposalGroupsPresenter
             'documentWarnings' => $isReviewer && $waiting ? $this->composer->forGroup($group)->warnings : [],
             'canSubmit' => $isAgent && $variants->every(fn (Proposal $variant): bool => $variant->isEditable()),
             'submitUrl' => route('proposals.groups.submit', $group),
-            'canReject' => $isReviewer && $waiting,
+            'reviewLock' => $lockHolder !== null ? [
+                'holder' => ReviewLock::name($lockHolder),
+                'since' => self::moment(ReviewLock::since($variants)),
+                'mine' => ! $lockedByOther,
+            ] : null,
+            'canTakeOver' => $lockedByOther && $viewer->can('takeOverReview', ProposalGroup::class),
+            'takeOverUrl' => route('proposals.groups.review.take-over', $group),
+            'canRelease' => $isReviewer && $lockHolder === $viewer->id,
+            'releaseUrl' => route('proposals.groups.review.release', $group),
+            'canWithdraw' => $isAgent && $waiting,
+            'withdrawBlocked' => $isAgent && $waiting && $lockHolder !== null,
+            'withdrawUrl' => route('proposals.groups.withdraw', $group),
+            'canReject' => $isReviewer && $waiting && ! $lockedByOther,
             'rejectUrl' => route('proposals.groups.reject', $group),
-            'canApprove' => $isReviewer && $waiting,
+            'canApprove' => $isReviewer && $waiting && ! $lockedByOther,
             'approveUrl' => route('proposals.groups.approve', $group),
             'canChoose' => $isReviewer && $many && $allApproved,
             'chooseUrl' => route('proposals.groups.choose', $group),

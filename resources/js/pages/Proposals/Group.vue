@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { AlertTriangle, ArrowLeft, CheckCircle2, CircleCheck, CircleX, Info, Pencil, Send } from '@lucide/vue';
+import { AlertTriangle, ArrowLeft, CheckCircle2, CircleCheck, CircleX, Info, Lock, LogOut, Pencil, Send, Undo2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -24,6 +24,8 @@ import type { DocumentSlides as DocumentSlidesData, LayoutData, ProposalGroupDet
  * client (D-410). The agent never sees discounts (D-011). DM-04: the PDF document of the group
  * (DocumentPanel) and, before the approval, what the library lacks for it (D-416). DM-05: the slides
  * of the document (DocumentSlides), which admin and manager change while the group waits (D-397).
+ * F5-01: the lock of the work (D-446): who holds it, "Subentra" for the admin, "Lascia la lavorazione"
+ * for the holder; "Ritira dall'approvazione" for the agent (D-100), blocked while the group is worked.
  */
 const props = defineProps<{
     layout: LayoutData;
@@ -138,6 +140,33 @@ function submit(): void {
     });
 }
 
+// F5-01: withdrawal (agent), take over (admin), release (holder).
+const confirmingWithdraw = ref(false);
+const confirmingTakeOver = ref(false);
+
+function postAndClose(url: string, close: () => void): void {
+    processing.value = true;
+    router.post(url, {}, {
+        preserveScroll: true,
+        onFinish: () => {
+            processing.value = false;
+            close();
+        },
+    });
+}
+
+function withdraw(): void {
+    postAndClose(props.group.withdrawUrl, () => (confirmingWithdraw.value = false));
+}
+
+function takeOver(): void {
+    postAndClose(props.group.takeOverUrl, () => (confirmingTakeOver.value = false));
+}
+
+function release(): void {
+    postAndClose(props.group.releaseUrl, () => undefined);
+}
+
 function openReject(): void {
     reason.value = '';
     reasonError.value = undefined;
@@ -195,6 +224,20 @@ function reject(): void {
                                 aria-hidden="true"
                             />
                             {{ t('proposals.submit.action') }}
+                        </button>
+                        <button
+                            v-if="group.canWithdraw"
+                            type="button"
+                            :class="buttonClasses.secondary"
+                            :disabled="group.withdrawBlocked"
+                            @click="confirmingWithdraw = true"
+                        >
+                            <Undo2
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                            {{ t('proposals.groups.withdraw.action') }}
                         </button>
                         <button
                             v-if="group.canApprove"
@@ -274,6 +317,49 @@ function reject(): void {
                 >
                     {{ t('proposals.groups.read_only') }}
                 </p>
+
+                <!-- F5-01: lock of the work (D-446) -->
+                <div
+                    v-if="group.reviewLock"
+                    class="flex flex-wrap items-center justify-between gap-3 rounded-[10px] px-3.5 py-3 text-sm text-ink"
+                    :class="group.reviewLock.mine ? 'bg-surface' : 'bg-notice-soft'"
+                    role="status"
+                >
+                    <p class="flex items-start gap-2">
+                        <Lock
+                            :size="18"
+                            :stroke-width="2"
+                            class="mt-0.5 shrink-0"
+                            :class="group.reviewLock.mine ? 'text-muted' : 'text-notice'"
+                            aria-hidden="true"
+                        />
+                        <span v-if="group.reviewLock.mine">{{ t('proposals.groups.lock.mine') }}</span>
+                        <span v-else-if="group.canWithdraw">{{ t('proposals.groups.lock.agent', { name: group.reviewLock.holder }) }}</span>
+                        <span v-else>{{ t('proposals.groups.lock.other', { name: group.reviewLock.holder, since: group.reviewLock.since ?? '' }) }}</span>
+                    </p>
+                    <button
+                        v-if="group.canTakeOver"
+                        type="button"
+                        :class="buttonClasses.secondary"
+                        @click="confirmingTakeOver = true"
+                    >
+                        {{ t('proposals.groups.lock.take_over') }}
+                    </button>
+                    <button
+                        v-if="group.canRelease"
+                        type="button"
+                        :class="buttonClasses.secondary"
+                        :disabled="processing"
+                        @click="release"
+                    >
+                        <LogOut
+                            :size="18"
+                            :stroke-width="2"
+                            aria-hidden="true"
+                        />
+                        {{ t('proposals.groups.lock.release') }}
+                    </button>
+                </div>
 
                 <div
                     v-if="isRejected && group.decidedAt"
@@ -762,6 +848,28 @@ function reject(): void {
             @confirm="submit"
         >
             <p>{{ many ? t('proposals.submit.text_variants', { letters }) : t('proposals.submit.text') }}</p>
+        </ConfirmDialog>
+
+        <ConfirmDialog
+            :open="confirmingWithdraw"
+            :title="t('proposals.groups.withdraw.title', { number: String(group.number) })"
+            :confirm-label="t('proposals.groups.withdraw.confirm')"
+            :processing="processing"
+            @cancel="confirmingWithdraw = false"
+            @confirm="withdraw"
+        >
+            <p>{{ t('proposals.groups.withdraw.text') }}</p>
+        </ConfirmDialog>
+
+        <ConfirmDialog
+            :open="confirmingTakeOver"
+            :title="t('proposals.groups.lock.take_over_title', { number: String(group.number) })"
+            :confirm-label="t('proposals.groups.lock.take_over')"
+            :processing="processing"
+            @cancel="confirmingTakeOver = false"
+            @confirm="takeOver"
+        >
+            <p>{{ t('proposals.groups.lock.take_over_text', { name: group.reviewLock?.holder ?? '' }) }}</p>
         </ConfirmDialog>
 
         <ConfirmDialog
