@@ -108,6 +108,7 @@ return [
         'proposal_review_lock_taken_over' => 'Lavorazione della proposta presa da un altro utente',
         'proposal_review_lock_released' => 'Lavorazione della proposta lasciata',
         'proposal_withdrawn' => 'Proposta ritirata dall\'approvazione',
+        'proposal_forced' => 'Approvazione forzata oltre la disponibilità',
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
         'led_mockup_saved' => 'Simulazione LED configurata',

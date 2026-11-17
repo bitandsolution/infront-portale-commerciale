@@ -79,6 +79,38 @@ function discountError(variantId: number): string | undefined {
 
 const confirmingApprove = ref(false);
 
+// F5-03 (D-064, D-070, D-459): "Forza e approva" of the admin, with the reason.
+const forcing = ref(false);
+const forcedReason = ref('');
+const forcedReasonError = ref<string | undefined>(undefined);
+
+function openForce(): void {
+    forcedReason.value = '';
+    forcedReasonError.value = undefined;
+    forcing.value = true;
+}
+
+function force(): void {
+    processing.value = true;
+    const send = (): void => {
+        router.post(props.group.forceUrl, { discounts: discountForm, forced_reason: forcedReason.value }, {
+            preserveScroll: true,
+            preserveState: 'errors',
+            onError: (errors) => {
+                discountErrors.value = errors;
+                forcedReasonError.value = errors.forced_reason;
+            },
+            onSuccess: () => (forcing.value = false),
+            onFinish: () => (processing.value = false),
+        });
+    };
+    if (documentSlidesPanel.value) {
+        documentSlidesPanel.value.flush(send);
+    } else {
+        send();
+    }
+}
+
 const documentSlidesPanel = ref<InstanceType<typeof DocumentSlides> | null>(null);
 
 function approve(): void {
@@ -443,7 +475,32 @@ function reject(): void {
                             {{ problem }}
                         </li>
                     </ul>
-                    <p class="text-muted">
+                    <div
+                        v-if="group.canForce"
+                        class="flex flex-wrap items-center justify-between gap-3"
+                    >
+                        <p class="text-muted">
+                            {{ t('proposals.approval.force_hint') }}
+                        </p>
+                        <button
+                            type="button"
+                            :class="buttonClasses.danger"
+                            :disabled="calculating"
+                            @click="openForce"
+                        >
+                            {{ t('proposals.approval.force_action') }}
+                        </button>
+                    </div>
+                    <p
+                        v-else-if="group.forceable"
+                        class="text-muted"
+                    >
+                        {{ t('proposals.approval.force_admin_only') }}
+                    </p>
+                    <p
+                        v-else
+                        class="text-muted"
+                    >
                         {{ t('proposals.approval.blocked_hint') }}
                     </p>
                 </div>
@@ -628,6 +685,11 @@ function reject(): void {
                                 v-if="many"
                                 class="text-[13px] text-muted"
                             >{{ variant.statusLabel }}</span>
+                            <StatusPill
+                                v-if="variant.forcedReason"
+                                :label="t('proposals.approval.forced_badge')"
+                                tone="notice"
+                            />
                         </div>
                         <Link
                             v-if="variant.editUrl"
@@ -838,6 +900,52 @@ function reject(): void {
                     {{ variant.letter ? t('proposals.approval.confirm_variant', { letter: variant.letter, total: variant.discount?.finalTotal ?? '' }) : t('proposals.approval.confirm_single', { total: variant.discount?.finalTotal ?? '' }) }}
                 </li>
             </ul>
+        </ConfirmDialog>
+
+        <ConfirmDialog
+            :open="forcing"
+            :title="t('proposals.approval.force_title', { number: String(group.number) })"
+            :confirm-label="t('proposals.approval.force_confirm')"
+            :processing="processing"
+            @cancel="forcing = false"
+            @confirm="force"
+        >
+            <p>{{ t('proposals.approval.force_text') }}</p>
+            <ul class="mt-2 flex list-disc flex-col gap-1 pl-5">
+                <li
+                    v-for="(need, index) in group.forceNeeds"
+                    :key="index"
+                >
+                    {{ t('proposals.approval.force_need', { ...need }) }}
+                </li>
+            </ul>
+            <div class="mt-3 flex flex-col gap-1.5">
+                <label
+                    for="forced-reason"
+                    class="text-sm font-medium text-ink"
+                >{{ t('proposals.approval.force_reason') }}</label>
+                <textarea
+                    id="forced-reason"
+                    v-model="forcedReason"
+                    rows="3"
+                    maxlength="1000"
+                    class="rounded-[10px] border border-line-strong bg-white px-3 py-2 text-[15px] focus-visible:outline-2 focus-visible:outline-accent"
+                    :aria-invalid="forcedReasonError !== undefined"
+                    aria-describedby="forced-reason-help"
+                />
+                <p
+                    id="forced-reason-help"
+                    class="text-[13px] text-muted"
+                >
+                    {{ t('proposals.approval.force_reason_help', { min: String(group.forcedReasonMin) }) }}
+                </p>
+                <p
+                    v-if="forcedReasonError"
+                    class="text-sm text-accent"
+                >
+                    {{ forcedReasonError }}
+                </p>
+            </div>
         </ConfirmDialog>
 
         <ConfirmDialog

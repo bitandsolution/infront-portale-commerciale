@@ -151,3 +151,19 @@ it('M07 §9: of two approvals on the last contract the first one wins, the secon
     expect(Proposal::query()->where('proposal_group_id', $group->id)->value('status'))->toBe(ProposalStatus::Submitted)
         ->and(InventoryCommitment::query()->count())->toBe(1);
 });
+
+it('M07-CA4, D-216: a forcing also waits for the other approval; after it the admin forces beyond the residual', function () {
+    $group = concurrentGroup($this);
+    $other = otherApproverSession($this);
+    $reason = 'Accordo del direttore commerciale';
+
+    expect(fn () => app(ApproveGroup::class)->handle($group, [], $this->admin, $reason))
+        ->toThrow(QueryException::class, 'Lock wait timeout');
+
+    $other->commit();
+
+    expect(app(ApproveGroup::class)->handle($group, [], $this->admin, $reason))->toBeTrue()
+        ->and(Proposal::query()->where('proposal_group_id', $group->id)->value('status'))->toBe(ProposalStatus::Approved)
+        ->and(InventoryCommitment::query()->count())->toBe(2)
+        ->and(InventoryCommitment::query()->where('is_forced', true)->value('forced_reason'))->toBe($reason);
+});

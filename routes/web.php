@@ -303,6 +303,11 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')
             ->name('proposals.groups.approve');
+        // Approval beyond the availability, only the admin with a reason (D-064, D-070, D-459; F5-03).
+        Route::post('proposte/gruppi/{group}/forzatura', [ProposalGroupController::class, 'force'])
+            ->middleware('can:'.Ability::ProposalsForce->value)
+            ->whereNumber('group')
+            ->name('proposals.groups.force');
         Route::post('proposte/gruppi/{group}/scelta', [ProposalGroupController::class, 'choose'])
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')

@@ -20,6 +20,9 @@ final readonly class ClubEvaluation
 {
     /**
      * @param  array<string, string>  $errors
+     * @param  list<string>  $shortFields  fields whose error is only a quantity beyond the residual (an
+     *                                     option sold out or more than its residual): what the admin may
+     *                                     force at the approval (F5-03, D-459)
      */
     public function __construct(
         public DraftClubData $data,
@@ -27,6 +30,7 @@ final readonly class ClubEvaluation
         public ?ClubSellability $sellability,
         public ?ClubQuote $quote,
         public array $errors,
+        public array $shortFields = [],
     ) {}
 
     public function total(): string

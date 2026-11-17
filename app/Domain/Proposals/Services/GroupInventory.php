@@ -108,6 +108,7 @@ final class GroupInventory
                 requested: $item['quantity'],
                 remaining: $resource !== null && $resource->isEnabled ? $resource->remaining() : 0,
                 letters: $item['letters'],
+                managed: $resource !== null && $resource->isEnabled,
             );
         }
 

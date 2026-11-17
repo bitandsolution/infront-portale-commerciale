@@ -36,6 +36,12 @@ class ProposalGroupPolicy
         return Ability::ProposalsReview->allows($user->role);
     }
 
+    /** F5-03 (M07 RB-06; D-064, D-070): only the admin forces an approval beyond the availability. */
+    public function force(User $user): bool
+    {
+        return Ability::ProposalsForce->allows($user->role) && $this->review($user);
+    }
+
     public function takeOverReview(User $user): bool
     {
         return $user->role === Role::Admin && $this->review($user);

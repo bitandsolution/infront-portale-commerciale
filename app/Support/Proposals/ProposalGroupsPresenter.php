@@ -14,6 +14,7 @@ use App\Domain\Proposals\Services\Discounts;
 use App\Domain\Proposals\Services\DraftEvaluator;
 use App\Domain\Proposals\Services\DraftRepricing;
 use App\Domain\Proposals\Services\ReviewLock;
+use App\Domain\Settings\Services\Settings;
 use App\Enums\DiscountType;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
@@ -50,6 +51,7 @@ final class ProposalGroupsPresenter
         private readonly DraftRepricing $repricing,
         private readonly Discounts $discounts,
         private readonly DocumentComposer $composer,
+        private readonly Settings $settings,
     ) {}
 
     /**
@@ -260,6 +262,8 @@ final class ProposalGroupsPresenter
 
             $entries[] = [
                 'id' => $variant->id,
+                // F5-03 (D-461): the reason of a forced approval, for admin and manager.
+                'forcedReason' => $isReviewer && $frozen !== null && $frozen->is_forced ? $frozen->forced_reason : null,
                 'letter' => $many ? $variant->variant_letter : null,
                 'number' => $variant->number,
                 'status' => $variant->status->value,
@@ -321,6 +325,13 @@ final class ProposalGroupsPresenter
             'rejectUrl' => route('proposals.groups.reject', $group),
             'canApprove' => $isReviewer && $waiting && ! $lockedByOther,
             'approveUrl' => route('proposals.groups.approve', $group),
+            // F5-03 (D-064, D-070, D-459): only quantities beyond the residual; the admin forces, the
+            // manager reads that only the admin can.
+            'forceable' => $review !== null && $review->canBeForced(),
+            'canForce' => $review !== null && $review->canBeForced() && ! $lockedByOther && $viewer->can('force', ProposalGroup::class),
+            'forceUrl' => route('proposals.groups.force', $group),
+            'forceNeeds' => $review !== null && $review->canBeForced() ? array_map(self::forceNeed(...), $review->forceable()) : [],
+            'forcedReasonMin' => $this->settings->forcedReasonMinLength(),
             'canChoose' => $isReviewer && $many && $allApproved,
             'chooseUrl' => route('proposals.groups.choose', $group),
             'backUrl' => match (true) {
@@ -475,6 +486,23 @@ final class ProposalGroupsPresenter
             'remaining' => ApprovalCheck::quantity($need->resource, $need->remaining),
             'letters' => $need->letters !== [] ? implode(', ', $need->letters) : null,
             'covered' => $need->isCovered(),
+        ];
+    }
+
+    /**
+     * A resource beyond the residual in the confirmation of "Forza e approva" (F5-03): asked, residual
+     * and residual after the approval (negative).
+     *
+     * @return array{club: string, resource: string, requested: string, remaining: string, after: string}
+     */
+    private static function forceNeed(InventoryNeed $need): array
+    {
+        return [
+            'club' => $need->club->name,
+            'resource' => $need->name,
+            'requested' => ApprovalCheck::quantity($need->resource, $need->requested),
+            'remaining' => ApprovalCheck::quantity($need->resource, $need->remaining),
+            'after' => ($need->remainingAfter() < 0 ? '−' : '').ApprovalCheck::quantity($need->resource, abs($need->remainingAfter())),
         ];
     }
 

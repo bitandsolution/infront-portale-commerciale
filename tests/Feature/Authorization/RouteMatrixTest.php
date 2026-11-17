@@ -143,6 +143,8 @@ function routeMatrix(): array
         // DM-03b: approval and choice of the client, admin and manager (a group still in draft, or an
         // empty choice, goes back with the toast or the errors)
         'proposals.groups.approve' => ['method' => 'POST', 'expected' => $backOfficeForm],
+        // F5-03: forcing beyond the availability, only the admin (D-070)
+        'proposals.groups.force' => ['method' => 'POST', 'expected' => $adminForm],
         'proposals.groups.choose' => ['method' => 'POST', 'expected' => $backOfficeForm],
         // F5-01: withdrawal for the agent of the group (here another agent, refused); "Subentra" for the
         // admin only (the group is a draft: back with the toast); "Lascia la lavorazione" for admin and

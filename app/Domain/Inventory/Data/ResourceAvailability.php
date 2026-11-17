@@ -22,11 +22,21 @@ final readonly class ResourceAvailability
         public bool $isEnabled,
         public int $capacity,
         public int $committed,
+        public bool $hasForced = false,
     ) {}
 
     public function remaining(): int
     {
         return $this->capacity - $this->committed;
+    }
+
+    /**
+     * F5-03 (M04 §10, D-462): residual negative with forced commitments among the open ones: "Oltre la
+     * capacità", distinguished from a capacity reduced under the committed.
+     */
+    public function isOverCapacity(): bool
+    {
+        return $this->hasForced && $this->committed > $this->capacity;
     }
 
     public function isBelowCommitted(): bool

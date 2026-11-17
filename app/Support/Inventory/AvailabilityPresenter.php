@@ -89,7 +89,7 @@ final class AvailabilityPresenter
     }
 
     /**
-     * @return array{state: string, capacity: string|null, committed: string, pending: null, remaining: string|null, share: int, isSoldOut: bool, isBelowCommitted: bool}
+     * @return array{state: string, capacity: string|null, committed: string, pending: null, remaining: string|null, share: int, isSoldOut: bool, isBelowCommitted: bool, isOverCapacity: bool}
      */
     private static function cell(ResourceAvailability $item): array
     {
@@ -101,10 +101,12 @@ final class AvailabilityPresenter
             'committed' => InventoryPresenter::quantity($item->resource, $item->committed),
             // Proposals waiting for approval arrive with F5 (D-337 point 2).
             'pending' => null,
-            'remaining' => $managed ? InventoryPresenter::quantity($item->resource, $item->remaining()) : null,
+            'remaining' => $managed ? InventoryPresenter::signedQuantity($item->resource, $item->remaining()) : null,
             'share' => $managed && $item->capacity > 0 ? max(0, min(100, intdiv($item->remaining() * 100, $item->capacity))) : 0,
             'isSoldOut' => $managed && $item->remaining() <= 0,
             'isBelowCommitted' => $item->isBelowCommitted(),
+            // F5-03 (D-462): negative after a forced approval.
+            'isOverCapacity' => $managed && $item->isOverCapacity(),
         ];
     }
 

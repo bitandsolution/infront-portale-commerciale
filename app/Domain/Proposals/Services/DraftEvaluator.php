@@ -176,9 +176,10 @@ final class DraftEvaluator
         }
 
         $errors = [];
-        $tier = $this->tier($sellability, $data, $errors);
-        $format = $this->format($sellability, $data, $errors);
-        $seats = $this->seats($sellability, $data, $errors);
+        $short = [];
+        $tier = $this->tier($sellability, $data, $errors, $short);
+        $format = $this->format($sellability, $data, $errors, $short);
+        $seats = $this->seats($sellability, $data, $errors, $short);
 
         $quote = null;
 
@@ -202,7 +203,7 @@ final class DraftEvaluator
             $errors['elements'] = Text::get('proposals.club_errors.no_elements');
         }
 
-        return new ClubEvaluation($data, $club, $sellability, $quote, $errors);
+        return new ClubEvaluation($data, $club, $sellability, $quote, $errors, array_values(array_intersect($short, array_keys($errors))));
     }
 
     /**
@@ -210,8 +211,9 @@ final class DraftEvaluator
      * price when the list has a price for it.
      *
      * @param  array<string, string>  $errors
+     * @param  list<string>  $short  fields whose error is a quantity beyond the residual (F5-03)
      */
-    private function tier(ClubSellability $sellability, DraftClubData $data, array &$errors): ?PartnershipTier
+    private function tier(ClubSellability $sellability, DraftClubData $data, array &$errors, array &$short): ?PartnershipTier
     {
         if ($data->tierId === null) {
             return null;
@@ -221,6 +223,10 @@ final class DraftEvaluator
 
         if ($option === null || ! $option->status->isSelectable()) {
             $errors['tier'] = self::unavailable('tier', $option, PartnershipTier::query()->find($data->tierId)?->name);
+
+            if ($option?->status === SellableStatus::SoldOut) {
+                $short[] = 'tier';
+            }
         }
 
         if ($option === null || (! $option->isFreePackage && $option->listPrice === null)) {
@@ -235,8 +241,9 @@ final class DraftEvaluator
      * residual of the format (D-063, D-064, D-065).
      *
      * @param  array<string, string>  $errors
+     * @param  list<string>  $short
      */
-    private function format(ClubSellability $sellability, DraftClubData $data, array &$errors): ?LedFormat
+    private function format(ClubSellability $sellability, DraftClubData $data, array &$errors, array &$short): ?LedFormat
     {
         if ($data->ledFormatId === null) {
             return null;
@@ -246,6 +253,10 @@ final class DraftEvaluator
 
         if ($option === null || ! $option->status->isSelectable()) {
             $errors['led_format'] = self::unavailable('format', $option, LedFormat::query()->find($data->ledFormatId)?->name);
+
+            if ($option?->status === SellableStatus::SoldOut && $data->ledSeconds > 0 && $data->ledSeconds % $this->settings->ledStepSeconds() === 0) {
+                $short[] = 'led_format';
+            }
         }
 
         $step = $this->settings->ledStepSeconds();
@@ -257,6 +268,7 @@ final class DraftEvaluator
                 'step' => LedDuration::format($step),
                 'remaining' => LedDuration::format($option->remaining),
             ]);
+            $short[] = 'led_seconds';
         }
 
         // Priced also beyond the residual; never with minutes out of step (PriceCalculator refuses them).
@@ -272,9 +284,10 @@ final class DraftEvaluator
      * residual of the variant and at most the maximum of the settings per club (D-147).
      *
      * @param  array<string, string>  $errors
+     * @param  list<string>  $short
      * @return list<array{variant: HospitalityVariant, seats: int}>
      */
-    private function seats(ClubSellability $sellability, DraftClubData $data, array &$errors): array
+    private function seats(ClubSellability $sellability, DraftClubData $data, array &$errors, array &$short): array
     {
         $seats = [];
         $max = $this->settings->hospitalityMaxSeats();
@@ -289,11 +302,16 @@ final class DraftEvaluator
 
             if ($option === null || ! $option->status->isSelectable()) {
                 $errors[$field] = self::unavailable('variant', $option, HospitalityVariant::query()->find($variantId)?->name);
+
+                if ($option?->status === SellableStatus::SoldOut) {
+                    $short[] = $field;
+                }
             } elseif ($option->remaining !== null && $count > $option->remaining) {
                 $errors[$field] = Text::get('proposals.club_errors.seats_over_residual', [
                     'variant' => $option->name,
                     'remaining' => (string) $option->remaining,
                 ]);
+                $short[] = $field;
             }
 
             $variant = $option !== null && $option->listPrice !== null ? HospitalityVariant::query()->find($variantId) : null;

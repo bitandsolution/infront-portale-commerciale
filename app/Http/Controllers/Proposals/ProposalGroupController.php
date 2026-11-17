@@ -13,6 +13,7 @@ use App\Enums\ProposalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Proposals\ApproveGroupRequest;
 use App\Http\Requests\Proposals\ChooseVariantRequest;
+use App\Http\Requests\Proposals\ForceGroupRequest;
 use App\Http\Requests\Proposals\RejectGroupRequest;
 use App\Models\Proposal;
 use App\Models\ProposalGroup;
@@ -185,6 +186,16 @@ class ProposalGroupController extends Controller
 
         return redirect()->route('proposals.groups.show', $group)->with('toast', Toast::success(
             Text::get('proposals.toasts.group_approved', ['number' => (string) $this->firstNumber($group)]),
+        ));
+    }
+
+    /** F5-03: "Forza e approva" of the admin, with the reason (D-064, D-070, D-459…D-461). */
+    public function force(ForceGroupRequest $request, ProposalGroup $group, ApproveGroup $approveGroup): RedirectResponse
+    {
+        $forced = $approveGroup->handle($group, $request->discounts(), $this->actor($request), $request->forcedReason());
+
+        return redirect()->route('proposals.groups.show', $group)->with('toast', Toast::success(
+            Text::get($forced ? 'proposals.toasts.group_forced' : 'proposals.toasts.group_approved', ['number' => (string) $this->firstNumber($group)]),
         ));
     }
 

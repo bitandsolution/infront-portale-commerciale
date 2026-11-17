@@ -113,6 +113,28 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.approval_blocked', ['problems' => implode('; ', $problems)]));
     }
 
+    /** F5-03 (M07 RB-06, D-070): only the admin forces an approval beyond the availability. */
+    public static function forceNotAllowed(): self
+    {
+        return new self(Text::get('proposals.errors.force_not_allowed'));
+    }
+
+    /**
+     * F5-03 (D-064, D-459): the forcing covers only quantities beyond the residual.
+     *
+     * @param  list<string>  $problems
+     */
+    public static function notForceable(array $problems): self
+    {
+        return new self(Text::get('proposals.errors.not_forceable', ['problems' => implode('; ', $problems)]));
+    }
+
+    /** F5-03 (M04 §9, M07 §8): the reason of a forcing, at least the minimum length of the settings. */
+    public static function forcedReasonTooShort(int $min): self
+    {
+        return new self(Text::get('proposals.errors.forced_reason_short', ['min' => (string) $min]));
+    }
+
     /** M07 §8 (D-097, D-103): percentage 0…100, amount 0…list total. */
     public static function discountOutOfRange(): self
     {

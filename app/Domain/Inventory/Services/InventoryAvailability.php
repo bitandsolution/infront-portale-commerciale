@@ -41,7 +41,7 @@ final class InventoryAvailability
     {
         $this->ensureSeasonal();
 
-        $committed = $this->committedByResource($season, $club);
+        [$committed, $forced] = $this->committedByResource($season, $club);
         $result = ['pool' => [], 'partnership' => [], 'hospitality' => []];
 
         foreach (InventoryResource::cases() as $resource) {
@@ -64,6 +64,7 @@ final class InventoryAvailability
                     isEnabled: (bool) $capacity?->getAttribute('is_enabled'),
                     capacity: (int) $capacity?->getAttribute($resource->quantityColumn()),
                     committed: $committed[$resource->value][$value->id] ?? 0,
+                    hasForced: isset($forced[$resource->value][$value->id]),
                 );
             }
         }
@@ -122,24 +123,31 @@ final class InventoryAvailability
     }
 
     /**
-     * @return array<string, array<int, int>> resource → value id → committed quantity
+     * Committed quantity by resource and value id, and the resources with forced commitments (F5-03).
+     *
+     * @return array{0: array<string, array<int, int>>, 1: array<string, array<int, true>>}
      */
     private function committedByResource(Season $season, Club $club): array
     {
         $committed = [];
+        $forced = [];
 
         $rows = InventoryCommitment::query()
             ->where('season_id', $season->id)
             ->where('club_id', $club->id)
             ->whereNull('released_at')
-            ->get(['resource_type', 'inventory_pool_id', 'partnership_tier_id', 'hospitality_variant_id', 'quantity']);
+            ->get(['resource_type', 'inventory_pool_id', 'partnership_tier_id', 'hospitality_variant_id', 'quantity', 'is_forced']);
 
         foreach ($rows as $row) {
             /** @var int $valueId */
             $valueId = $row->getAttribute($row->resource_type->valueKey());
             $committed[$row->resource_type->value][$valueId] = ($committed[$row->resource_type->value][$valueId] ?? 0) + $row->quantity;
+
+            if ($row->is_forced) {
+                $forced[$row->resource_type->value][$valueId] = true;
+            }
         }
 
-        return $committed;
+        return [$committed, $forced];
     }
 }
