@@ -175,6 +175,24 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.review_header_fixed'));
     }
 
+    /** F5-05 (D-095): only the admin cancels an approved group. */
+    public static function cancelNotAllowed(): self
+    {
+        return new self(Text::get('proposals.errors.cancel_not_allowed'));
+    }
+
+    /** F5-05 (D-447): the reason of a cancellation is required, at least $min characters. */
+    public static function cancelReasonTooShort(int $min): self
+    {
+        return new self(Text::get('proposals.errors.cancel_reason_short', ['min' => (string) $min]));
+    }
+
+    /** F5-05 (D-444, D-471): only a group with an approved variant is cancelled, once. */
+    public static function groupNotCancellable(): self
+    {
+        return new self(Text::get('proposals.errors.group_not_cancellable'));
+    }
+
     /** F5-04 (D-041, D-466): only an approved variant is changed with a new version, by the admin. */
     public static function notRevisable(int $number): self
     {

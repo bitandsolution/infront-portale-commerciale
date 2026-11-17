@@ -97,6 +97,14 @@ function regenerate(): void {
             </div>
         </div>
 
+        <!-- F5-05 (D-470): the PDF of a cancelled proposal stays as it was presented -->
+        <p
+            v-if="document.cancelled"
+            class="rounded-[10px] bg-notice-soft px-3.5 py-2.5 text-sm text-ink"
+            role="status"
+        >
+            {{ t('proposals.document.cancelled') }}
+        </p>
         <p
             v-if="!document.current"
             class="text-sm text-muted"

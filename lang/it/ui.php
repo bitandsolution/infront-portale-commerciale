@@ -1628,6 +1628,19 @@ return [
                 'reason_help' => 'La legge l\'agente nel configuratore e nel dettaglio della proposta.',
                 'confirm' => 'Rifiuta',
             ],
+            // F5-05: cancellation of an approved group (D-095, D-447, D-469…D-473).
+            'cancel' => [
+                'action' => 'Annulla la proposta',
+                'title' => 'Annullare la proposta n. :number?',
+                'text' => 'Le varianti approvate diventano "Annullata" e la disponibilità impegnata torna libera. L\'annullamento è definitivo: per rifare l\'offerta l\'agente duplica una variante. Il PDF già generato resta com\'è.',
+                'revision' => 'Le modifiche in corso di una nuova versione si perdono.',
+                'reason' => 'Motivazione',
+                'reason_help' => 'Almeno :min caratteri: la leggono l\'agente nel dettaglio e nella cronologia e l\'audit.',
+                'confirm' => 'Annulla la proposta',
+                'banner' => 'Proposta annullata il :at',
+                'by' => ' da :name',
+                'reason_line' => 'Motivo: :reason',
+            ],
         ],
         // DM-04: the PDF document of the group (D-413…D-417).
         'document' => [
@@ -1638,6 +1651,7 @@ return [
             'failed' => 'Il documento non è riuscito. L\'amministratore può rigenerarlo dopo aver sistemato la libreria delle slide.',
             'failed_reason' => 'Motivo: :reason',
             'download' => 'Scarica il PDF',
+            'cancelled' => 'Documento di una proposta annullata: il PDF resta quello presentato al cliente.',
             'regenerate' => 'Rigenera',
             'regenerate_title' => 'Rigenerare il documento?',
             'regenerate_text' => 'Il documento attuale resta consultabile solo dall\'amministratore. Il nuovo documento contiene le varianti approvate: dopo la scelta del cliente, solo quella scelta.',
