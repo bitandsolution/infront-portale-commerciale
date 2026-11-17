@@ -58,21 +58,25 @@ beforeEach(function () {
     $league = CompetitionSeason::factory()->create(['season_id' => $this->season->id, 'standard_home_matches' => 19]);
     $this->format = LedFormat::query()->where('code', 'FILA_2')->firstOrFail();
 
-    $this->lazio = Club::factory()->infront()->create([
-        'name' => 'SS Lazio',
-        'code' => 'LAZIO',
-        'short_name' => 'Lazio',
-        'logo_file_id' => storeTestFile(FilePurpose::ClubLogo, null, null, 'logo.png')->id,
-    ]);
-    ClubEnrollment::query()->create(['competition_season_id' => $league->id, 'club_id' => $this->lazio->id]);
-    LedPrice::query()->create(['price_list_id' => $priceList->id, 'club_id' => $this->lazio->id, 'led_format_id' => $this->format->id, 'unit_price' => '1000.00']);
-    PoolCapacity::query()->create(['season_id' => $this->season->id, 'club_id' => $this->lazio->id, 'inventory_pool_id' => InventoryPool::query()->where('code', 'FILA_2')->value('id'), 'is_enabled' => true, 'seconds_per_match' => 600]);
-
     $this->agent = User::factory()->agent()->create(['first_name' => 'Luca', 'last_name' => 'Verdi']);
     $this->admin = User::factory()->admin()->create(['first_name' => 'Anna', 'last_name' => 'Neri']);
     $this->manager = User::factory()->manager()->create(['first_name' => 'Marta', 'last_name' => 'Bruni']);
     User::factory()->manager()->inactive()->create();
     User::factory()->manager()->create(['activated_at' => null]);
+    // The factories of the fixtures create their own authors: only the three users above are active.
+    User::query()->whereKeyNot([$this->agent->id, $this->admin->id, $this->manager->id])->update(['is_active' => false, 'deactivated_at' => now()]);
+
+
+    $this->lazio = Club::factory()->infront()->create([
+        'name' => 'SS Lazio',
+        'code' => 'LAZIO',
+        'short_name' => 'Lazio',
+        'logo_file_id' => storeTestFile(FilePurpose::ClubLogo, $this->admin, null, 'logo.png')->id,
+    ]);
+    ClubEnrollment::query()->create(['competition_season_id' => $league->id, 'club_id' => $this->lazio->id]);
+    LedPrice::query()->create(['price_list_id' => $priceList->id, 'club_id' => $this->lazio->id, 'led_format_id' => $this->format->id, 'unit_price' => '1000.00']);
+    PoolCapacity::query()->create(['season_id' => $this->season->id, 'club_id' => $this->lazio->id, 'inventory_pool_id' => InventoryPool::query()->where('code', 'FILA_2')->value('id'), 'is_enabled' => true, 'seconds_per_match' => 600]);
+
 });
 
 /** Cover, club recap and closing of the club: with them the document of the group is ready. */
@@ -197,7 +201,7 @@ it('M01-CA6, M07-CA5: the sending reaches the active admins and managers, with t
     $mail->assertSeeInHtml('2027-28');
     $mail->assertSeeInHtml(route('proposals.groups.show', $proposal->proposal_group_id), false);
     $mail->assertDontSeeInHtml('€');
-    expect($mail->attachments())->toBe([]);
+    expect($mail->attachments)->toBe([]);
 });
 
 it('D-475, D-478: one e-mail per group with the letters; "sent again" after a rejection', function () {
@@ -255,7 +259,7 @@ it('D-221: the approval e-mail leaves when the PDF is ready, with the link', fun
     $mail->assertSeeInHtml('Il documento PDF è pronto');
     $mail->assertSeeInHtml(route('proposals.groups.show', $proposal->proposal_group_id), false);
     $mail->assertDontSeeInHtml('€');
-    expect($mail->attachments())->toBe([])
+    expect($mail->attachments)->toBe([])
         ->and(NotificationLog::query()->where('type', NotificationType::ProposalApproved->value)->sole()->proposal_id)->toBe($proposal->id);
 
     // A regeneration of a document already delivered sends nothing (D-477).
