@@ -105,6 +105,27 @@ final class Proposal extends Model
         return $this->status === ProposalStatus::Draft || $this->status === ProposalStatus::Rejected;
     }
 
+    /**
+     * F5-04 (D-466): an approved proposal whose working version is the copy of a new version being
+     * changed by the admin (read from the database).
+     */
+    public function isUnderRevision(): bool
+    {
+        return $this->status === ProposalStatus::Approved && $this->workingVersion()->exists();
+    }
+
+    /**
+     * The version to show of the proposal: the frozen one once decided (approved, not chosen,
+     * cancelled), also while the admin changes an approved one (F5-04, D-466); otherwise the working
+     * version. Uses the loaded relations.
+     */
+    public function shownVersion(): ?ProposalVersion
+    {
+        return in_array($this->status, [ProposalStatus::Approved, ProposalStatus::NotChosen, ProposalStatus::Cancelled], true)
+            ? ($this->currentVersion ?? $this->workingVersion)
+            : ($this->workingVersion ?? $this->currentVersion);
+    }
+
     /** The agent can send the proposal for approval (with its group, DM-03a). */
     public function isSubmittable(): bool
     {

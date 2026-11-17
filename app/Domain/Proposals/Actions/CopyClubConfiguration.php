@@ -30,7 +30,9 @@ use Illuminate\Support\Facades\DB;
  * - The draft is then saved by SaveDraft, in the same transaction: lock version, prices calculated by
  *   the server and one audit event proposal.draft_updated with the changed clubs (D-372).
  * - Review mode ($review; F5-02, D-457): admin and manager copy on a variant waiting for approval,
- *   with the lock of the work (SaveDraft::lockForReview) and the save of the review (SaveDraft::review).
+ *   with the lock of the work (SaveDraft::lockForReview) and the save of the review (SaveDraft::review);
+ *   the admin copies also on the working copy of an approved variant (F5-04, D-466), whose residuals
+ *   leave out its own commitments (D-465).
  */
 final class CopyClubConfiguration
 {
@@ -86,6 +88,7 @@ final class CopyClubConfiguration
                 $version->starts_on?->toDateString(),
                 $version->ends_on?->toDateString(),
                 $candidates,
+                DraftEvaluator::exceptProposalId($locked),
             );
 
             $clubs = [];

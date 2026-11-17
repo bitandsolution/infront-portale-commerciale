@@ -25,6 +25,8 @@ use Illuminate\Database\Eloquent\Collection;
  *   resource; never stored.
  * - Seasonal method (D-062): a commitment counts for the whole season, whatever its contract period.
  *   With the method "per_match" of the settings the service refuses explicitly (D-293, D-337).
+ * - F5-04 (D-465): with $exceptProposalId the open commitments of that proposal are left out, so the
+ *   residual is what an approved proposal being changed may use (capacity − commitments of the others).
  * - The resources are the active values of the catalogue: active pools of an active visibility type,
  *   partnership tiers without the free package (no counter, D-052), hospitality variants.
  */
@@ -37,11 +39,11 @@ final class InventoryAvailability
      *
      * @return array{pool: list<ResourceAvailability>, partnership: list<ResourceAvailability>, hospitality: list<ResourceAvailability>}
      */
-    public function forClub(Season $season, Club $club): array
+    public function forClub(Season $season, Club $club, ?int $exceptProposalId = null): array
     {
         $this->ensureSeasonal();
 
-        [$committed, $forced] = $this->committedByResource($season, $club);
+        [$committed, $forced] = $this->committedByResource($season, $club, $exceptProposalId);
         $result = ['pool' => [], 'partnership' => [], 'hospitality' => []];
 
         foreach (InventoryResource::cases() as $resource) {
@@ -127,7 +129,7 @@ final class InventoryAvailability
      *
      * @return array{0: array<string, array<int, int>>, 1: array<string, array<int, true>>}
      */
-    private function committedByResource(Season $season, Club $club): array
+    private function committedByResource(Season $season, Club $club, ?int $exceptProposalId): array
     {
         $committed = [];
         $forced = [];
@@ -136,6 +138,7 @@ final class InventoryAvailability
             ->where('season_id', $season->id)
             ->where('club_id', $club->id)
             ->whereNull('released_at')
+            ->when($exceptProposalId !== null, fn (Builder $query) => $query->where(fn (Builder $inner) => $inner->whereNull('proposal_id')->orWhere('proposal_id', '!=', $exceptProposalId)))
             ->get(['resource_type', 'inventory_pool_id', 'partnership_tier_id', 'hospitality_variant_id', 'quantity', 'is_forced']);
 
         foreach ($rows as $row) {

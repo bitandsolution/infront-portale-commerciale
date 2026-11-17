@@ -52,6 +52,7 @@ final class ProposalGroupsPresenter
         private readonly Discounts $discounts,
         private readonly DocumentComposer $composer,
         private readonly Settings $settings,
+        private readonly ProposalVersionsPresenter $versions,
     ) {}
 
     /**
@@ -274,6 +275,12 @@ final class ProposalGroupsPresenter
                 'reviewUrl' => $isReviewer && $variant->status === ProposalStatus::Submitted && $lockHolder === $viewer->id
                     ? route('proposals.review.edit', ['proposal' => $variant, 'passo' => 4])
                     : null,
+                // F5-04 (D-466, D-468): "Modifica" of an approved variant by the admin (a new version), the
+                // changes in progress and the frozen versions.
+                'revisionStartUrl' => $frozen !== null && $variant->workingVersion === null && $viewer->can('revise', $variant) ? route('proposals.revision.start', $variant) : null,
+                'revisionUrl' => $frozen !== null && $variant->workingVersion !== null && $viewer->can('revise', $variant) ? route('proposals.revision.edit', ['proposal' => $variant, 'passo' => 4]) : null,
+                'underRevision' => $frozen !== null && $variant->workingVersion !== null && $isReviewer,
+                'versions' => $frozen !== null ? $this->versions->versions($variant, $isReviewer) : [],
                 'repricing' => $isReviewer && $waiting && $evaluation !== null ? $this->repricing($variant, $evaluation) : null,
                 'discount' => $isReviewer ? $this->discount($variant, $frozen, $evaluation, $discounts[$variant->id] ?? null, $discountErrors[$variant->id] ?? null) : null,
             ];
@@ -495,7 +502,7 @@ final class ProposalGroupsPresenter
      *
      * @return array{club: string, resource: string, requested: string, remaining: string, after: string}
      */
-    private static function forceNeed(InventoryNeed $need): array
+    public static function forceNeed(InventoryNeed $need): array
     {
         return [
             'club' => $need->club->name,

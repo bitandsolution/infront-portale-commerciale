@@ -16,6 +16,7 @@ use App\Domain\Proposals\Data\DraftEvaluation;
 use App\Domain\Settings\Services\Settings;
 use App\Domain\Sports\Exceptions\SportsActionNotAllowed;
 use App\Domain\Sports\Services\MatchCounter;
+use App\Enums\ProposalStatus;
 use App\Enums\SellableStatus;
 use App\Models\Club;
 use App\Models\HospitalityVariant;
@@ -48,6 +49,9 @@ use Illuminate\Support\Carbon;
  *   others; the options with a price in the published list are priced also when sold out or beyond
  *   the residual, so the agent sees what they would cost. Without a price the club price is not
  *   calculated. The list total is the sum of the club prices (RB-07).
+ * - F5-04 (D-465): an approved proposal being changed is evaluated without its own commitments
+ *   ($exceptProposalId; evaluateProposal() does it by itself for an approved proposal), so its residual
+ *   is the capacity minus the commitments of the other proposals.
  * - KPI of the campaign (M06 §6, D-093; F4-04): MatchCounter on all the priced clubs together, so the
  *   campaign starts with the first home match of any of them (RB-02) and the top matches count only
  *   in the competitions with the KPI (D-036); spots from the LED of the priced clubs.
@@ -78,13 +82,23 @@ final class DraftEvaluator
             $version->starts_on?->toDateString(),
             $version->ends_on?->toDateString(),
             SaveDraft::fromRows(SaveDraft::rows($version)),
+            self::exceptProposalId($proposal),
         );
+    }
+
+    /**
+     * F5-04 (D-465): the proposal whose commitments are left out of the residuals: an approved
+     * proposal being changed (its working version is the copy of the new version).
+     */
+    public static function exceptProposalId(Proposal $proposal): ?int
+    {
+        return $proposal->status === ProposalStatus::Approved ? $proposal->id : null;
     }
 
     /**
      * @param  list<DraftClubData>  $clubs
      */
-    public function evaluate(?Season $season, ?string $startsOn, ?string $endsOn, array $clubs): DraftEvaluation
+    public function evaluate(?Season $season, ?string $startsOn, ?string $endsOn, array $clubs, ?int $exceptProposalId = null): DraftEvaluation
     {
         $models = Club::query()->whereKey(array_map(fn (DraftClubData $club): int => $club->clubId, $clubs))->get()->keyBy('id');
         $evaluations = [];
@@ -99,7 +113,7 @@ final class DraftEvaluator
 
             $evaluation = $season === null || $startsOn === null
                 ? new ClubEvaluation($data, $club, null, null, ['club' => Text::get('proposals.club_errors.no_season')])
-                : $this->club($season, Carbon::parse($startsOn), $endsOn !== null ? Carbon::parse($endsOn) : null, $club, $data);
+                : $this->club($season, Carbon::parse($startsOn), $endsOn !== null ? Carbon::parse($endsOn) : null, $club, $data, $exceptProposalId);
 
             $evaluations[] = $evaluation;
             $total = $total->plus($evaluation->total());
@@ -163,9 +177,9 @@ final class DraftEvaluator
         );
     }
 
-    private function club(Season $season, Carbon $startsOn, ?Carbon $endsOn, Club $club, DraftClubData $data): ClubEvaluation
+    private function club(Season $season, Carbon $startsOn, ?Carbon $endsOn, Club $club, DraftClubData $data, ?int $exceptProposalId): ClubEvaluation
     {
-        $sellability = $this->sellable->forClub($season, $club);
+        $sellability = $this->sellable->forClub($season, $club, $exceptProposalId);
 
         if (! $sellability->isSelectable()) {
             return new ClubEvaluation($data, $club, $sellability, null, ['club' => Text::get('proposals.club_errors.not_selectable', [

@@ -21,6 +21,10 @@ return [
         'group_rejected' => 'Proposta n. :number rifiutata',
         'group_approved' => 'Proposta n. :number approvata',
         'group_forced' => 'Proposta n. :number approvata con forzatura',
+        'revision_started' => 'Modifica della proposta n. :number: le modifiche si salvano come nuova versione',
+        'revision_discarded' => 'Modifiche della proposta n. :number annullate: resta la versione :version',
+        'version_saved' => 'Proposta n. :number: salvata la versione :version',
+        'version_forced' => 'Proposta n. :number: salvata la versione :version con forzatura',
         'client_chosen' => 'Scelta del cliente registrata: variante :letter (proposta n. :number)',
         // F5-01 (D-100, D-446).
         'group_withdrawn' => 'Proposta n. :number ritirata: è di nuovo in bozza',
@@ -79,6 +83,9 @@ return [
         'forced_reason_short' => 'Scrivi la motivazione della forzatura (almeno :min caratteri)',
         'not_in_review' => 'La proposta n. :number non è in approvazione: non si modifica in revisione',
         'review_header_fixed' => 'Durante l\'approvazione cliente e stagione della proposta non cambiano',
+        'not_revisable' => 'La proposta n. :number non è approvata: non si crea una nuova versione',
+        'not_under_revision' => 'La proposta n. :number non ha modifiche in corso: riaprila con «Modifica» dal dettaglio',
+        'version_unchanged' => 'Nessuna modifica rispetto alla versione corrente: la nuova versione non è stata salvata',
         'withdraw_locked' => 'La proposta è in lavorazione da :name e non si può ritirare ora: riprova più tardi',
     ],
 
@@ -162,6 +169,7 @@ return [
         'discount_amount' => 'Sconto € :amount (:percent%): totale finale € :final',
         'chosen' => 'Il cliente ha scelto questa variante',
         'not_chosen' => 'Il cliente ha scelto la variante :letter',
+        'new_version' => 'Versione :number',
     ],
 
     'event_types' => [

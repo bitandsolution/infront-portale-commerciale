@@ -14,6 +14,7 @@ import DocumentSlides from '@/components/proposals/DocumentSlides.vue';
 import DraftSummary from '@/components/proposals/DraftSummary.vue';
 import { formatLedDuration } from '@/components/proposals/ledDuration';
 import NewClientDialog from '@/components/proposals/NewClientDialog.vue';
+import NewVersionPanel from '@/components/proposals/NewVersionPanel.vue';
 import EmptyState from '@/components/states/EmptyState.vue';
 import StatusPill from '@/components/StatusPill.vue';
 import { useTrans } from '@/composables/useTrans';
@@ -29,6 +30,7 @@ import type {
     ProposalDuplicatedNotice,
     ProposalRepricing,
     ProposalReviewMode,
+    ProposalRevisionMode,
     ProposalSeasonOption,
     SectorOption,
 } from '@/types';
@@ -64,12 +66,17 @@ import type {
  * - Review mode (prop "review"; F5-02, D-445, D-454…D-457): admin and manager change a variant waiting
  *   for approval, with the lock of the work. Steps 2 to 5 only (lastStep = 5), season fixed, no
  *   deletion and no new variants; the way back leads to the detail of the group.
+ * - New version of an approved variant (prop "revision" with "review"; F5-04, D-464…D-467): the same
+ *   review mode on the working copy made by "Modifica"; at step 5 the box "Nuova versione"
+ *   (NewVersionPanel) saves the version n+1 or discards the changes. Every automatic save reloads the
+ *   box too, so differences and problems follow the configuration.
  */
 const props = defineProps<{
     layout: LayoutData;
     step: number;
     lastStep: number;
     review: ProposalReviewMode | null;
+    revision: ProposalRevisionMode | null;
     draft: ProposalDraft | null;
     reopened: ProposalRepricing | null;
     copied: ProposalCopied | null;
@@ -169,7 +176,7 @@ function save(after?: () => void): void {
     router.put(props.draft.saveUrl, { ...fields, lock_version: lockVersion.value }, {
         preserveState: true,
         preserveScroll: true,
-        only: ['draft', 'clubOptions', 'documentSlides'],
+        only: props.revision !== null ? ['draft', 'clubOptions', 'revision'] : ['draft', 'clubOptions', 'documentSlides'],
         onSuccess: (response) => {
             const draft = response.props.draft as ProposalDraft | null;
             if (draft) {
@@ -269,7 +276,11 @@ const saveText = computed(() => {
     }
 
     return {
-        saved: props.review !== null ? t('proposals.review.saved_at', { time: savedAt.value }) : t('proposals.save.saved_at', { time: savedAt.value }),
+        saved: props.revision !== null
+            ? t('proposals.revision.saved_at', { time: savedAt.value })
+            : props.review !== null
+              ? t('proposals.review.saved_at', { time: savedAt.value })
+              : t('proposals.save.saved_at', { time: savedAt.value }),
         pending: t('proposals.save.pending'),
         saving: t('proposals.save.saving'),
         error: t('proposals.save.error'),
@@ -592,6 +603,39 @@ const showReopened = ref(props.reopened !== null);
 
 const totalStale = computed(() => !online.value && saveState.value === 'pending');
 const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
+
+// F5-04 (D-467): the box "Nuova versione"; the pending changes are saved before every request.
+const versionProcessing = ref(false);
+
+function previewVersion(discount: { sconto_tipo: string; sconto: string }): void {
+    save(() => router.reload({ data: discount, only: ['revision'] }));
+}
+
+function saveVersion(payload: { discount_type: string; discount_value: string; forced_reason: string }): void {
+    const url = props.revision?.saveUrl;
+    if (!url) {
+        return;
+    }
+    versionProcessing.value = true;
+    save(() =>
+        router.post(url, { ...payload, lock_version: lockVersion.value }, {
+            preserveScroll: true,
+            preserveState: 'errors',
+            onFinish: () => (versionProcessing.value = false),
+        }),
+    );
+}
+
+function discardVersion(): void {
+    const url = props.revision?.discardUrl;
+    if (!url) {
+        return;
+    }
+    versionProcessing.value = true;
+    clearTimeout(timer);
+    dirty = false;
+    router.delete(url, { onFinish: () => (versionProcessing.value = false) });
+}
 </script>
 
 <template>
@@ -629,7 +673,7 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         </h2>
                         <StatusPill
                             v-if="draft"
-                            :label="review ? t('proposals.review.badge') : t('proposals.draft_badge')"
+                            :label="revision ? t('proposals.revision.badge') : review ? t('proposals.review.badge') : t('proposals.draft_badge')"
                             :tone="review ? 'notice' : 'muted'"
                         />
                     </div>
@@ -640,10 +684,18 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         class="flex flex-col gap-1 rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
                         role="note"
                     >
-                        <p class="font-semibold">
-                            {{ t('proposals.review.title') }}
-                        </p>
-                        <p>{{ t('proposals.review.text', { agent: review.agent }) }}</p>
+                        <template v-if="revision">
+                            <p class="font-semibold">
+                                {{ t('proposals.revision.title') }}
+                            </p>
+                            <p>{{ t('proposals.revision.text', { agent: review.agent, next: String(revision.nextNumber), current: String(revision.versionNumber) }) }}</p>
+                        </template>
+                        <template v-else>
+                            <p class="font-semibold">
+                                {{ t('proposals.review.title') }}
+                            </p>
+                            <p>{{ t('proposals.review.text', { agent: review.agent }) }}</p>
+                        </template>
                     </div>
 
                     <!-- Variants of the group (D-396) -->
@@ -699,7 +751,10 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                             </button>
                         </div>
                         <p class="text-[13px] leading-relaxed text-muted">
-                            <template v-if="review">
+                            <template v-if="revision">
+                                {{ t('proposals.revision.variants') }}
+                            </template>
+                            <template v-else-if="review">
                                 {{ t('proposals.review.variants') }}
                             </template>
                             <template v-else-if="!draft.canAddVariant">
@@ -1173,7 +1228,10 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                                     <template v-if="chosenSeason">
                                         {{ chosenSeason.range }} ·
                                     </template>
-                                    <template v-if="review">
+                                    <template v-if="revision">
+                                        {{ t('proposals.revision.season_fixed') }}
+                                    </template>
+                                    <template v-else-if="review">
                                         {{ t('proposals.review.season_fixed') }}
                                     </template>
                                     <template v-else-if="multipleVariants">
@@ -1307,6 +1365,18 @@ const listTotal = computed(() => props.draft?.listTotal ?? '0,00');
                         :client-name="chosenClient?.name ?? null"
                         :sector="chosenClient?.sector ?? null"
                         @fix="goTo(4)"
+                    />
+
+                    <!-- New version of an approved variant (F5-04, D-467) -->
+                    <NewVersionPanel
+                        v-if="currentStep === 5 && draft && revision"
+                        :revision="revision"
+                        :number="draft.number"
+                        :processing="versionProcessing"
+                        :errors="errors"
+                        @preview="previewVersion"
+                        @save="saveVersion"
+                        @discard="discardVersion"
                     />
 
                     <!-- Step 6: slides of the document of the group (DM-05, D-397) -->

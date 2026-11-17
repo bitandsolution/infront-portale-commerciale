@@ -16,6 +16,7 @@ use App\Domain\Proposals\Services\DraftRowsWriter;
 use App\Domain\Proposals\Services\ProposalPeriod;
 use App\Domain\Proposals\Services\ReviewLock;
 use App\Domain\Settings\Services\Settings;
+use App\Enums\Ability;
 use App\Enums\AuditAction;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
@@ -72,6 +73,12 @@ use Illuminate\Validation\ValidationException;
  *   (reviewHeaderFixed). The history gets one "Modificata in approvazione" (edited_in_review) per
  *   variant and work: written when the last event of the variant is not already an edited_in_review
  *   of the same user (D-456); the audit event proposal.draft_updated is written at every save.
+ * - The same review mode saves the working copy of an approved variant changed by the admin (F5-04,
+ *   D-445, D-466): only the admin (Ability::ProposalsManageApproved), no lock of the work, client and
+ *   season fixed; the residuals leave out the commitments of the proposal (DraftEvaluator, D-465) and
+ *   a new quantity beyond the residual is kept with its error, to be forced when the version is saved
+ *   (D-465); every other new choice that is not valid is refused as usual (D-382). No history event:
+ *   the history gets "Nuova versione" when the version is saved (SaveNewVersion).
  */
 final class SaveDraft
 {
@@ -111,6 +118,15 @@ final class SaveDraft
 
         $variants = Proposal::query()->where('proposal_group_id', $group->id)->orderBy('id')->lockForUpdate()->get();
         $locked = $variants->firstWhere('id', $proposal->id);
+
+        // F5-04 (D-466): the working copy of an approved variant, changed only by the admin.
+        if ($locked instanceof Proposal && $locked->isUnderRevision()) {
+            if (! Ability::ProposalsManageApproved->allows($actor->role)) {
+                throw ProposalsActionNotAllowed::notUnderRevision($locked->number);
+            }
+
+            return $locked;
+        }
 
         if (! $locked instanceof Proposal || $locked->status !== ProposalStatus::Submitted) {
             throw ProposalsActionNotAllowed::notInReview($proposal->number);
@@ -169,10 +185,10 @@ final class SaveDraft
             }
 
             $clubs = $data->clubs ?? self::fromRows($rows);
-            $evaluation = $this->evaluator->evaluate($season, $startsOn, $endsOn, $clubs);
+            $evaluation = $this->evaluator->evaluate($season, $startsOn, $endsOn, $clubs, DraftEvaluator::exceptProposalId($locked));
 
             if ($data->clubs !== null) {
-                self::refuseNewChoices($rows, $evaluation);
+                self::refuseNewChoices($rows, $evaluation, $locked->status === ProposalStatus::Approved);
             }
 
             $locked->fill(['client_id' => $client->id, 'season_id' => $season?->id]);
@@ -211,7 +227,7 @@ final class SaveDraft
 
             $this->audit->record(AuditAction::ProposalDraftUpdated, $actor, AuditSubject::proposal($locked), $old, $new);
 
-            if ($review) {
+            if ($review && $locked->status === ProposalStatus::Submitted) {
                 self::recordEditedInReview($locked, $version, $actor);
             }
 
@@ -333,14 +349,20 @@ final class SaveDraft
      *
      * @param  Collection<int, ProposalVersionClub>  $rows
      */
-    private static function refuseNewChoices(Collection $rows, DraftEvaluation $evaluation): void
+    private static function refuseNewChoices(Collection $rows, DraftEvaluation $evaluation, bool $keepShort = false): void
     {
         $errors = [];
 
         foreach ($evaluation->clubs as $club) {
             $row = $rows->firstWhere('club_id', $club->club->id);
             $data = $club->data;
-            $refuse = function (string $field) use (&$errors, $club): void {
+            // F5-04 (D-465): in a new version of an approved proposal a quantity beyond the residual is
+            // kept, to be forced when the version is saved.
+            $refuse = function (string $field) use (&$errors, $club, $keepShort): void {
+                if ($keepShort && in_array($field, $club->shortFields, true)) {
+                    return;
+                }
+
                 if (isset($club->errors[$field])) {
                     $errors[self::field($club->club->id, $field)] = $club->errors[$field];
                 }

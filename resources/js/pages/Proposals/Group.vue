@@ -79,6 +79,12 @@ function discountError(variantId: number): string | undefined {
 
 const confirmingApprove = ref(false);
 
+// F5-04 (D-466): "Modifica" of an approved variant starts its new version and opens the configurator.
+function startRevision(url: string): void {
+    processing.value = true;
+    router.post(url, {}, { onFinish: () => (processing.value = false) });
+}
+
 // F5-03 (D-064, D-070, D-459): "Forza e approva" of the admin, with the reason.
 const forcing = ref(false);
 const forcedReason = ref('');
@@ -715,7 +721,41 @@ function reject(): void {
                             />
                             {{ t('proposals.groups.edit_review') }}
                         </Link>
+                        <!-- F5-04 (D-466): new version of an approved variant, admin only -->
+                        <button
+                            v-if="variant.revisionStartUrl"
+                            type="button"
+                            :class="buttonClasses.secondary"
+                            :disabled="processing"
+                            @click="startRevision(variant.revisionStartUrl)"
+                        >
+                            <Pencil
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                            {{ t('proposals.versions.start') }}
+                        </button>
+                        <Link
+                            v-if="variant.revisionUrl"
+                            :href="variant.revisionUrl"
+                            :class="buttonClasses.primary"
+                        >
+                            <Pencil
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                            {{ t('proposals.versions.resume') }}
+                        </Link>
                     </div>
+                    <p
+                        v-if="variant.underRevision"
+                        class="rounded-[10px] bg-notice-soft px-3.5 py-2.5 text-sm text-ink"
+                        role="status"
+                    >
+                        {{ t('proposals.versions.in_progress') }}
+                    </p>
                     <div
                         v-if="variant.repricing"
                         class="flex gap-2.5 rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
@@ -832,6 +872,80 @@ function reject(): void {
                     >
                         {{ t('proposals.groups.no_version') }}
                     </p>
+
+                    <!-- F5-04 (D-468): frozen versions of the variant, the most recent first -->
+                    <div
+                        v-if="variant.versions.length > 0"
+                        class="flex flex-col gap-2"
+                    >
+                        <h4 class="text-sm font-semibold text-ink">
+                            {{ t('proposals.versions.heading') }}
+                        </h4>
+                        <ol class="flex flex-col divide-y divide-line rounded-[12px] border border-line">
+                            <li
+                                v-for="version in variant.versions"
+                                :key="version.id"
+                                class="flex flex-col gap-1.5 px-4 py-3 text-sm"
+                            >
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="font-semibold text-ink">{{ version.title }}</span>
+                                    <StatusPill
+                                        v-if="version.current"
+                                        :label="t('proposals.versions.current')"
+                                        tone="success"
+                                    />
+                                    <StatusPill
+                                        v-if="version.forced"
+                                        :label="t('proposals.versions.forced')"
+                                        tone="notice"
+                                    />
+                                    <span class="text-muted">{{ t('proposals.versions.meta', { at: version.at ?? '', author: version.author ?? '' }) }}</span>
+                                </div>
+                                <p class="text-ink-soft">
+                                    {{ t('proposals.versions.list_total', { value: version.listTotal }) }}
+                                    <template v-if="version.discount">
+                                        · {{ version.discount }}
+                                    </template>
+                                    <template v-if="version.finalTotal">
+                                        · {{ t('proposals.versions.final_total', { value: version.finalTotal }) }}
+                                    </template>
+                                </p>
+                                <ul
+                                    v-if="version.changes.length > 0"
+                                    class="flex list-disc flex-col gap-0.5 pl-5 text-ink"
+                                >
+                                    <li
+                                        v-for="(change, index) in version.changes"
+                                        :key="index"
+                                    >
+                                        {{ change }}
+                                    </li>
+                                </ul>
+                                <p
+                                    v-else-if="version.number === 1"
+                                    class="text-muted"
+                                >
+                                    {{ t('proposals.versions.first') }}
+                                </p>
+                                <details
+                                    v-if="version.draft"
+                                    class="group"
+                                >
+                                    <summary class="min-h-11 cursor-pointer py-2 font-medium text-accent focus-visible:outline-2 focus-visible:outline-accent">
+                                        {{ t('proposals.versions.show', { number: String(version.number) }) }}
+                                    </summary>
+                                    <DraftSummary
+                                        :draft="version.draft"
+                                        :client-name="version.draft.client?.name ?? null"
+                                        :sector="version.draft.client?.sector ?? null"
+                                        read-only
+                                        in-group
+                                        hide-note
+                                    />
+                                </details>
+                            </li>
+                        </ol>
+                    </div>
                 </article>
             </section>
 

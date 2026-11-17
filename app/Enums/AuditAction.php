@@ -137,6 +137,11 @@ enum AuditAction: string
     // F5-03: approval beyond the availability by the admin (D-064, D-070, D-459…D-461), one per variant
     // with forced commitments, before its proposal.approved.
     case ProposalForced = 'proposal.forced';
+    // F5-04: new version of an approved variant by the admin (D-041, D-096, D-466, D-467): start and
+    // discard of the working copy, then the frozen version n+1.
+    case ProposalRevisionStarted = 'proposal.revision_started';
+    case ProposalRevisionDiscarded = 'proposal.revision_discarded';
+    case ProposalNewVersion = 'proposal.new_version';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';
