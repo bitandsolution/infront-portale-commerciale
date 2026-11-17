@@ -33,3 +33,4 @@ Fuori da F5:
 | F5-00 | In revisione (PR #124) |
 | F5-01 | In revisione (decisioni D-449…D-453 e codice con la stessa PR) |
 | F5-02 | In revisione (decisioni D-454…D-458 e codice con la stessa PR) |
+| F5-03 | In revisione (decisioni D-459…D-463 e codice con la stessa PR) |

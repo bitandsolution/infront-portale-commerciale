@@ -17,7 +17,10 @@ use App\Support\Text;
  *
  * - Every variant is evaluated again on the current list and residuals (DraftEvaluator): a club no
  *   longer on sale, an option sold out, minutes or seats beyond the residual of the club, a club
- *   without elements or a variant without a period block the approval (D-409; the forcing is F5).
+ *   without elements or a variant without a period block the approval (D-409).
+ * - F5-03 (D-459): quantities beyond the residual of a managed resource (an option sold out, minutes
+ *   or seats beyond the residual, the sum of the variants) are the only problems the admin may force;
+ *   every other problem is "blocking" (ApprovalReview::canBeForced()).
  * - What the variants ask together of each resource (GroupInventory) must fit its residual: all the
  *   variants commit at the approval (D-396).
  */
@@ -67,30 +70,34 @@ final class ApprovalCheck
         $short = [];
 
         foreach ($needs as $need) {
-            if (! $need->isCovered()) {
+            if ($need->isForceable()) {
                 $short[$need->club->id.'|'.$need->resource->value] = true;
             }
         }
 
         // Errors of a variant on a resource that the group lacks are said once, with the numbers, by
         // the shortfall below (DM-03b collaudo): the agent's hints ("scegline un altro") do not repeat.
-        $problems = $periodProblems;
+        $blocking = $periodProblems;
 
         foreach ($byLetter as $letter => $evaluation) {
             foreach ($this->variantProblems($evaluation, $short) as $problem) {
-                $problems[] = $letter !== ''
+                $blocking[] = $letter !== ''
                     ? Text::get('proposals.approval_problems.variant', ['letter' => $letter, 'problem' => $problem])
                     : $problem;
             }
         }
 
+        // A resource not managed for the club is said by the error of the variant ("non più in
+        // vendita"): never forceable, never repeated as a shortfall.
+        $problems = $blocking;
+
         foreach ($needs as $need) {
-            if (! $need->isCovered()) {
+            if ($need->isForceable()) {
                 $problems[] = self::shortfall($need);
             }
         }
 
-        return new ApprovalReview($list, $evaluations, $needs, $problems);
+        return new ApprovalReview($list, $evaluations, $needs, $problems, $blocking);
     }
 
     /**
@@ -127,7 +134,9 @@ final class ApprovalCheck
             foreach ($club->errors as $field => $message) {
                 $resource = self::resourceOf((string) $field);
 
-                if ($resource !== null && isset($short[$club->club->id.'|'.$resource->value])) {
+                // Only a quantity beyond the residual is said by the shortfall; an option no longer on
+                // sale stays a blocking problem even on a resource the group lacks (D-459).
+                if ($resource !== null && in_array((string) $field, $club->shortFields, true) && isset($short[$club->club->id.'|'.$resource->value])) {
                     continue;
                 }
 
@@ -152,7 +161,7 @@ final class ApprovalCheck
         };
     }
 
-    private static function shortfall(InventoryNeed $need): string
+    public static function shortfall(InventoryNeed $need): string
     {
         $values = [
             'club' => $need->club->name,

@@ -10,12 +10,15 @@ use App\Domain\Documents\Actions\RequestDocument;
 use App\Domain\Proposals\Data\AppliedDiscount;
 use App\Domain\Proposals\Data\DiscountInput;
 use App\Domain\Proposals\Data\DraftEvaluation;
+use App\Domain\Proposals\Data\InventoryNeed;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
 use App\Domain\Proposals\Services\ApprovalCheck;
 use App\Domain\Proposals\Services\Discounts;
 use App\Domain\Proposals\Services\DraftRowsWriter;
 use App\Domain\Proposals\Services\GroupInventory;
 use App\Domain\Proposals\Services\ReviewLock;
+use App\Domain\Settings\Services\Settings;
+use App\Enums\Ability;
 use App\Enums\AuditAction;
 use App\Enums\DiscountType;
 use App\Enums\InventoryResource;
@@ -45,7 +48,7 @@ use Illuminate\Support\Facades\DB;
  *    approvals on the same clubs wait for each other instead of reading the same residual);
  * 3. check (ApprovalCheck): every variant evaluated on the current list and residuals, and what the
  *    variants ask together within the residuals; any problem blocks the approval and nothing is
- *    written (the forcing is F5);
+ *    written, unless the admin forces it (F5-03, below);
  * 4. for every variant: club rows rewritten with the current prices (D-409), discount on the total
  *    (D-408), client frozen, slides chosen for the document and slides composed with blocks copied
  *    from the group (D-419, DM-07), working
@@ -54,6 +57,14 @@ use Illuminate\Support\Facades\DB;
  * 5. status "Approvata", history "discount_set" and "approved", audit proposal.approved;
  * 6. the PDF document of the group is requested (RequestDocument, DM-04): its job runs after the
  *    commit, so a failed generation never undoes the approval (D-416).
+ *
+ * Forcing (F5-03; M07 F-05, RB-06, CA4; M04 F-10, CA8; D-064, D-070, D-459…D-461): with a reason
+ * (at least forced_reason_min_length characters) the admin approves a group whose only problems are
+ * quantities beyond the residual of managed resources (ApprovalReview::canBeForced()); any other
+ * problem still blocks. The commitments on the resources beyond the residual are written with
+ * is_forced and the reason, the versions of the variants that ask for them with is_forced; history
+ * "forced" before "approved" and audit proposal.forced with the resources. When the residuals are
+ * enough again at that moment the group is approved without forcing.
  *
  * The e-mail to the agent arrives with F5.
  */
@@ -66,14 +77,30 @@ final class ApproveGroup
         private readonly DraftRowsWriter $rows,
         private readonly AuditLog $audit,
         private readonly RequestDocument $requestDocument,
+        private readonly Settings $settings,
     ) {}
 
     /**
      * @param  array<int, DiscountInput>  $discounts  proposal id → discount of the variant
+     * @param  string|null  $forcedReason  F5-03: the reason of the admin who forces the approval
+     * @return bool whether the approval was forced
      */
-    public function handle(ProposalGroup $group, array $discounts, User $actor): void
+    public function handle(ProposalGroup $group, array $discounts, User $actor, ?string $forcedReason = null): bool
     {
-        DB::transaction(function () use ($group, $discounts, $actor): void {
+        if ($forcedReason !== null) {
+            if (! Ability::ProposalsForce->allows($actor->role)) {
+                throw ProposalsActionNotAllowed::forceNotAllowed();
+            }
+
+            $forcedReason = trim($forcedReason);
+            $min = $this->settings->forcedReasonMinLength();
+
+            if (mb_strlen($forcedReason) < $min) {
+                throw ProposalsActionNotAllowed::forcedReasonTooShort($min);
+            }
+        }
+
+        return DB::transaction(function () use ($group, $discounts, $actor, $forcedReason): bool {
             $locked = ProposalGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
             $selection = $locked->documentSelection();
             // DM-07: the slides composed with blocks are frozen with the versions, like the choice.
@@ -105,8 +132,21 @@ final class ApproveGroup
             $this->lockCapacities($season, $variants->all());
             $review = $this->check->review($variants);
 
+            /** @var array<string, InventoryNeed> $forced key of the need → need beyond the residual */
+            $forced = [];
+
             if (! $review->canBeApproved()) {
-                throw ProposalsActionNotAllowed::approvalBlocked($review->problems);
+                if ($forcedReason === null) {
+                    throw ProposalsActionNotAllowed::approvalBlocked($review->problems);
+                }
+
+                if (! $review->canBeForced()) {
+                    throw ProposalsActionNotAllowed::notForceable($review->blocking);
+                }
+
+                foreach ($review->forceable() as $need) {
+                    $forced[$need->key()] = $need;
+                }
             }
 
             // The discounts are checked before anything is written.
@@ -122,22 +162,27 @@ final class ApproveGroup
             foreach ($review->variants as $variant) {
                 /** @var DraftEvaluation $evaluation */
                 $evaluation = $review->evaluation($variant);
-                $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $selection, $customSlides, $actor);
+                $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $selection, $customSlides, $actor, $forced, $forcedReason);
             }
 
             $this->requestDocument->handle($group, $actor);
+
+            return $forced !== [];
         }, 3);
     }
 
     /**
      * @param  list<array<string, mixed>>  $customSlides
+     * @param  array<string, InventoryNeed>  $forced
      */
-    private function approve(ProposalGroup $group, Proposal $variant, Season $season, DraftEvaluation $evaluation, AppliedDiscount $discount, DocumentSelection $selection, array $customSlides, User $actor): void
+    private function approve(ProposalGroup $group, Proposal $variant, Season $season, DraftEvaluation $evaluation, AppliedDiscount $discount, DocumentSelection $selection, array $customSlides, User $actor, array $forced, ?string $forcedReason): void
     {
         /** @var ProposalVersion $version */
         $version = $variant->workingVersion;
         $client = $variant->client;
         $now = now();
+        $variantForced = $this->forcedNeeds($evaluation, $forced);
+        $isForced = $variantForced !== [] && $forcedReason !== null;
 
         // D-409: the rows take the current prices, then the version is frozen with them.
         $this->rows->write($version, $version->clubs()->with('seats')->get(), $evaluation, $season);
@@ -154,12 +199,14 @@ final class ApproveGroup
             'sector_free_text' => $client?->sector_free_text,
             ...$selection->columns(),
             'custom_slides' => $customSlides,
+            'is_forced' => $isForced,
+            'forced_reason' => $isForced ? $forcedReason : null,
             'number' => ((int) ProposalVersion::query()->where('proposal_id', $variant->id)->max('number')) + 1,
             'frozen_at' => $now,
             'frozen_by' => $actor->id,
         ])->save();
 
-        $this->commit($season, $variant, $version, $evaluation, $actor);
+        $this->commit($season, $variant, $version, $evaluation, $actor, $isForced ? $forced : [], $forcedReason);
 
         $variant->forceFill([
             'status' => ProposalStatus::Approved,
@@ -179,6 +226,29 @@ final class ApproveGroup
                 'user_id' => $actor->id,
                 'notes' => self::discountNote($discount),
             ]);
+        }
+
+        if ($isForced) {
+            ProposalEvent::query()->create([
+                'proposal_id' => $variant->id,
+                'proposal_version_id' => $version->id,
+                'type' => ProposalEventType::Forced,
+                'user_id' => $actor->id,
+                'notes' => $forcedReason,
+            ]);
+
+            $this->audit->record(
+                AuditAction::ProposalForced,
+                $actor,
+                AuditSubject::proposal($variant),
+                [],
+                [
+                    'proposal_group_id' => $group->id,
+                    'variant_letter' => $variant->variant_letter,
+                    'forced_reason' => $forcedReason,
+                    'resources' => implode('; ', array_map(ApprovalCheck::shortfall(...), $variantForced)),
+                ],
+            );
         }
 
         ProposalEvent::query()->create([
@@ -203,14 +273,41 @@ final class ApproveGroup
                 'discount_value' => $discount->value,
                 'discount_amount' => $discount->isNone() ? null : $discount->amount,
                 'final_total' => $discount->finalTotal,
+                'is_forced' => $isForced,
             ],
         );
     }
 
     /**
-     * One commitment per resource of every club row (D-192), with the contract period of the version.
+     * The needs beyond the residual that the clubs of a variant ask for (F5-03).
+     *
+     * @param  array<string, InventoryNeed>  $forced
+     * @return list<InventoryNeed>
      */
-    private function commit(Season $season, Proposal $variant, ProposalVersion $version, DraftEvaluation $evaluation, User $actor): void
+    private function forcedNeeds(DraftEvaluation $evaluation, array $forced): array
+    {
+        $needs = [];
+
+        foreach ($evaluation->clubs as $club) {
+            foreach ($this->inventory->demand($club->data) as $item) {
+                $key = $club->club->id.'|'.$item['resource']->value.'|'.$item['valueId'];
+
+                if (isset($forced[$key]) && ! in_array($forced[$key], $needs, true)) {
+                    $needs[] = $forced[$key];
+                }
+            }
+        }
+
+        return $needs;
+    }
+
+    /**
+     * One commitment per resource of every club row (D-192), with the contract period of the version;
+     * forced, with the reason, on the resources beyond the residual (F5-03, D-460).
+     *
+     * @param  array<string, InventoryNeed>  $forced
+     */
+    private function commit(Season $season, Proposal $variant, ProposalVersion $version, DraftEvaluation $evaluation, User $actor, array $forced, ?string $forcedReason): void
     {
         foreach ($version->clubs()->get() as $row) {
             $club = $evaluation->club($row->club_id);
@@ -220,6 +317,8 @@ final class ApproveGroup
             }
 
             foreach ($this->inventory->demand($club->data) as $item) {
+                $isForced = $forcedReason !== null && isset($forced[$row->club_id.'|'.$item['resource']->value.'|'.$item['valueId']]);
+
                 InventoryCommitment::query()->create([
                     'season_id' => $season->id,
                     'club_id' => $row->club_id,
@@ -233,6 +332,8 @@ final class ApproveGroup
                     'quantity' => $item['quantity'],
                     'starts_on' => $version->starts_on,
                     'ends_on' => $version->ends_on,
+                    'is_forced' => $isForced,
+                    'forced_reason' => $isForced ? $forcedReason : null,
                     'created_by' => $actor->id,
                 ]);
             }

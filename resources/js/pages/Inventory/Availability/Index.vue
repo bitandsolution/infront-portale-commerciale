@@ -25,6 +25,7 @@ interface Cell {
     share: number;
     isSoldOut: boolean;
     isBelowCommitted: boolean;
+    isOverCapacity: boolean;
 }
 
 interface PoolCell extends Cell {
@@ -300,7 +301,13 @@ const formatTones: Record<Row['sellability']['formats'][number]['status'], Statu
                                                         />
                                                     </div>
                                                     <span
-                                                        v-if="cell(row)?.isBelowCommitted"
+                                                        v-if="cell(row)?.isOverCapacity"
+                                                        class="font-semibold text-accent"
+                                                    >
+                                                        <span class="font-mono whitespace-nowrap">{{ cell(row)?.remaining }}</span> · {{ t('inventory.availability.over_capacity') }}
+                                                    </span>
+                                                    <span
+                                                        v-else-if="cell(row)?.isBelowCommitted"
                                                         class="font-semibold text-notice"
                                                     >
                                                         <span class="font-mono whitespace-nowrap">{{ cell(row)?.remaining }}</span> · {{ t('inventory.availability.below_committed') }}
@@ -418,10 +425,13 @@ const formatTones: Record<Row['sellability']['formats'][number]['status'], Statu
                                             </td>
                                             <td
                                                 class="py-1 text-right font-semibold"
-                                                :class="item.isBelowCommitted ? 'text-notice' : (item.state === 'managed' ? 'text-ink' : 'text-muted')"
+                                                :class="item.isOverCapacity ? 'text-accent' : (item.isBelowCommitted ? 'text-notice' : (item.state === 'managed' ? 'text-ink' : 'text-muted'))"
                                             >
                                                 <template v-if="item.state !== 'managed'">
                                                     {{ t('inventory.availability.empty') }}
+                                                </template>
+                                                <template v-else-if="item.isOverCapacity">
+                                                    {{ item.remaining }} · {{ t('inventory.availability.over_capacity') }}
                                                 </template>
                                                 <template v-else-if="item.isBelowCommitted">
                                                     {{ item.remaining }} · {{ t('inventory.availability.below_committed') }}

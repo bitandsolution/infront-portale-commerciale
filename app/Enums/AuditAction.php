@@ -134,6 +134,9 @@ enum AuditAction: string
     case ProposalReviewLockTakenOver = 'proposal.review_lock_taken_over';
     case ProposalReviewLockReleased = 'proposal.review_lock_released';
     case ProposalWithdrawn = 'proposal.withdrawn';
+    // F5-03: approval beyond the availability by the admin (D-064, D-070, D-459…D-461), one per variant
+    // with forced commitments, before its proposal.approved.
+    case ProposalForced = 'proposal.forced';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';

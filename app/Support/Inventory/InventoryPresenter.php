@@ -98,6 +98,12 @@ final class InventoryPresenter
         return $resource === InventoryResource::Pool ? LedDuration::format($quantity) : (string) $quantity;
     }
 
+    /** A quantity that can be negative (a residual after a forcing, F5-03), with the minus sign "−". */
+    public static function signedQuantity(InventoryResource $resource, int $quantity): string
+    {
+        return ($quantity < 0 ? '−' : '').self::quantity($resource, abs($quantity));
+    }
+
     /**
      * @return array{state: string, display: string|null, isBelowCommitted: bool}
      */

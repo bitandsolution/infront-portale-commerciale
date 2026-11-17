@@ -683,6 +683,15 @@ export interface ProposalVariantDiscount {
     error: string | null;
 }
 
+/** F5-03: a resource beyond the residual in the confirmation of "Forza e approva". */
+export interface ProposalForceNeed {
+    club: string;
+    resource: string;
+    requested: string;
+    remaining: string;
+    after: string;
+}
+
 /** A variant in the detail of its group: the summary before the approval, the frozen version after it. */
 export interface ProposalGroupVariant {
     id: number;
@@ -694,6 +703,8 @@ export interface ProposalGroupVariant {
     editUrl: string | null;
     /** F5-02 (D-445): the configurator in review mode, for who holds the lock of the work. */
     reviewUrl: string | null;
+    /** F5-03 (D-461): the reason of a forced approval (admin and manager). */
+    forcedReason: string | null;
     /** D-409: prices changed since the sending (admin and manager). */
     repricing: ProposalRepricing | null;
     /** Admin and manager only (D-011). */
@@ -752,6 +763,13 @@ export interface ProposalGroupDetail {
     rejectUrl: string;
     canApprove: boolean;
     approveUrl: string;
+    /** F5-03 (D-459): only quantities beyond the residual block the approval. */
+    forceable: boolean;
+    /** Only the admin (D-070). */
+    canForce: boolean;
+    forceUrl: string;
+    forceNeeds: ProposalForceNeed[];
+    forcedReasonMin: number;
     canChoose: boolean;
     chooseUrl: string;
     backUrl: string;
