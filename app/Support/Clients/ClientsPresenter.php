@@ -91,7 +91,7 @@ final class ClientsPresenter
      * merged client has none. Agents for the reassignment: the active ones except the owner. Clients
      * that can stay in a merge: the active, not merged ones except the client itself.
      *
-     * @return array{reassignUrl: string|null, deactivateUrl: string|null, reactivateUrl: string|null, mergeUrl: string|null, owners: array<int, array{value: string, label: string}>, mergeTargets: array<int, array{value: string, label: string, ownerId: string}>, mergeGroups: int, mergeAgentIds: list<string>}
+     * @return array{reassignUrl: string|null, deactivateUrl: string|null, reactivateUrl: string|null, mergeUrl: string|null, owners: array<int, array{value: string, label: string}>, mergeTargets: array<int, array{value: string, label: string, ownerId: string}>, mergeGroups: int, mergeAgentIds: array<int, string>}
      */
     public static function management(Client $client): array
     {
