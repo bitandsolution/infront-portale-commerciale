@@ -74,6 +74,7 @@ it('M04 F-06, M04-CA1: the page shows capacity, committed and residual of a pool
                 'share' => 95,
                 'isSoldOut' => false,
                 'isBelowCommitted' => false,
+                'isOverCapacity' => false,
                 'notSellable' => 'Format Jumbo, Domination, 1ª fila non vendibili',
             ])
             ->where("page.rows.0.pools.{$this->row2->id}.state", 'not_configured')
