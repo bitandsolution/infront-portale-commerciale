@@ -225,10 +225,12 @@ final class ProposalsPresenter
     /**
      * A draft open in the configurator; the clubs, the total, the KPI of the campaign and the warnings
      * of the summary come from the evaluation of the server, made on the current list and residuals.
+     * $review (F5-02, D-454…D-457): a variant waiting for approval changed by admin or manager; saves and
+     * the copy on other clubs go to the routes of the review, without deletion, new variants or sending.
      *
      * @return array<string, mixed>
      */
-    public static function draft(Proposal $proposal, User $agent, ?DraftEvaluation $evaluation = null): array
+    public static function draft(Proposal $proposal, User $agent, ?DraftEvaluation $evaluation = null, bool $review = false): array
     {
         /** @var ProposalVersion $version */
         $version = $proposal->workingVersion;
@@ -264,15 +266,15 @@ final class ProposalsPresenter
             'blocksSummary' => $evaluation?->blocksSummary() ?? true,
             'campaign' => $evaluation?->campaign !== null ? self::campaign($evaluation->campaign) : null,
             'warnings' => $evaluation !== null ? self::warnings($evaluation) : [],
-            'saveUrl' => route('proposals.update', $proposal),
-            'deleteUrl' => route('proposals.destroy', $proposal),
+            'saveUrl' => route($review ? 'proposals.review.update' : 'proposals.update', $proposal),
+            'deleteUrl' => $review ? null : route('proposals.destroy', $proposal),
             'newClientUrl' => route('proposals.clients.update', $proposal),
-            'copyUrl' => route('proposals.copy-clubs', $proposal),
+            'copyUrl' => route($review ? 'proposals.review.copy-clubs' : 'proposals.copy-clubs', $proposal),
             // DM-03a: "Invia in approvazione" of the whole group (D-395) and the last rejection, shown
             // while the agent corrects the proposal (D-412).
-            'submitUrl' => $proposal->proposal_group_id !== null ? route('proposals.groups.submit', $proposal->proposal_group_id) : null,
-            'rejection' => self::rejection($proposal),
-            ...self::variants($proposal),
+            'submitUrl' => ! $review && $proposal->proposal_group_id !== null ? route('proposals.groups.submit', $proposal->proposal_group_id) : null,
+            'rejection' => $review ? null : self::rejection($proposal),
+            ...self::variants($proposal, $review),
         ];
     }
 
@@ -383,13 +385,29 @@ final class ProposalsPresenter
     }
 
     /**
+     * The review mode of the configurator (F5-02, D-454): the agent of the proposal and the way back to
+     * the detail of the group.
+     *
+     * @return array{agent: string, groupUrl: string|null}
+     */
+    public static function reviewMode(Proposal $proposal): array
+    {
+        $agent = $proposal->agent;
+
+        return [
+            'agent' => $agent->first_name.' '.$agent->last_name,
+            'groupUrl' => $proposal->proposal_group_id !== null ? route('proposals.groups.show', $proposal->proposal_group_id) : null,
+        ];
+    }
+
+    /**
      * The variants of the group of a draft (D-396; DM-01): letter, number and address of each, with
      * the maximum of the settings. While the group has more variants, client and season are shared
      * and cannot change (SaveDraft).
      *
      * @return array{variantLetter: string|null, variants: list<array{id: int, letter: string, number: int, url: string, current: bool}>, sharedHeader: bool, canAddVariant: bool, maxVariants: int, addVariantUrl: string}
      */
-    public static function variants(Proposal $proposal): array
+    public static function variants(Proposal $proposal, bool $review = false): array
     {
         $variants = $proposal->proposal_group_id !== null
             ? Proposal::query()->where('proposal_group_id', $proposal->proposal_group_id)->orderBy('variant_letter')->get(['id', 'number', 'variant_letter'])
@@ -402,7 +420,7 @@ final class ProposalsPresenter
                 'id' => $variant->id,
                 'letter' => $variant->variant_letter ?? ProposalVariants::FIRST,
                 'number' => $variant->number,
-                'url' => route('proposals.edit', $variant),
+                'url' => route($review ? 'proposals.review.edit' : 'proposals.edit', $variant),
                 'current' => $variant->id === $proposal->id,
             ];
         }
@@ -411,7 +429,7 @@ final class ProposalsPresenter
             'variantLetter' => $proposal->variant_letter,
             'variants' => $list,
             'sharedHeader' => count($list) > 1,
-            'canAddVariant' => $proposal->proposal_group_id !== null && count($list) < $max,
+            'canAddVariant' => ! $review && $proposal->proposal_group_id !== null && count($list) < $max,
             'maxVariants' => $max,
             'addVariantUrl' => route('proposals.variants.store', $proposal),
         ];

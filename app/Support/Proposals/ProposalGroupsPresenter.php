@@ -266,6 +266,10 @@ final class ProposalGroupsPresenter
                 'statusLabel' => $variant->status->label(),
                 'draft' => $draft,
                 'editUrl' => $isAgent && $variant->isEditable() ? route('proposals.edit', ['proposal' => $variant, 'passo' => 5]) : null,
+                // F5-02 (D-445): who holds the lock of the work changes the variant in review mode.
+                'reviewUrl' => $isReviewer && $variant->status === ProposalStatus::Submitted && $lockHolder === $viewer->id
+                    ? route('proposals.review.edit', ['proposal' => $variant, 'passo' => 4])
+                    : null,
                 'repricing' => $isReviewer && $waiting && $evaluation !== null ? $this->repricing($variant, $evaluation) : null,
                 'discount' => $isReviewer ? $this->discount($variant, $frozen, $evaluation, $discounts[$variant->id] ?? null, $discountErrors[$variant->id] ?? null) : null,
             ];

@@ -411,6 +411,12 @@ export interface ProposalSeasonOption extends Option {
     defaultEndsOn: string;
 }
 
+/** F5-02 (D-454): the configurator in review mode (ProposalsPresenter::reviewMode). */
+export interface ProposalReviewMode {
+    agent: string;
+    groupUrl: string | null;
+}
+
 /** A draft open in the configurator (ProposalsPresenter::draft). */
 export interface ProposalDraft {
     id: number;
@@ -438,7 +444,8 @@ export interface ProposalDraft {
     campaign: ProposalCampaign | null;
     warnings: ProposalWarning[];
     saveUrl: string;
-    deleteUrl: string;
+    /** Null in review mode (F5-02): a variant waiting for approval is not deleted. */
+    deleteUrl: string | null;
     newClientUrl: string;
     /** "Copia su altri club" (F4-05). */
     copyUrl: string;
@@ -685,6 +692,8 @@ export interface ProposalGroupVariant {
     statusLabel: string;
     draft: ProposalDraft | null;
     editUrl: string | null;
+    /** F5-02 (D-445): the configurator in review mode, for who holds the lock of the work. */
+    reviewUrl: string | null;
     /** D-409: prices changed since the sending (admin and manager). */
     repricing: ProposalRepricing | null;
     /** Admin and manager only (D-011). */
