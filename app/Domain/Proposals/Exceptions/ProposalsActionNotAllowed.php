@@ -175,6 +175,24 @@ final class ProposalsActionNotAllowed extends RuntimeException
         return new self(Text::get('proposals.errors.review_header_fixed'));
     }
 
+    /** F5-04 (D-041, D-466): only an approved variant is changed with a new version, by the admin. */
+    public static function notRevisable(int $number): self
+    {
+        return new self(Text::get('proposals.errors.not_revisable', ['number' => (string) $number]));
+    }
+
+    /** F5-04 (D-466): the working copy of an approved variant exists only while the admin changes it. */
+    public static function notUnderRevision(int $number): self
+    {
+        return new self(Text::get('proposals.errors.not_under_revision', ['number' => (string) $number]));
+    }
+
+    /** F5-04 (D-467): a version equal to the current one is not saved. */
+    public static function versionUnchanged(): self
+    {
+        return new self(Text::get('proposals.errors.version_unchanged'));
+    }
+
     /** F5-01 (M07 §9, D-446): the group is being worked by admin or manager. */
     public static function withdrawLocked(string $name): self
     {

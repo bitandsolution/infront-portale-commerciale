@@ -157,6 +157,14 @@ function routeMatrix(): array
         'proposals.review.edit' => ['method' => 'GET', 'expected' => $nobody],
         'proposals.review.update' => ['method' => 'PUT', 'expected' => $nobody],
         'proposals.review.copy-clubs' => ['method' => 'POST', 'expected' => $nobody],
+        // F5-04: new version of an approved variant, admin only (ProposalPolicy::revise): here a draft,
+        // refused to every role (manager and agent by the area)
+        'proposals.revision.start' => ['method' => 'POST', 'expected' => $nobody],
+        'proposals.revision.edit' => ['method' => 'GET', 'expected' => $nobody],
+        'proposals.revision.update' => ['method' => 'PUT', 'expected' => $nobody],
+        'proposals.revision.copy-clubs' => ['method' => 'POST', 'expected' => $nobody],
+        'proposals.revision.save' => ['method' => 'POST', 'expected' => $nobody],
+        'proposals.revision.discard' => ['method' => 'DELETE', 'expected' => $nobody],
         // DM-05: slides of the document (D-397): the agent of the group (here another agent, refused);
         // admin and manager go back with the errors of the empty body
         'proposals.groups.slides' => ['method' => 'PUT', 'expected' => $backOfficeForm],
@@ -425,7 +433,8 @@ function matrixParameters(string $route): array
         in_array($route, ['clients.edit', 'clients.update', 'clients.reassign', 'clients.deactivate', 'clients.reactivate', 'clients.merge'], true) => [
             'client' => Client::factory()->create()->id,
         ],
-        in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store', 'proposals.review.edit', 'proposals.review.update', 'proposals.review.copy-clubs'], true) => [
+        in_array($route, ['proposals.edit', 'proposals.update', 'proposals.clients.update', 'proposals.destroy', 'proposals.copy-clubs', 'proposals.duplicate', 'proposals.variants.store', 'proposals.review.edit', 'proposals.review.update', 'proposals.review.copy-clubs',
+            'proposals.revision.start', 'proposals.revision.edit', 'proposals.revision.update', 'proposals.revision.copy-clubs', 'proposals.revision.save', 'proposals.revision.discard'], true) => [
             'proposal' => Proposal::factory()->withWorkingVersion()->create()->id,
         ],
         str_starts_with($route, 'proposals.groups.custom-slides.') && $route !== 'proposals.groups.custom-slides.store' => (function (): array {

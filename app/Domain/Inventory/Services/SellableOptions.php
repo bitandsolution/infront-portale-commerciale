@@ -44,7 +44,11 @@ final class SellableOptions
         private readonly InventoryAvailability $availability,
     ) {}
 
-    public function forClub(Season $season, Club $club): ClubSellability
+    /**
+     * @param  int|null  $exceptProposalId  F5-04 (D-465): residuals without the commitments of the
+     *                                      approved proposal being changed
+     */
+    public function forClub(Season $season, Club $club, ?int $exceptProposalId = null): ClubSellability
     {
         $this->availability->ensureSeasonal();
 
@@ -62,7 +66,7 @@ final class SellableOptions
             return new ClubSellability($club, ClubSellabilityReason::PriceListDraft);
         }
 
-        return $this->options($season, $club, $priceList);
+        return $this->options($season, $club, $priceList, $exceptProposalId);
     }
 
     /**
@@ -71,12 +75,12 @@ final class SellableOptions
      *
      * @return list<ClubSellability>
      */
-    public function selectableClubs(Season $season): array
+    public function selectableClubs(Season $season, ?int $exceptProposalId = null): array
     {
         $result = [];
 
         foreach ($this->grid->clubs($season) as $club) {
-            $sellability = $this->forClub($season, $club);
+            $sellability = $this->forClub($season, $club, $exceptProposalId);
 
             if ($sellability->isSelectable()) {
                 $result[] = $sellability;
@@ -86,7 +90,7 @@ final class SellableOptions
         return $result;
     }
 
-    private function options(Season $season, Club $club, PriceList $priceList): ClubSellability
+    private function options(Season $season, Club $club, PriceList $priceList, ?int $exceptProposalId): ClubSellability
     {
         $formats = $this->grid->ledFormats()->load('pools');
         $tiers = PartnershipTier::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
@@ -100,7 +104,7 @@ final class SellableOptions
             return new ClubSellability($club, ClubSellabilityReason::NoPrices);
         }
 
-        $resources = $this->availability->forClub($season, $club);
+        $resources = $this->availability->forClub($season, $club, $exceptProposalId);
 
         return new ClubSellability(
             club: $club,

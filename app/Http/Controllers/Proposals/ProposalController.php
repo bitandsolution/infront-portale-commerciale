@@ -24,6 +24,8 @@ use App\Support\Navigation\LayoutProps;
 use App\Support\Navigation\PortalPages;
 use App\Support\Proposals\DocumentSlidesPresenter;
 use App\Support\Proposals\ProposalsPresenter;
+use App\Support\Proposals\ProposalVersionsPresenter;
+use App\Support\Proposals\RevisionDiscount;
 use App\Support\Text;
 use App\Support\Toast;
 use Illuminate\Http\RedirectResponse;
@@ -167,8 +169,11 @@ class ProposalController extends Controller
     /**
      * The configurator page; $review (F5-02, D-445, D-454): admin or manager change a variant waiting
      * for approval: steps 2 to 5, client and season fixed, no step "Documento", back to the group.
+     * $revision (F5-04, D-466): the same review mode on the working copy of an approved variant changed
+     * by the admin, with the box "Nuova versione" (prop "revision") and the residuals without the
+     * commitments of the variant (D-465).
      */
-    protected function configurator(User $actor, ?Proposal $proposal, int $step, ?DraftEvaluation $evaluation = null, bool $review = false): Response
+    protected function configurator(User $actor, ?Proposal $proposal, int $step, ?DraftEvaluation $evaluation = null, bool $review = false, bool $revision = false): Response
     {
         $period = app(ProposalPeriod::class);
         $settings = app(Settings::class);
@@ -178,6 +183,7 @@ class ProposalController extends Controller
 
         return Inertia::render('Proposals/Configurator', [
             'layout' => LayoutProps::for($actor, match (true) {
+                $revision => 'proposals_all',
                 $review => 'proposals_pending',
                 $proposal === null => 'proposals_new',
                 default => 'proposals_mine',
@@ -185,7 +191,8 @@ class ProposalController extends Controller
             'step' => $step,
             'lastStep' => $review ? self::SUMMARY_STEP : self::LAST_STEP,
             'review' => $review && $proposal !== null ? ProposalsPresenter::reviewMode($proposal) : null,
-            'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $review ? $proposal->agent : $actor, $evaluation ?? self::evaluation($proposal), $review) : null,
+            'revision' => fn (): ?array => $revision && $proposal !== null ? app(ProposalVersionsPresenter::class)->revision($proposal, $actor, ...RevisionDiscount::fromQuery(request(), $proposal)) : null,
+            'draft' => fn (): ?array => $proposal !== null ? ProposalsPresenter::draft($proposal, $review ? $proposal->agent : $actor, $evaluation ?? self::evaluation($proposal), $review, $revision) : null,
             // Prices recalculated since the last save (RB-12): only when the page is opened.
             'reopened' => fn (): ?array => $proposal !== null ? ProposalsPresenter::repricing(self::repricing($proposal, $evaluation ?? self::evaluation($proposal))) : null,
             // Outcome of "Copia su altri club" and of "Duplica proposta" (F4-05), flashed by
@@ -196,7 +203,7 @@ class ProposalController extends Controller
             // Slides of the document of the group (step 6, DM-05): reloaded with the draft, because a
             // change of the clubs changes the slides whose conditions hold.
             'documentSlides' => fn (): ?array => ! $review && $proposal !== null && $proposal->group !== null ? app(DocumentSlidesPresenter::class)->forGroup($proposal->group, $actor) : null,
-            'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season) : []),
+            'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season, $revision && $proposal !== null ? $proposal->id : null) : []),
             'ledStepSeconds' => $settings->ledStepSeconds(),
             'hospitalityMaxSeats' => $settings->hospitalityMaxSeats(),
             'clients' => $review ? [] : ProposalsPresenter::clientOptions($actor),

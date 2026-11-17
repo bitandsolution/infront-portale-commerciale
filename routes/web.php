@@ -26,6 +26,7 @@ use App\Http\Controllers\Proposals\ProposalCustomSlideController;
 use App\Http\Controllers\Proposals\ProposalGroupController;
 use App\Http\Controllers\Proposals\ProposalGroupDocumentController;
 use App\Http\Controllers\Proposals\ProposalReviewController;
+use App\Http\Controllers\Proposals\ProposalRevisionController;
 use App\Http\Controllers\Proposals\ProposalVariantController;
 use App\Http\Controllers\Settings\SettingsController;
 use App\Http\Controllers\Sports\CalendarImportController;
@@ -331,6 +332,20 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
                 ->middleware('throttle:60,1')
                 ->name('proposals.review.update');
             Route::post('proposte/{proposal}/revisione/copia-club', [ProposalReviewController::class, 'copyClubs'])->whereNumber('proposal')->name('proposals.review.copy-clubs');
+        });
+        // New version of an approved variant (D-041, D-096, D-464…D-468; F5-04): only the admin
+        // (ProposalPolicy::revise); the working copy is born with "Modifica" and ends with the save of
+        // the version n+1 or with the discard of the changes.
+        Route::middleware('can:'.Ability::ProposalsManageApproved->value)->group(function (): void {
+            Route::post('proposte/{proposal}/versione', [ProposalRevisionController::class, 'start'])->whereNumber('proposal')->name('proposals.revision.start');
+            Route::get('proposte/{proposal}/versione', [ProposalRevisionController::class, 'open'])->whereNumber('proposal')->name('proposals.revision.edit');
+            Route::put('proposte/{proposal}/versione', [ProposalRevisionController::class, 'save'])
+                ->whereNumber('proposal')
+                ->middleware('throttle:60,1')
+                ->name('proposals.revision.update');
+            Route::post('proposte/{proposal}/versione/copia-club', [ProposalRevisionController::class, 'copyClubs'])->whereNumber('proposal')->name('proposals.revision.copy-clubs');
+            Route::post('proposte/{proposal}/versione/salva', [ProposalRevisionController::class, 'saveVersion'])->whereNumber('proposal')->name('proposals.revision.save');
+            Route::delete('proposte/{proposal}/versione', [ProposalRevisionController::class, 'discard'])->whereNumber('proposal')->name('proposals.revision.discard');
         });
         // Slides chosen for the document of a group (D-397, D-419; DM-05): the agent of the group on
         // drafts and rejected groups, admin and manager while it waits (ProposalGroupPolicy::editDocument

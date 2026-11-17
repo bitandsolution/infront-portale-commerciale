@@ -417,6 +417,45 @@ export interface ProposalReviewMode {
     groupUrl: string | null;
 }
 
+/** F5-04 (D-467): the box "Nuova versione" of an approved variant (ProposalVersionsPresenter::revision). */
+export interface ProposalRevisionMode {
+    versionNumber: number;
+    nextNumber: number;
+    groupUrl: string | null;
+    current: { listTotal: string; discount: string; finalTotal: string };
+    discountType: string;
+    discountValue: string;
+    discountError: string | null;
+    listTotal: string;
+    preview: { discount: string; finalTotal: string } | null;
+    changes: string[];
+    problems: string[];
+    blocking: string[];
+    forceable: boolean;
+    canForce: boolean;
+    forceNeeds: ProposalForceNeed[];
+    forcedReasonMin: number;
+    saveUrl: string;
+    discardUrl: string;
+}
+
+/** F5-04 (D-468): a frozen version of a variant in the detail of its group. */
+export interface ProposalVersionEntry {
+    id: number;
+    number: number;
+    title: string;
+    at: string | null;
+    author: string | null;
+    current: boolean;
+    forced: boolean;
+    listTotal: string;
+    /** Admin and manager only (D-417). */
+    discount: string | null;
+    finalTotal: string | null;
+    changes: string[];
+    draft: ProposalDraft | null;
+}
+
 /** A draft open in the configurator (ProposalsPresenter::draft). */
 export interface ProposalDraft {
     id: number;
@@ -705,6 +744,12 @@ export interface ProposalGroupVariant {
     reviewUrl: string | null;
     /** F5-03 (D-461): the reason of a forced approval (admin and manager). */
     forcedReason: string | null;
+    /** F5-04 (D-466): "Modifica" of an approved variant (admin), or the changes in progress. */
+    revisionStartUrl: string | null;
+    revisionUrl: string | null;
+    underRevision: boolean;
+    /** F5-04 (D-468): the frozen versions, the most recent first. */
+    versions: ProposalVersionEntry[];
     /** D-409: prices changed since the sending (admin and manager). */
     repricing: ProposalRepricing | null;
     /** Admin and manager only (D-011). */

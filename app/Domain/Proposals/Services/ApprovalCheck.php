@@ -23,6 +23,9 @@ use App\Support\Text;
  *   every other problem is "blocking" (ApprovalReview::canBeForced()).
  * - What the variants ask together of each resource (GroupInventory) must fit its residual: all the
  *   variants commit at the approval (D-396).
+ * - F5-04 (D-465): the new version of an approved variant is checked without its own commitments and
+ *   with what its previous version committed: a quantity not increased never blocks (the error of the
+ *   evaluation on that resource is not repeated), an increase beyond the residual is forceable.
  */
 final class ApprovalCheck
 {
@@ -33,8 +36,10 @@ final class ApprovalCheck
 
     /**
      * @param  iterable<Proposal>  $variants  of the same group, with season and working version
+     * @param  int|null  $exceptProposalId  F5-04: the approved variant of a new version
+     * @param  array<string, int>  $previous  F5-04: quantities of its previous version (GroupInventory::committedBy)
      */
-    public function review(iterable $variants): ApprovalReview
+    public function review(iterable $variants, ?int $exceptProposalId = null, array $previous = []): ApprovalReview
     {
         $list = [];
 
@@ -66,11 +71,11 @@ final class ApprovalCheck
             $byLetter[$letter] = $evaluation;
         }
 
-        $needs = $season instanceof Season ? $this->inventory->needs($season, $byLetter) : [];
+        $needs = $season instanceof Season ? $this->inventory->needs($season, $byLetter, $exceptProposalId, $previous) : [];
         $short = [];
 
         foreach ($needs as $need) {
-            if ($need->isForceable()) {
+            if ($need->isForceable() || $need->isKept()) {
                 $short[$need->club->id.'|'.$need->resource->value] = true;
             }
         }

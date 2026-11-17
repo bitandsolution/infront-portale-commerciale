@@ -227,11 +227,19 @@ final class ProposalsPresenter
      * of the summary come from the evaluation of the server, made on the current list and residuals.
      * $review (F5-02, D-454…D-457): a variant waiting for approval changed by admin or manager; saves and
      * the copy on other clubs go to the routes of the review, without deletion, new variants or sending.
+     * $revision (F5-04, D-466): the working copy of an approved variant changed by the admin, with the
+     * routes of the new version.
      *
      * @return array<string, mixed>
      */
-    public static function draft(Proposal $proposal, User $agent, ?DraftEvaluation $evaluation = null, bool $review = false): array
+    public static function draft(Proposal $proposal, User $agent, ?DraftEvaluation $evaluation = null, bool $review = false, bool $revision = false): array
     {
+        $prefix = match (true) {
+            $revision => 'proposals.revision.',
+            $review => 'proposals.review.',
+            default => 'proposals.',
+        };
+
         /** @var ProposalVersion $version */
         $version = $proposal->workingVersion;
         $client = $proposal->client;
@@ -266,15 +274,15 @@ final class ProposalsPresenter
             'blocksSummary' => $evaluation?->blocksSummary() ?? true,
             'campaign' => $evaluation?->campaign !== null ? self::campaign($evaluation->campaign) : null,
             'warnings' => $evaluation !== null ? self::warnings($evaluation) : [],
-            'saveUrl' => route($review ? 'proposals.review.update' : 'proposals.update', $proposal),
+            'saveUrl' => route($prefix.'update', $proposal),
             'deleteUrl' => $review ? null : route('proposals.destroy', $proposal),
             'newClientUrl' => route('proposals.clients.update', $proposal),
-            'copyUrl' => route($review ? 'proposals.review.copy-clubs' : 'proposals.copy-clubs', $proposal),
+            'copyUrl' => route($prefix.'copy-clubs', $proposal),
             // DM-03a: "Invia in approvazione" of the whole group (D-395) and the last rejection, shown
             // while the agent corrects the proposal (D-412).
             'submitUrl' => ! $review && $proposal->proposal_group_id !== null ? route('proposals.groups.submit', $proposal->proposal_group_id) : null,
             'rejection' => $review ? null : self::rejection($proposal),
-            ...self::variants($proposal, $review),
+            ...self::variants($proposal, $review, $revision),
         ];
     }
 
@@ -407,7 +415,7 @@ final class ProposalsPresenter
      *
      * @return array{variantLetter: string|null, variants: list<array{id: int, letter: string, number: int, url: string, current: bool}>, sharedHeader: bool, canAddVariant: bool, maxVariants: int, addVariantUrl: string}
      */
-    public static function variants(Proposal $proposal, bool $review = false): array
+    public static function variants(Proposal $proposal, bool $review = false, bool $revision = false): array
     {
         $variants = $proposal->proposal_group_id !== null
             ? Proposal::query()->where('proposal_group_id', $proposal->proposal_group_id)->orderBy('variant_letter')->get(['id', 'number', 'variant_letter'])
@@ -420,7 +428,12 @@ final class ProposalsPresenter
                 'id' => $variant->id,
                 'letter' => $variant->variant_letter ?? ProposalVariants::FIRST,
                 'number' => $variant->number,
-                'url' => route($review ? 'proposals.review.edit' : 'proposals.edit', $variant),
+                // F5-04: a new version concerns one variant; the others are reached from the group.
+                'url' => match (true) {
+                    $revision && $proposal->proposal_group_id !== null => route('proposals.groups.show', $proposal->proposal_group_id),
+                    $review => route('proposals.review.edit', $variant),
+                    default => route('proposals.edit', $variant),
+                },
                 'current' => $variant->id === $proposal->id,
             ];
         }
@@ -604,8 +617,8 @@ final class ProposalsPresenter
      */
     public static function draftRow(Proposal $proposal, int $groupSize = 1): array
     {
-        // DM-03b: an approved proposal has no working version any more, only its frozen version.
-        $version = $proposal->workingVersion ?? $proposal->currentVersion;
+        // DM-03b: an approved proposal shows its frozen version (F5-04: also while the admin changes it).
+        $version = $proposal->shownVersion();
 
         return [
             'id' => $proposal->id,

@@ -67,8 +67,12 @@ final class DuplicateProposal
             throw ProposalsActionNotAllowed::notAgent();
         }
 
+        // F5-04 (D-466): of a decided proposal the frozen version, never the working copy of a new
+        // version that the admin has not saved yet.
         /** @var ProposalVersion|null $source */
-        $source = $original->workingVersion()->first() ?? $original->currentVersion()->first();
+        $source = in_array($original->status, [ProposalStatus::Approved, ProposalStatus::NotChosen, ProposalStatus::Cancelled], true)
+            ? ($original->currentVersion()->first() ?? $original->workingVersion()->first())
+            : ($original->workingVersion()->first() ?? $original->currentVersion()->first());
 
         if (! $original->isOwnedBy($agent) || $source === null) {
             throw ProposalsActionNotAllowed::notDuplicable($original->number);

@@ -48,6 +48,14 @@ class ProposalPolicy
         return $proposal->status === ProposalStatus::Submitted && Ability::ProposalsReview->allows($user->role);
     }
 
+    /**
+     * F5-04 (M07 RB-07; D-041, D-466): only the admin changes an approved proposal, with a new version.
+     */
+    public function revise(User $user, Proposal $proposal): bool
+    {
+        return $proposal->status === ProposalStatus::Approved && Ability::ProposalsManageApproved->allows($user->role);
+    }
+
     /** Only drafts and rejected proposals are deleted, by their agent (M07 RB-08, D-412). */
     public function delete(User $user, Proposal $proposal): bool
     {

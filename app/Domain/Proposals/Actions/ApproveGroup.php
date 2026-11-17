@@ -21,10 +21,8 @@ use App\Domain\Settings\Services\Settings;
 use App\Enums\Ability;
 use App\Enums\AuditAction;
 use App\Enums\DiscountType;
-use App\Enums\InventoryResource;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
-use App\Models\InventoryCommitment;
 use App\Models\Proposal;
 use App\Models\ProposalCustomSlide;
 use App\Models\ProposalEvent;
@@ -129,7 +127,7 @@ final class ApproveGroup
                 throw ProposalsActionNotAllowed::groupNotSubmitted();
             }
 
-            $this->lockCapacities($season, $variants->all());
+            $this->inventory->lockCapacities($season, self::clubIds($variants->all()));
             $review = $this->check->review($variants);
 
             /** @var array<string, InventoryNeed> $forced key of the need → need beyond the residual */
@@ -206,7 +204,7 @@ final class ApproveGroup
             'frozen_by' => $actor->id,
         ])->save();
 
-        $this->commit($season, $variant, $version, $evaluation, $actor, $isForced ? $forced : [], $forcedReason);
+        $this->inventory->commit($season, $variant, $version, $evaluation, $actor, $isForced ? $forced : [], $forcedReason);
 
         $variant->forceFill([
             'status' => ProposalStatus::Approved,
@@ -302,50 +300,12 @@ final class ApproveGroup
     }
 
     /**
-     * One commitment per resource of every club row (D-192), with the contract period of the version;
-     * forced, with the reason, on the resources beyond the residual (F5-03, D-460).
-     *
-     * @param  array<string, InventoryNeed>  $forced
-     */
-    private function commit(Season $season, Proposal $variant, ProposalVersion $version, DraftEvaluation $evaluation, User $actor, array $forced, ?string $forcedReason): void
-    {
-        foreach ($version->clubs()->get() as $row) {
-            $club = $evaluation->club($row->club_id);
-
-            if ($club === null) {
-                continue;
-            }
-
-            foreach ($this->inventory->demand($club->data) as $item) {
-                $isForced = $forcedReason !== null && isset($forced[$row->club_id.'|'.$item['resource']->value.'|'.$item['valueId']]);
-
-                InventoryCommitment::query()->create([
-                    'season_id' => $season->id,
-                    'club_id' => $row->club_id,
-                    'proposal_id' => $variant->id,
-                    'proposal_version_id' => $version->id,
-                    'proposal_version_club_id' => $row->id,
-                    'resource_type' => $item['resource'],
-                    'inventory_pool_id' => $item['resource'] === InventoryResource::Pool ? $item['valueId'] : null,
-                    'partnership_tier_id' => $item['resource'] === InventoryResource::Partnership ? $item['valueId'] : null,
-                    'hospitality_variant_id' => $item['resource'] === InventoryResource::Hospitality ? $item['valueId'] : null,
-                    'quantity' => $item['quantity'],
-                    'starts_on' => $version->starts_on,
-                    'ends_on' => $version->ends_on,
-                    'is_forced' => $isForced,
-                    'forced_reason' => $isForced ? $forcedReason : null,
-                    'created_by' => $actor->id,
-                ]);
-            }
-        }
-    }
-
-    /**
-     * D-216: the capacity rows of the clubs of the group, locked table by table in order of id.
+     * The clubs of the working versions of the variants, for the lock of the capacities (D-216).
      *
      * @param  array<int, Proposal>  $variants
+     * @return list<int>
      */
-    private function lockCapacities(Season $season, array $variants): void
+    private static function clubIds(array $variants): array
     {
         $versionIds = [];
 
@@ -355,21 +315,10 @@ final class ApproveGroup
             }
         }
 
-        $clubIds = ProposalVersionClub::query()->whereIn('proposal_version_id', $versionIds)->distinct()->pluck('club_id')->all();
+        /** @var list<int> $ids */
+        $ids = ProposalVersionClub::query()->whereIn('proposal_version_id', $versionIds)->distinct()->pluck('club_id')->map(fn (mixed $id): int => (int) $id)->values()->all();
 
-        if ($clubIds === []) {
-            return;
-        }
-
-        foreach (InventoryResource::cases() as $resource) {
-            $model = $resource->capacityModel();
-            $model::query()
-                ->where('season_id', $season->id)
-                ->whereIn('club_id', $clubIds)
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get(['id']);
-        }
+        return $ids;
     }
 
     private static function discountNote(AppliedDiscount $discount): string

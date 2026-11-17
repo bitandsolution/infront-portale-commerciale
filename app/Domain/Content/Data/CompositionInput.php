@@ -38,7 +38,7 @@ final readonly class CompositionInput
         $variants = [];
 
         foreach ($group->proposals()->with(['workingVersion', 'currentVersion'])->get() as $proposal) {
-            $version = $proposal->workingVersion ?? $proposal->currentVersion;
+            $version = $proposal->shownVersion();
             $variants[] = new VariantFacts(
                 (string) $proposal->variant_letter,
                 $version !== null ? self::clubsOf($version) : [],
