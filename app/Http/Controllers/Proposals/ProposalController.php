@@ -203,7 +203,7 @@ class ProposalController extends Controller
             // Slides of the document of the group (step 6, DM-05): reloaded with the draft, because a
             // change of the clubs changes the slides whose conditions hold.
             'documentSlides' => fn (): ?array => ! $review && $proposal !== null && $proposal->group !== null ? app(DocumentSlidesPresenter::class)->forGroup($proposal->group, $actor) : null,
-            'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season, $revision && $proposal !== null ? $proposal->id : null) : []),
+            'clubOptions' => fn (): array => ProposalsPresenter::clubOptions($season, $season !== null ? app(SellableOptions::class)->selectableClubs($season, $revision ? $proposal->id : null) : []),
             'ledStepSeconds' => $settings->ledStepSeconds(),
             'hospitalityMaxSeats' => $settings->hospitalityMaxSeats(),
             'clients' => $review ? [] : ProposalsPresenter::clientOptions($actor),

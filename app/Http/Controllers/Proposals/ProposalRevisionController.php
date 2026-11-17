@@ -110,7 +110,7 @@ class ProposalRevisionController extends ProposalController
 
         return $this->toGroup($proposal, Toast::success(Text::get('proposals.toasts.revision_discarded', [
             'number' => (string) $proposal->number,
-            'version' => (string) ($proposal->currentVersion?->number ?? ''),
+            'version' => (string) $proposal->currentVersion?->number,
         ])));
     }
 

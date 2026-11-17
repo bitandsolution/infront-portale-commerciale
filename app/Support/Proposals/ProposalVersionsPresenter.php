@@ -138,7 +138,7 @@ final class ProposalVersionsPresenter
                 'discount' => self::discountLabel($currentDiscount),
                 'finalTotal' => Amounts::italian($currentDiscount->finalTotal),
             ],
-            'discountType' => $input->type?->value ?? '',
+            'discountType' => $input->type !== null ? $input->type->value : '',
             'discountValue' => $input->value !== null ? Amounts::italian(Amounts::normalize($input->value)) : '',
             'discountError' => $error,
             'listTotal' => Amounts::italian($evaluation !== null ? $evaluation->listTotal : '0'),
@@ -227,7 +227,7 @@ final class ProposalVersionsPresenter
     {
         $names = $this->names();
         $parts = explode(' | ', $line);
-        $tier = $parts[0] ?? '—';
+        $tier = $parts[0];
         $led = $parts[1] ?? '—';
         $seats = $parts[2] ?? '—';
         $text = [];
