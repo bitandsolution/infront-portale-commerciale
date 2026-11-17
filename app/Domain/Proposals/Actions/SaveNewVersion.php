@@ -21,6 +21,7 @@ use App\Enums\Ability;
 use App\Enums\AuditAction;
 use App\Enums\CommitmentReleaseReason;
 use App\Enums\DiscountType;
+use App\Enums\DocumentNotification;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
 use App\Models\Proposal;
@@ -58,7 +59,7 @@ use Illuminate\Support\Facades\DB;
  * 7. the PDF document of the group is asked again (D-448, D-205): only the approved variants, at their
  *    last version.
  *
- * The e-mail to the agent arrives with F5-06.
+ * The e-mail to the agent leaves when the regenerated document is ready (F5-06; D-474).
  */
 final class SaveNewVersion
 {
@@ -204,7 +205,7 @@ final class SaveNewVersion
             ])->save();
 
             $this->history($group, $locked, $working, $previous, $applied, $forced, $forcedReason, $actor, $old, $new);
-            $this->requestDocument->handle($group, $actor);
+            $this->requestDocument->handle($group, $actor, notification: DocumentNotification::NewVersion);
 
             return $working;
         }, 3);

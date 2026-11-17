@@ -7,6 +7,7 @@ use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Documents\Contracts\RendersPdf;
 use App\Domain\Documents\Exceptions\DocumentNotComposable;
 use App\Domain\Files\Services\FileStorage;
+use App\Domain\Proposals\Services\ProposalNotifications;
 use App\Enums\AuditAction;
 use App\Enums\DocumentStatus;
 use App\Enums\FilePurpose;
@@ -30,6 +31,10 @@ use Throwable;
  *
  * Any other error is kept as the last error and thrown again, so the queue retries; after the last
  * attempt the job marks the document "failed" (fail()).
+ *
+ * F5-06 (D-221, D-474…D-477): in the same transaction that marks the current document "ready" or
+ * "failed", the e-mail that waited for it leaves (ProposalNotifications) and pending_notification
+ * changes: cleared when ready, "document_ready" after a failure that told the agent without the PDF.
  */
 final class DocumentGenerator
 {
@@ -38,6 +43,7 @@ final class DocumentGenerator
         private readonly RendersPdf $renderer,
         private readonly FileStorage $storage,
         private readonly AuditLog $audit,
+        private readonly ProposalNotifications $notifications,
     ) {}
 
     public function generate(int $documentId): void
@@ -104,6 +110,11 @@ final class DocumentGenerator
                         'size_bytes' => $report->bytes,
                     ],
                 );
+
+                if ($locked->pending_notification !== null) {
+                    $this->notifications->documentReady($locked);
+                    $locked->forceFill(['pending_notification' => null])->save();
+                }
             });
         } catch (Throwable $exception) {
             $document->forceFill(['last_error' => self::message($exception->getMessage())])->save();
@@ -137,6 +148,12 @@ final class DocumentGenerator
                 ['status' => DocumentStatus::Failed->value],
                 self::message($reason),
             );
+
+            // A replaced document tells nobody (its successor is on the way), a failed one only once.
+            if ($document->isCurrent() && $before !== DocumentStatus::Failed) {
+                $pending = $this->notifications->documentFailed($document);
+                $document->forceFill(['pending_notification' => $pending])->save();
+            }
         });
     }
 

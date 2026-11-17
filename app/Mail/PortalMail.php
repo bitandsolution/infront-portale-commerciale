@@ -48,6 +48,14 @@ abstract class PortalMail extends Mailable implements ShouldBeEncrypted, ShouldQ
      */
     abstract public function subjectText(): string;
 
+    /**
+     * The proposal the e-mail is about (notification_logs.proposal_id; D-299, D-478), if any.
+     */
+    public function proposalId(): ?int
+    {
+        return null;
+    }
+
     public function envelope(): Envelope
     {
         return new Envelope(subject: $this->subjectText());

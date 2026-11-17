@@ -21,6 +21,7 @@ use App\Domain\Settings\Services\Settings;
 use App\Enums\Ability;
 use App\Enums\AuditAction;
 use App\Enums\DiscountType;
+use App\Enums\DocumentNotification;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
 use App\Models\Proposal;
@@ -64,7 +65,7 @@ use Illuminate\Support\Facades\DB;
  * "forced" before "approved" and audit proposal.forced with the resources. When the residuals are
  * enough again at that moment the group is approved without forcing.
  *
- * The e-mail to the agent arrives with F5.
+ * The e-mail to the agent leaves when the document is ready (F5-06; D-221, D-474).
  */
 final class ApproveGroup
 {
@@ -163,7 +164,7 @@ final class ApproveGroup
                 $this->approve($group, $variant, $season, $evaluation, $applied[$variant->id], $selection, $customSlides, $actor, $forced, $forcedReason);
             }
 
-            $this->requestDocument->handle($group, $actor);
+            $this->requestDocument->handle($group, $actor, notification: DocumentNotification::Approved);
 
             return $forced !== [];
         }, 3);

@@ -2,7 +2,7 @@
 
 /*
 | E-mails of the portal (M01 §7; PR-08): template, access links, lock after failed attempts, register
-| of the e-mails (notification_logs) and its commands. The e-mails of the proposals arrive with F5.
+| of the e-mails (notification_logs) and its commands; the e-mails of the proposals (F5-06).
 */
 
 return [
@@ -83,6 +83,63 @@ return [
         'action' => 'Apri il pannello delle code',
     ],
 
+    // Proposals (M01 §7, M07 F-08; D-105, D-221, D-474…D-478; F5-06): one e-mail per group, never an
+    // amount, the link to the detail of the group.
+    'proposals' => [
+        'number' => 'Proposta',
+        'number_value' => 'n. :number',
+        'client' => 'Cliente',
+        'season' => 'Stagione',
+        'variants' => 'Varianti',
+        'agent' => 'Agente',
+        'decided_by' => 'Decisione di',
+        'version' => 'Versione',
+        'reason' => 'Motivazione',
+        'no_reason' => 'Nessuna motivazione indicata',
+        'action' => 'Apri la proposta',
+
+        'submitted' => [
+            'subject' => 'Nuova proposta da approvare: n. :number',
+            'subject_again' => 'Proposta n. :number inviata di nuovo in approvazione',
+            'intro' => ':agent ha inviato in approvazione la proposta n. :number.',
+            'intro_again' => ':agent ha corretto e inviato di nuovo in approvazione la proposta n. :number, rifiutata in precedenza.',
+            'note' => 'La trovi anche in "Proposte › Da approvare". Chi la apre per primo la prende in lavorazione.',
+        ],
+        'approved' => [
+            'subject' => 'Proposta n. :number approvata',
+            'intro' => 'la proposta n. :number è stata approvata.',
+            'document' => 'Il documento PDF è pronto: lo scarichi dal dettaglio della proposta dopo l\'accesso al portale.',
+            'no_document' => 'Il documento PDF non è stato generato: l\'amministratore è stato avvisato e riceverai un\'altra e-mail quando sarà pronto.',
+        ],
+        'rejected' => [
+            'subject' => 'Proposta n. :number rifiutata',
+            'intro' => 'la proposta n. :number è stata rifiutata.',
+            'note' => 'Correggila dal configuratore e inviala di nuovo in approvazione: mantiene lo stesso numero.',
+        ],
+        'new_version' => [
+            'subject' => 'Proposta n. :number: nuova versione :version',
+            'intro' => 'l\'amministratore ha modificato la proposta n. :number approvata e ne ha salvato la versione :version.',
+            'intro_variant' => 'l\'amministratore ha modificato la variante :letter della proposta n. :number approvata e ne ha salvato la versione :version.',
+            'document' => 'Il documento PDF aggiornato è pronto: lo scarichi dal dettaglio della proposta dopo l\'accesso al portale. Nel dettaglio trovi anche le versioni precedenti.',
+            'no_document' => 'Il documento PDF aggiornato non è stato generato: l\'amministratore è stato avvisato e riceverai un\'altra e-mail quando sarà pronto.',
+        ],
+        'cancelled' => [
+            'subject' => 'Proposta n. :number annullata',
+            'intro' => 'la proposta n. :number approvata è stata annullata e la disponibilità che impegnava è tornata libera.',
+            'note' => 'L\'annullamento è definitivo. Per rifare l\'offerta duplica una variante da "Le mie proposte".',
+        ],
+        'document_ready' => [
+            'subject' => 'Documento pronto: proposta n. :number',
+            'intro' => 'il documento PDF della proposta n. :number è pronto.',
+            'note' => 'Lo scarichi dal dettaglio della proposta dopo l\'accesso al portale.',
+        ],
+        'document_failed' => [
+            'subject' => 'Documento non generato: proposta n. :number',
+            'intro' => 'il documento PDF della proposta n. :number non è stato generato.',
+            'note' => 'Nel dettaglio della proposta trovi il motivo e il pulsante "Rigenera". Se l\'agente aspetta il documento, riceverà un\'e-mail quando sarà pronto.',
+        ],
+    ],
+
     // Register of the e-mails (notification_logs, D-209).
     'types' => [
         'activation' => 'Attivazione',
@@ -93,6 +150,13 @@ return [
         'login_locked_admin' => 'Accesso bloccato (admin)',
         'job_failed' => 'Lavoro non riuscito (admin)',
         'queue_stalled' => 'Coda ferma (admin)',
+        'proposal_submitted' => 'Proposta da approvare (admin e gestori)',
+        'proposal_approved' => 'Proposta approvata (agente)',
+        'proposal_rejected' => 'Proposta rifiutata (agente)',
+        'proposal_new_version' => 'Nuova versione (agente)',
+        'proposal_cancelled' => 'Proposta annullata (agente)',
+        'proposal_document_ready' => 'Documento pronto (agente)',
+        'proposal_document_failed' => 'Documento non generato (admin)',
     ],
     'statuses' => [
         'queued' => 'In coda',

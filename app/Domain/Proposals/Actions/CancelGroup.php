@@ -6,6 +6,7 @@ use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
 use App\Domain\Proposals\Services\GroupInventory;
+use App\Domain\Proposals\Services\ProposalNotifications;
 use App\Domain\Settings\Services\Settings;
 use App\Enums\Ability;
 use App\Enums\AuditAction;
@@ -33,7 +34,7 @@ use Illuminate\Support\Facades\DB;
  * - history "cancelled" with the reason and audit proposal.cancelled on every cancelled variant.
  *
  * The cancellation is final (D-471): nothing brings a variant back to "Approvata". The PDF already
- * generated is not changed (D-447, D-470). The e-mail to the agent arrives with F5-06.
+ * generated is not changed (D-447, D-470). One e-mail to the agent with the reason (F5-06, D-478).
  */
 final class CancelGroup
 {
@@ -41,6 +42,7 @@ final class CancelGroup
         private readonly GroupInventory $inventory,
         private readonly AuditLog $audit,
         private readonly Settings $settings,
+        private readonly ProposalNotifications $notifications,
     ) {}
 
     /**
@@ -120,6 +122,8 @@ final class CancelGroup
 
                 $cancelled[] = $variant;
             }
+
+            $this->notifications->cancelled($group, $actor, $reason, $cancelled);
 
             return $cancelled;
         }, 3);
