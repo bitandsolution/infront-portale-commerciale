@@ -64,6 +64,7 @@ final class Notifications
     {
         $log = NotificationLog::query()->create([
             'user_id' => $user->id,
+            'proposal_id' => $mail->proposalId(),
             'type' => $mail->notificationType(),
             'recipient_email' => $user->email,
             'subject' => Str::limit($mail->subjectText(), 250, ''),

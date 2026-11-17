@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int $user_id
+ * @property int|null $proposal_id
  * @property NotificationType $type
  * @property string $recipient_email
  * @property string $subject

@@ -6,6 +6,7 @@ use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
 use App\Domain\Proposals\Services\DraftEvaluator;
+use App\Domain\Proposals\Services\ProposalNotifications;
 use App\Enums\AuditAction;
 use App\Enums\ProposalEventType;
 use App\Enums\ProposalStatus;
@@ -28,13 +29,15 @@ use Illuminate\Support\Facades\DB;
  * - Every variant becomes "In approvazione" with submitted_at and a new lock_version (an open
  *   configurator then gets the conflict instead of writing); history "submitted", or "resubmitted"
  *   after a rejection (M07-CA6); audit proposal.submitted per variant.
- * The e-mail to admin and manager arrives with F5 (D-395).
+ * One e-mail to every active admin and manager, "sent again" after a rejection (F5-06; D-105,
+ * D-475, D-478).
  */
 final class SubmitGroup
 {
     public function __construct(
         private readonly AuditLog $audit,
         private readonly DraftEvaluator $evaluator,
+        private readonly ProposalNotifications $notifications,
     ) {}
 
     public function handle(ProposalGroup $group, User $agent): void
@@ -71,6 +74,7 @@ final class SubmitGroup
             }
 
             $now = now();
+            $again = $variants->contains(fn (Proposal $variant): bool => $variant->status === ProposalStatus::Rejected);
 
             foreach ($variants as $variant) {
                 $before = $variant->status;
@@ -95,6 +99,8 @@ final class SubmitGroup
                     ['status' => ProposalStatus::Submitted->value, 'proposal_group_id' => $group->id, 'variant_letter' => $variant->variant_letter],
                 );
             }
+
+            $this->notifications->submitted($group, $agent, $again);
         });
     }
 }

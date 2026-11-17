@@ -5,8 +5,7 @@ namespace App\Enums;
 /**
  * Kind of e-mail sent by the portal (M01 §7; D-209), stored in notification_logs.type (C8).
  *
- * Stable names: the register of the e-mails is filtered on them. The e-mails of the proposals
- * (new, approved, rejected, new version, cancelled) are added by slice F5.
+ * Stable names: the register of the e-mails is filtered on them.
  */
 enum NotificationType: string
 {
@@ -23,6 +22,15 @@ enum NotificationType: string
     // Operations alerts to the admins (progettazione-tecnica §5.2.7; D-298; PR-09)
     case JobFailed = 'job_failed';
     case QueueStalled = 'queue_stalled';
+
+    // Proposals (M01 §7, M07 F-08; D-105, D-221, D-474…D-478; F5-06)
+    case ProposalSubmitted = 'proposal_submitted';
+    case ProposalApproved = 'proposal_approved';
+    case ProposalRejected = 'proposal_rejected';
+    case ProposalNewVersion = 'proposal_new_version';
+    case ProposalCancelled = 'proposal_cancelled';
+    case ProposalDocumentReady = 'proposal_document_ready';
+    case ProposalDocumentFailed = 'proposal_document_failed';
 
     public static function forAccessLink(AccessLinkType $type): self
     {

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentNotification;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string $format
  * @property string $language
  * @property DocumentStatus $status
+ * @property DocumentNotification|null $pending_notification
  * @property int $attempts
  * @property string|null $last_error
  * @property int|null $file_id
@@ -55,6 +57,7 @@ final class Document extends Model
         return [
             'document_type' => DocumentType::class,
             'status' => DocumentStatus::class,
+            'pending_notification' => DocumentNotification::class,
             'attempts' => 'integer',
             'page_count' => 'integer',
             'size_bytes' => 'integer',

@@ -6,6 +6,7 @@ use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Documents\Exceptions\DocumentsActionNotAllowed;
 use App\Enums\AuditAction;
+use App\Enums\DocumentNotification;
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
 use App\Enums\ProposalStatus;
@@ -23,14 +24,19 @@ use Illuminate\Support\Facades\DB;
  * admin. The current document, if any, becomes "replaced" (it stays, downloadable by the admin only),
  * a new row starts "queued" and the job of the queue "documents" composes and renders it after the
  * commit. A job of a replaced document finds it replaced and stores nothing.
+ *
+ * F5-06 (D-221, D-474, D-477): $notification is the e-mail to the agent that waits for this document
+ * (approval, new version); a regeneration inherits the one the replaced document still owed (an
+ * approval not yet told, or the "document ready" after a failure), so a document already delivered
+ * sends nothing again.
  */
 final class RequestDocument
 {
     public function __construct(private readonly AuditLog $audit) {}
 
-    public function handle(ProposalGroup $group, User $actor, bool $regeneration = false): Document
+    public function handle(ProposalGroup $group, User $actor, bool $regeneration = false, ?DocumentNotification $notification = null): Document
     {
-        return DB::transaction(function () use ($group, $actor, $regeneration): Document {
+        return DB::transaction(function () use ($group, $actor, $regeneration, $notification): Document {
             ProposalGroup::query()->whereKey($group->id)->lockForUpdate()->firstOrFail();
 
             $variants = Proposal::query()
@@ -68,6 +74,7 @@ final class RequestDocument
                 'format' => Document::FORMAT_PDF,
                 'language' => Document::LANGUAGE,
                 'status' => DocumentStatus::Queued,
+                'pending_notification' => $notification ?? $current?->pending_notification,
                 'attempts' => 0,
                 // progettazione-tecnica §5.3.5: null = automatic (after the approval).
                 'generated_by' => $regeneration ? $actor->id : null,

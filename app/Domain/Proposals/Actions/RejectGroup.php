@@ -5,6 +5,7 @@ namespace App\Domain\Proposals\Actions;
 use App\Domain\Audit\Data\AuditSubject;
 use App\Domain\Audit\Services\AuditLog;
 use App\Domain\Proposals\Exceptions\ProposalsActionNotAllowed;
+use App\Domain\Proposals\Services\ProposalNotifications;
 use App\Domain\Proposals\Services\ReviewLock;
 use App\Enums\AuditAction;
 use App\Enums\ProposalEventType;
@@ -20,11 +21,14 @@ use Illuminate\Support\Facades\DB;
  * every variant of the group, all "In approvazione", becomes "Rifiutata" with the optional reason;
  * the agent corrects and sends the group again. Group and variants are locked like SubmitGroup, so a
  * second click or a decision taken meanwhile is refused (groupNotSubmitted). History "rejected" with
- * the reason, audit proposal.rejected per variant. The e-mail to the agent arrives with F5.
+ * the reason, audit proposal.rejected per variant; one e-mail to the agent (F5-06, D-478).
  */
 final class RejectGroup
 {
-    public function __construct(private readonly AuditLog $audit) {}
+    public function __construct(
+        private readonly AuditLog $audit,
+        private readonly ProposalNotifications $notifications,
+    ) {}
 
     public function handle(ProposalGroup $group, ?string $reason, User $actor): void
     {
@@ -75,6 +79,8 @@ final class RejectGroup
                     $reason,
                 );
             }
+
+            $this->notifications->rejected($group, $actor, $reason);
         });
     }
 }
