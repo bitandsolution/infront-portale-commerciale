@@ -816,6 +816,11 @@ export interface ProposalGroupDetail {
     forceNeeds: ProposalForceNeed[];
     forcedReasonMin: number;
     canChoose: boolean;
+    /** F5-05 (D-095, D-447, D-469…D-473): cancellation by the admin and its reason. */
+    canCancel: boolean;
+    cancelUrl: string;
+    cancelDiscardsRevision: boolean;
+    cancellation: { at: string | null; by: string | null; reason: string | null } | null;
     chooseUrl: string;
     backUrl: string;
     backLabel: string;
@@ -841,6 +846,8 @@ export interface GroupDocument {
     current: GroupDocumentEntry | null;
     pending: boolean;
     canRegenerate: boolean;
+    /** F5-05 (D-470): the group is cancelled, the PDF stays as it was. */
+    cancelled: boolean;
     regenerateUrl: string;
     /** Replaced documents, for the admin only (D-205). */
     previous: GroupDocumentEntry[];

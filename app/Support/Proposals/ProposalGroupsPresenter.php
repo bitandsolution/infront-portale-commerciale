@@ -74,6 +74,8 @@ final class ProposalGroupsPresenter
         }
 
         return match (true) {
+            // F5-05 (D-473): a cancelled variant makes the group cancelled (the others are "not chosen").
+            $statuses->contains(ProposalStatus::Cancelled) => ProposalStatus::Cancelled,
             $statuses->contains(ProposalStatus::Approved) => ProposalStatus::Approved,
             $statuses->contains(ProposalStatus::Rejected) => ProposalStatus::Rejected,
             default => ProposalStatus::Draft,
@@ -208,7 +210,7 @@ final class ProposalGroupsPresenter
     {
         $options = [['value' => '', 'label' => Text::get('ui.proposals.all.status_all')]];
 
-        foreach ([ProposalStatus::Submitted, ProposalStatus::Approved, ProposalStatus::Rejected, ProposalStatus::Draft] as $status) {
+        foreach ([ProposalStatus::Submitted, ProposalStatus::Approved, ProposalStatus::Rejected, ProposalStatus::Draft, ProposalStatus::Cancelled] as $status) {
             $options[] = ['value' => $status->value, 'label' => $status->label()];
         }
 
@@ -340,6 +342,12 @@ final class ProposalGroupsPresenter
             'forceNeeds' => $review !== null && $review->canBeForced() ? array_map(self::forceNeed(...), $review->forceable()) : [],
             'forcedReasonMin' => $this->settings->forcedReasonMinLength(),
             'canChoose' => $isReviewer && $many && $allApproved,
+            // F5-05 (D-095, D-447, D-469…D-473): cancellation by the admin, its reason for everybody who
+            // sees the group (the agent too, D-472).
+            'canCancel' => $viewer->can('cancel', ProposalGroup::class) && $variants->contains(fn (Proposal $variant): bool => $variant->status === ProposalStatus::Approved),
+            'cancelUrl' => route('proposals.groups.cancel', $group),
+            'cancelDiscardsRevision' => $variants->contains(fn (Proposal $variant): bool => $variant->status === ProposalStatus::Approved && $variant->workingVersion !== null),
+            'cancellation' => $this->cancellation($variants),
             'chooseUrl' => route('proposals.groups.choose', $group),
             'backUrl' => match (true) {
                 $isAgent => route('pages.proposals_mine'),
@@ -376,12 +384,37 @@ final class ProposalGroupsPresenter
             'current' => $current !== null ? $this->documentEntry($current, $viewer) : null,
             'pending' => $current !== null && $current->status->isPending(),
             'canRegenerate' => $canRegenerate,
+            // F5-05 (D-470): the PDF stays as it was; the portal says the proposal is cancelled.
+            'cancelled' => $status === ProposalStatus::Cancelled,
             'regenerateUrl' => route('documents.regenerate', $group),
             'previous' => $viewer->role === Role::Admin
                 ? array_values($documents->reject(fn (Document $document): bool => $document->isCurrent())
                     ->map(fn (Document $document): array => $this->documentEntry($document, $viewer))
                     ->all())
                 : [],
+        ];
+    }
+
+    /**
+     * F5-05 (D-447, D-472): date, author and reason of the cancellation of the group.
+     *
+     * @param  Collection<int, Proposal>  $variants
+     * @return array{at: string|null, by: string|null, reason: string|null}|null
+     */
+    private function cancellation(Collection $variants): ?array
+    {
+        $cancelled = $variants->first(fn (Proposal $variant): bool => $variant->status === ProposalStatus::Cancelled);
+
+        if (! $cancelled instanceof Proposal) {
+            return null;
+        }
+
+        $by = $cancelled->cancelled_by !== null ? User::query()->find($cancelled->cancelled_by) : null;
+
+        return [
+            'at' => self::moment($cancelled->cancelled_at),
+            'by' => $by !== null ? $by->first_name.' '.$by->last_name : null,
+            'reason' => $cancelled->cancel_reason,
         ];
     }
 
@@ -518,7 +551,8 @@ final class ProposalGroupsPresenter
      */
     private static function frozenVersion(Proposal $variant): ?ProposalVersion
     {
-        return in_array($variant->status, [ProposalStatus::Approved, ProposalStatus::NotChosen], true) ? $variant->currentVersion : null;
+        // F5-05 (D-468): also a cancelled variant shows its frozen version and its versions.
+        return in_array($variant->status, [ProposalStatus::Approved, ProposalStatus::NotChosen, ProposalStatus::Cancelled], true) ? $variant->currentVersion : null;
     }
 
     /**

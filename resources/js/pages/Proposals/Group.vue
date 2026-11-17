@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
-import { AlertTriangle, ArrowLeft, CheckCircle2, CircleCheck, CircleX, Info, Lock, LogOut, Pencil, Send, Undo2 } from '@lucide/vue';
+import { AlertTriangle, ArrowLeft, Ban, CheckCircle2, CircleCheck, CircleX, Info, Lock, LogOut, Pencil, Send, Undo2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
@@ -40,6 +40,7 @@ const letters = computed(() => props.group.variants.map((variant) => variant.let
 const isRejected = computed(() => props.group.status === 'rejected');
 const isSubmitted = computed(() => props.group.status === 'submitted');
 const isApproved = computed(() => props.group.status === 'approved');
+const isCancelled = computed(() => props.group.status === 'cancelled');
 
 const reviewing = computed(() => props.group.canApprove);
 
@@ -205,6 +206,28 @@ function release(): void {
     postAndClose(props.group.releaseUrl, () => undefined);
 }
 
+// F5-05 (D-095, D-447): cancellation of the approved group by the admin, with the reason.
+const cancelling = ref(false);
+const cancelReason = ref('');
+const cancelReasonError = ref<string | undefined>(undefined);
+
+function openCancel(): void {
+    cancelReason.value = '';
+    cancelReasonError.value = undefined;
+    cancelling.value = true;
+}
+
+function cancelGroup(): void {
+    processing.value = true;
+    router.post(props.group.cancelUrl, { cancel_reason: cancelReason.value }, {
+        preserveScroll: true,
+        preserveState: 'errors',
+        onError: (errors) => (cancelReasonError.value = errors.cancel_reason),
+        onSuccess: () => (cancelling.value = false),
+        onFinish: () => (processing.value = false),
+    });
+}
+
 function openReject(): void {
     reason.value = '';
     reasonError.value = undefined;
@@ -303,6 +326,19 @@ function reject(): void {
                                 aria-hidden="true"
                             />
                             {{ t('proposals.groups.reject.action') }}
+                        </button>
+                        <button
+                            v-if="group.canCancel"
+                            type="button"
+                            :class="buttonClasses.secondary"
+                            @click="openCancel"
+                        >
+                            <Ban
+                                :size="18"
+                                :stroke-width="2"
+                                aria-hidden="true"
+                            />
+                            {{ t('proposals.groups.cancel.action') }}
                         </button>
                     </div>
                 </div>
@@ -422,6 +458,29 @@ function reject(): void {
                             class="text-muted"
                         >
                             {{ t('proposals.rejection.hint') }}
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    v-if="isCancelled && group.cancellation"
+                    class="flex gap-3 rounded-[10px] bg-notice-soft px-3.5 py-3 text-sm text-ink"
+                    role="status"
+                >
+                    <Ban
+                        :size="18"
+                        :stroke-width="2"
+                        class="mt-0.5 shrink-0 text-notice"
+                        aria-hidden="true"
+                    />
+                    <div class="flex flex-col gap-1">
+                        <p class="font-semibold">
+                            {{ t('proposals.groups.cancel.banner', { at: group.cancellation.at ?? '' }) }}<template v-if="group.cancellation.by">
+                                {{ t('proposals.groups.cancel.by', { name: group.cancellation.by }) }}
+                            </template>
+                        </p>
+                        <p v-if="group.cancellation.reason">
+                            {{ t('proposals.groups.cancel.reason_line', { reason: group.cancellation.reason }) }}
                         </p>
                     </div>
                 </div>
@@ -1104,6 +1163,50 @@ function reject(): void {
             @confirm="takeOver"
         >
             <p>{{ t('proposals.groups.lock.take_over_text', { name: group.reviewLock?.holder ?? '' }) }}</p>
+        </ConfirmDialog>
+
+        <ConfirmDialog
+            :open="cancelling"
+            :title="t('proposals.groups.cancel.title', { number: String(group.number) })"
+            :confirm-label="t('proposals.groups.cancel.confirm')"
+            :processing="processing"
+            @cancel="cancelling = false"
+            @confirm="cancelGroup"
+        >
+            <p>{{ t('proposals.groups.cancel.text') }}</p>
+            <p
+                v-if="group.cancelDiscardsRevision"
+                class="mt-2 font-medium"
+            >
+                {{ t('proposals.groups.cancel.revision') }}
+            </p>
+            <div class="mt-3 flex flex-col gap-1.5">
+                <label
+                    for="cancel-reason"
+                    class="text-sm font-medium text-ink"
+                >{{ t('proposals.groups.cancel.reason') }}</label>
+                <textarea
+                    id="cancel-reason"
+                    v-model="cancelReason"
+                    rows="3"
+                    maxlength="1000"
+                    class="rounded-[10px] border border-line-strong bg-white px-3 py-2 text-[15px] focus-visible:outline-2 focus-visible:outline-accent"
+                    :aria-invalid="cancelReasonError !== undefined"
+                    aria-describedby="cancel-reason-help"
+                />
+                <p
+                    id="cancel-reason-help"
+                    class="text-[13px] text-muted"
+                >
+                    {{ t('proposals.groups.cancel.reason_help', { min: String(group.forcedReasonMin) }) }}
+                </p>
+                <p
+                    v-if="cancelReasonError"
+                    class="text-sm text-accent"
+                >
+                    {{ cancelReasonError }}
+                </p>
+            </div>
         </ConfirmDialog>
 
         <ConfirmDialog

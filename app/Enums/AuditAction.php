@@ -142,6 +142,8 @@ enum AuditAction: string
     case ProposalRevisionStarted = 'proposal.revision_started';
     case ProposalRevisionDiscarded = 'proposal.revision_discarded';
     case ProposalNewVersion = 'proposal.new_version';
+    // F5-05: cancellation of an approved group by the admin (D-095, D-447, D-469…D-473).
+    case ProposalCancelled = 'proposal.cancelled';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';

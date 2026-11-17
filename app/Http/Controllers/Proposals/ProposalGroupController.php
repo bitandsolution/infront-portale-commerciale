@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Proposals;
 
 use App\Domain\Proposals\Actions\ApproveGroup;
+use App\Domain\Proposals\Actions\CancelGroup;
 use App\Domain\Proposals\Actions\RecordClientChoice;
 use App\Domain\Proposals\Actions\RejectGroup;
 use App\Domain\Proposals\Actions\ReleaseReviewLock;
@@ -12,6 +13,7 @@ use App\Domain\Proposals\Actions\WithdrawGroup;
 use App\Enums\ProposalStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Proposals\ApproveGroupRequest;
+use App\Http\Requests\Proposals\CancelGroupRequest;
 use App\Http\Requests\Proposals\ChooseVariantRequest;
 use App\Http\Requests\Proposals\ForceGroupRequest;
 use App\Http\Requests\Proposals\RejectGroupRequest;
@@ -196,6 +198,16 @@ class ProposalGroupController extends Controller
 
         return redirect()->route('proposals.groups.show', $group)->with('toast', Toast::success(
             Text::get($forced ? 'proposals.toasts.group_forced' : 'proposals.toasts.group_approved', ['number' => (string) $this->firstNumber($group)]),
+        ));
+    }
+
+    /** F5-05 (M07 FL-05; D-095, D-447): cancellation of an approved group by the admin. */
+    public function cancel(CancelGroupRequest $request, ProposalGroup $group, CancelGroup $cancelGroup): RedirectResponse
+    {
+        $cancelGroup->handle($group, $request->reason(), $this->actor($request));
+
+        return redirect()->route('proposals.groups.show', $group)->with('toast', Toast::success(
+            Text::get('proposals.toasts.group_cancelled', ['number' => (string) $this->firstNumber($group)]),
         ));
     }
 

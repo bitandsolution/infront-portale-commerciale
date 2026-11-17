@@ -309,6 +309,12 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
             ->middleware('can:'.Ability::ProposalsForce->value)
             ->whereNumber('group')
             ->name('proposals.groups.force');
+        // Cancellation of an approved group, only the admin with a reason (D-095, D-447, D-469…D-473;
+        // F5-05).
+        Route::post('proposte/gruppi/{group}/annullamento', [ProposalGroupController::class, 'cancel'])
+            ->middleware('can:'.Ability::ProposalsManageApproved->value)
+            ->whereNumber('group')
+            ->name('proposals.groups.cancel');
         Route::post('proposte/gruppi/{group}/scelta', [ProposalGroupController::class, 'choose'])
             ->middleware('can:'.Ability::ProposalsReview->value)
             ->whereNumber('group')

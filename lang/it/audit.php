@@ -112,6 +112,7 @@ return [
         'proposal_revision_started' => 'Modifica di una proposta approvata avviata',
         'proposal_revision_discarded' => 'Modifiche di una proposta approvata annullate',
         'proposal_new_version' => 'Nuova versione di una proposta approvata',
+        'proposal_cancelled' => 'Proposta approvata annullata',
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
         'led_mockup_saved' => 'Simulazione LED configurata',

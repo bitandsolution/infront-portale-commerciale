@@ -42,6 +42,12 @@ class ProposalGroupPolicy
         return Ability::ProposalsForce->allows($user->role) && $this->review($user);
     }
 
+    /** F5-05 (M07 F-07; D-095, D-447): only the admin cancels an approved group. */
+    public function cancel(User $user): bool
+    {
+        return Ability::ProposalsManageApproved->allows($user->role);
+    }
+
     public function takeOverReview(User $user): bool
     {
         return $user->role === Role::Admin && $this->review($user);
