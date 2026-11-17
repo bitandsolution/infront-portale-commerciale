@@ -12,13 +12,15 @@ use App\Models\Proposal;
 use App\Models\ProposalGroup;
 use App\Models\ProposalVersion;
 use App\Models\User;
+use App\Support\Amounts;
 use Illuminate\Support\Facades\DB;
 
 /**
  * "Annulla le modifiche" of an approved variant (D-466; F5-04): the working copy made by StartRevision
  * is deleted with its rows and seats (cascade, C3; a working version is not frozen, so the triggers
  * allow it) and no version is born; the variant stays at its current frozen version, its commitments
- * untouched. Audit proposal.revision_discarded with the changes that are lost (list total and clubs).
+ * untouched. Audit proposal.revision_discarded with the version kept and, when the copy had changed it,
+ * the list total that is lost.
  */
 final class DiscardRevision
 {
@@ -49,11 +51,14 @@ final class DiscardRevision
             $working->delete();
             $locked->forceFill(['lock_version' => $locked->lock_version + 1])->save();
 
+            // The list total of the copy only when it differs from the current version (changes lost).
+            $changed = $current === null || Amounts::normalize($listTotal) !== Amounts::normalize($current->list_total);
+
             $this->audit->record(
                 AuditAction::ProposalRevisionDiscarded,
                 $actor,
                 AuditSubject::proposal($locked),
-                ['list_total' => $listTotal],
+                $changed ? ['list_total' => $listTotal] : [],
                 [
                     'proposal_group_id' => $locked->proposal_group_id,
                     'variant_letter' => $locked->variant_letter,

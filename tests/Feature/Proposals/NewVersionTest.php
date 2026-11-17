@@ -340,7 +340,14 @@ it('D-466: "Annulla le modifiche" deletes the copy, the version and its commitme
         ->and($proposal->currentVersion?->number)->toBe(1)
         ->and(InventoryCommitment::query()->where('proposal_id', $proposal->id)->whereNull('released_at')->count())->toBe(2)
         ->and(nvPoolRemaining($this))->toBe(540)
-        ->and(auditEventsOf(AuditAction::ProposalRevisionDiscarded))->toHaveCount(1);
+        ->and(auditEventsOf(AuditAction::ProposalRevisionDiscarded))->toHaveCount(1)
+        ->and(auditEventsOf(AuditAction::ProposalRevisionDiscarded)[0]->old_values['list_total'] ?? null)->toBe('193680.00');
+
+    // A copy discarded without changes does not repeat the same list total in the audit.
+    nvStart($this->admin, $proposal);
+    $this->actingAs($this->admin)->delete(route('proposals.revision.discard', $proposal));
+
+    expect(auditEventsOf(AuditAction::ProposalRevisionDiscarded)[1]->old_values ?? [])->toBe([]);
 
     // The configurator of a copy no longer there leads back to the group.
     $this->actingAs($this->admin)->get(route('proposals.revision.edit', $proposal))
