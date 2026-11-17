@@ -232,5 +232,7 @@ jobs:
                       fi
                   fi
                   .github/scripts/run.sh "composer audit" composer audit --locked --no-interaction
+            # High and critical advisories block, except the temporary ones in .github/npm-audit-exceptions.json
+            # (each with an expiry date and Antonio's approval); a moderate one is listed and does not block.
             - name: npm audit (high and critical)
-              run: npm audit --audit-level=high
+              run: node .github/scripts/npm-audit.mjs
