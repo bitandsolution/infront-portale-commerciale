@@ -1544,6 +1544,8 @@ return [
             'history_empty' => 'Nessun evento.',
             'history_variant' => 'Variante :letter',
             'read_only' => 'In approvazione: la proposta non si modifica finché non viene decisa.',
+            // F5-02 (D-445): who holds the lock of the work changes the variants with "Modifica".
+            'read_only_mine' => 'In approvazione: puoi modificare le varianti con "Modifica"; l\'agente non le modifica finché la proposta non viene decisa.',
             // F5-01: lock of the work (D-446, D-450, D-452) and withdrawal (D-100).
             'lock' => [
                 'mine' => 'La stai lavorando tu: gli altri la vedono in sola lettura fino all\'esito o per 30 minuti dalla tua ultima azione.',

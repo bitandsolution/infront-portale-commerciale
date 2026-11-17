@@ -315,7 +315,7 @@ function reject(): void {
                     v-if="isSubmitted"
                     class="rounded-[10px] bg-surface px-3.5 py-3 text-sm text-ink"
                 >
-                    {{ t('proposals.groups.read_only') }}
+                    {{ group.reviewLock?.mine ? t('proposals.groups.read_only_mine') : t('proposals.groups.read_only') }}
                 </p>
 
                 <!-- F5-01: lock of the work (D-446) -->
