@@ -197,7 +197,7 @@ it('M01-CA6, M07-CA5: the sending reaches the active admins and managers, with t
     $mail->assertSeeInHtml('Ciao Marta,');
     $mail->assertSeeInHtml('Luca Verdi ha inviato in approvazione la proposta n. '.$proposal->number.'.');
     $mail->assertSeeInHtml('Birra Aurora S.p.A.');
-    $mail->assertSeeInHtml('2027-28');
+    expect($mail->details['Stagione'])->toBe('2027-28');
     $mail->assertSeeInHtml(route('proposals.groups.show', $proposal->proposal_group_id), false);
     $mail->assertDontSeeInHtml('€');
     expect($mail->attachments)->toBe([]);

@@ -291,7 +291,7 @@ final class ProposalNotifications
         $details = [
             Text::get('mail.proposals.number') => Text::get('mail.proposals.number_value', ['number' => $number ?? (string) $first->number]),
             Text::get('mail.proposals.client') => (string) $group->client?->company_name,
-            Text::get('mail.proposals.season') => (string) $group->season?->name,
+            Text::get('mail.proposals.season') => (string) $group->season?->code,
         ];
 
         if ($all->count() > 1) {
