@@ -5,6 +5,7 @@ namespace App\Support\Clients;
 use App\Enums\Role;
 use App\Models\Client;
 use App\Models\CommoditySector;
+use App\Models\ProposalGroup;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -90,7 +91,7 @@ final class ClientsPresenter
      * merged client has none. Agents for the reassignment: the active ones except the owner. Clients
      * that can stay in a merge: the active, not merged ones except the client itself.
      *
-     * @return array{reassignUrl: string|null, deactivateUrl: string|null, reactivateUrl: string|null, mergeUrl: string|null, owners: array<int, array{value: string, label: string}>, mergeTargets: array<int, array{value: string, label: string}>}
+     * @return array{reassignUrl: string|null, deactivateUrl: string|null, reactivateUrl: string|null, mergeUrl: string|null, owners: array<int, array{value: string, label: string}>, mergeTargets: array<int, array{value: string, label: string, ownerId: string}>, mergeGroups: int, mergeAgentIds: list<string>}
      */
     public static function management(Client $client): array
     {
@@ -106,6 +107,13 @@ final class ClientsPresenter
             ->orderBy('id')
             ->get();
 
+        // F5-07 (D-480, D-483): the groups that move with the merge, of this client and of the clients
+        // already merged into it, and their agents (the dialog warns when they differ from the owner of
+        // the client that stays).
+        $groups = $merged ? collect() : ProposalGroup::query()
+            ->whereIn('client_id', Client::query()->where('merged_into_id', $client->id)->pluck('id')->push($client->id)->all())
+            ->get(['id', 'agent_id']);
+
         return [
             'reassignUrl' => $merged ? null : route('clients.reassign', $client),
             'deactivateUrl' => ! $merged && $client->is_active ? route('clients.deactivate', $client) : null,
@@ -116,9 +124,15 @@ final class ClientsPresenter
                 fn (array $option): bool => $option['value'] !== (string) $client->owner_id,
             )),
             'mergeTargets' => $targets
-                ->map(fn (Client $target): array => ['value' => (string) $target->id, 'label' => self::mergeLabel($target)])
+                ->map(fn (Client $target): array => [
+                    'value' => (string) $target->id,
+                    'label' => self::mergeLabel($target),
+                    'ownerId' => (string) $target->owner_id,
+                ])
                 ->values()
                 ->all(),
+            'mergeGroups' => $groups->count(),
+            'mergeAgentIds' => $groups->pluck('agent_id')->unique()->map(fn (mixed $id): string => (string) $id)->sort()->values()->all(),
         ];
     }
 
