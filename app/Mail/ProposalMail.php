@@ -41,7 +41,7 @@ final class ProposalMail extends PortalMail
         return $this->subjectLine;
     }
 
-    public function proposalId(): ?int
+    public function proposalId(): int
     {
         return $this->proposal;
     }

@@ -247,7 +247,7 @@ final class ProposalNotifications
         $changed = $approved->firstWhere('current_version_id', $versionId) ?? $approved->first();
         $version = $changed->currentVersion;
         $number = (string) $changed->number;
-        $replace = ['number' => $number, 'version' => (string) ($version?->number ?? ''), 'letter' => (string) $changed->variant_letter];
+        $replace = ['number' => $number, 'version' => (string) ($version->number ?? ''), 'letter' => (string) $changed->variant_letter];
 
         $this->send(
             $agent,
@@ -257,7 +257,7 @@ final class ProposalNotifications
             Text::get('mail.proposals.new_version.subject', $replace),
             Text::get($variants->count() > 1 ? 'mail.proposals.new_version.intro_variant' : 'mail.proposals.new_version.intro', $replace),
             [
-                Text::get('mail.proposals.version') => (string) ($version?->number ?? ''),
+                Text::get('mail.proposals.version') => (string) ($version->number ?? ''),
                 Text::get('mail.proposals.decided_by') => $this->userName($version?->frozen_by),
             ],
             Text::get('mail.proposals.new_version.'.$document),
