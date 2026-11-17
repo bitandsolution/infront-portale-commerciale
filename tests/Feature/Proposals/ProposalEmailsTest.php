@@ -66,7 +66,6 @@ beforeEach(function () {
     // The factories of the fixtures create their own authors: only the three users above are active.
     User::query()->whereKeyNot([$this->agent->id, $this->admin->id, $this->manager->id])->update(['is_active' => false, 'deactivated_at' => now()]);
 
-
     $this->lazio = Club::factory()->infront()->create([
         'name' => 'SS Lazio',
         'code' => 'LAZIO',
