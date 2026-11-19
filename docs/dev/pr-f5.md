@@ -37,4 +37,6 @@ Fuori da F5:
 | F5-04 | ✅ Unita e collaudata (PR #128, D-464…D-468) |
 | F5-05 | ✅ Unita e collaudata (PR #129, D-469…D-473) |
 | F5-06 | ✅ Unita e collaudata (PR #130, D-474…D-478) |
-| F5-07 | In revisione (decisioni D-480…D-484 e codice con la stessa PR) |
+| F5-07 | ✅ Unita e collaudata (PR #132, D-480…D-484) |
+
+**F5 completata il 19/11/2026.**
