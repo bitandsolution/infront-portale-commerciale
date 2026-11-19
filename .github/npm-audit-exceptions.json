@@ -1,0 +1,9 @@
+[
+    {
+        "advisory": "GHSA-fc5q-39xc-vjpf",
+        "package": "picomatch",
+        "expires": "2026-12-15",
+        "reason": "ReDoS in picomatch (all versions, no fix yet): reached only through build and development tools (vite, vue-tsc, eslint), never shipped with the portal. Remove as soon as a fixed picomatch is released.",
+        "approved": "Antonio Tartaglia, 17/11/2026"
+    }
+]
