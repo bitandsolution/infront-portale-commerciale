@@ -144,6 +144,8 @@ enum AuditAction: string
     case ProposalNewVersion = 'proposal.new_version';
     // F5-05: cancellation of an approved group by the admin (D-095, D-447, D-469…D-473).
     case ProposalCancelled = 'proposal.cancelled';
+    // F5-07: a group moved to the client that stays when the admin merges two clients (D-480, D-482).
+    case ProposalClientMerged = 'proposal.client_merged';
 
     // DM-02: slide library (D-406): area "content".
     case SlideCreated = 'slide.created';

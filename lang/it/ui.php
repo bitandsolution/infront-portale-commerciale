@@ -1102,6 +1102,10 @@ return [
             'confirm_merge' => 'Unisci',
             'confirm_merge_text' => ':client diventa non attivo e viene unito a :keep, che mantiene i suoi dati e il suo agente.',
             'confirm_merge_final' => 'L\'unione non si annulla: il cliente unito non si può più modificare né riattivare.',
+            // F5-07 (D-480, D-483): the proposals move with the merge.
+            'confirm_merge_proposals_one' => 'Anche la sua proposta passa al cliente che resta, con la cronologia e i documenti; resta al suo agente.',
+            'confirm_merge_proposals' => 'Anche le sue :count proposte passano al cliente che resta, con la cronologia e i documenti; restano ai loro agenti.',
+            'confirm_merge_other_agents' => 'Attenzione: alcune di queste proposte sono di un agente diverso da quello del cliente che resta. Le continuerà a vedere e gestire il loro agente.',
         ],
     ],
 
