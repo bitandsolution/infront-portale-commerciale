@@ -99,6 +99,28 @@ final class DemoData
     /** Price level of each club of the demo, in % of the base prices below. */
     public const PRICE_LEVELS = ['LAZIO' => 100, 'ROMA' => 100, 'BOLOGNA' => 70, 'COMO' => 60, 'UDINESE' => 55];
 
+    /**
+     * Fictitious KPI and digital of the clubs of the demo at 100% (F6-01, for the tests of the KPI
+     * pages and of the slices after it), scaled by the price level of each club.
+     *
+     * @var array<string, int>
+     */
+    public const KPI_VALUES = [
+        'FANBASE_ITALY' => 1800000,
+        'AVERAGE_MATCH_FANS' => 42000,
+        'ANNUAL_ATTENDANCE' => 790000,
+        'HOME_AUDIENCE' => 21000000,
+        'DEDICATED_BROADCASTS' => 120,
+        'SEASON_TICKETS' => 30000,
+        'FACEBOOK_FOLLOWERS' => 1500000,
+        'INSTAGRAM_FOLLOWERS' => 1900000,
+        'X_FOLLOWERS' => 600000,
+        'YOUTUBE_FOLLOWERS' => 350000,
+        'TIKTOK_FOLLOWERS' => 900000,
+        'DIGITAL_USERS' => 450000,
+        'DEM_CONTACTS' => 180000,
+    ];
+
     /** Cost per 1′ per match of the LED formats, at 100%, in euro. */
     public const LED_PRICES = ['FILA_1' => 3000, 'FILA_2' => 2400, 'JUMBO' => 5400, 'DOMINATION' => 8400];
 

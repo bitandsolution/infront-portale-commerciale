@@ -9,6 +9,8 @@ use App\Domain\Clients\Actions\CreateClient;
 use App\Domain\Clients\Data\ClientData;
 use App\Domain\Content\Actions\CreateSlide;
 use App\Domain\Content\Actions\SaveLedMockupSetting;
+use App\Domain\Content\Actions\SetClubKpis;
+use App\Domain\Content\Data\KpiInput;
 use App\Domain\Content\Data\SlideData;
 use App\Domain\Content\Services\CustomSlideContent;
 use App\Domain\Documents\Services\DocumentFonts;
@@ -55,6 +57,7 @@ use App\Models\Competition;
 use App\Models\CompetitionSeason;
 use App\Models\HospitalityVariant;
 use App\Models\InventoryPool;
+use App\Models\KpiDefinition;
 use App\Models\LedFormat;
 use App\Models\LedMockupSetting;
 use App\Models\PartnershipTier;
@@ -82,7 +85,7 @@ use Throwable;
  *
  * 1. Season 2027-28 (open), Serie A with 20 clubs (the 5 of the demo are clubs of Infront) and a
  *    fictitious calendar of 380 matches; Serie B with the standard number, no clubs (D-441).
- * 2. Published price list and managed capacities of the 5 clubs.
+ * 2. Published price list and managed capacities of the 5 clubs; fictitious KPI and digital (F6-01).
  * 3. Fictitious clients with drawn logos (one opaque, the others transparent: LED strip, D-425).
  * 4. Slide library for the network and for every club: cover, recap, LED simulation, background of
  *    the composed slide, static slides with conditions, closing (D-405, D-428, D-438).
@@ -167,6 +170,8 @@ final class DemoPreparer
             $this->calendar();
             $step('catalog');
             $this->catalog();
+            $step('kpis');
+            $this->kpis();
             $step('clients');
             $this->clients();
             $step('slides');
@@ -347,6 +352,30 @@ final class DemoPreparer
 
         app(PublishPriceList::class)->handle($priceList, $this->admin);
         $this->report[] = Text::get('demo.console.catalog', ['clubs' => (string) count(DemoData::PRICE_LEVELS)]);
+    }
+
+    /**
+     * Fictitious KPI of the clubs of the demo (F6-01, D-491), written with SetClubKpis.
+     */
+    private function kpis(): void
+    {
+        $definitions = KpiDefinition::query()->whereIn('code', array_keys(DemoData::KPI_VALUES))->pluck('id', 'code');
+
+        foreach (DemoData::PRICE_LEVELS as $code => $level) {
+            $inputs = [];
+
+            foreach (DemoData::KPI_VALUES as $kpi => $value) {
+                $id = $definitions->get($kpi);
+
+                if (is_numeric($id)) {
+                    $inputs[] = new KpiInput((int) $id, intdiv($value * $level, 100), Text::get('demo.kpi_source'), Text::get('demo.kpi_period'));
+                }
+            }
+
+            app(SetClubKpis::class)->handle($this->season, $this->clubs[$code], $inputs, $this->admin);
+        }
+
+        $this->report[] = Text::get('demo.console.kpis', ['clubs' => (string) count(DemoData::PRICE_LEVELS)]);
     }
 
     private function clients(): void

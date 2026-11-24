@@ -7,6 +7,7 @@ use App\Http\Controllers\Catalog\CatalogValueController;
 use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\CommoditySectorController;
+use App\Http\Controllers\Content\KpiController;
 use App\Http\Controllers\Content\LedMockupController;
 use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Inventory\AvailabilityController;
@@ -117,6 +118,7 @@ final class PortalPages
         'proposals_all' => [ProposalGroupController::class, 'all'],
         'content_slides' => [SlideController::class, 'index'],
         'content_led_mockups' => [LedMockupController::class, 'index'],
+        'content_kpi' => [KpiController::class, 'index'],
     ];
 
     /**
