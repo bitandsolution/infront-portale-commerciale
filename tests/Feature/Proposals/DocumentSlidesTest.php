@@ -191,7 +191,8 @@ it('D-397: step 6 "Documento" lists the slides of the group by section, cover an
         ->where('documentSlides.documentLabel', 'Documento club')
         ->where('documentSlides.totalSlides', 5)
         ->where('documentSlides.includedSlides', 5)
-        ->where('documentSlides.pages', 5)
+        // D-499: the LED simulation without configuration makes no page, as in the PDF (D-427).
+        ->where('documentSlides.pages', 4)
         ->where('documentSlides.warnings', [])
         ->where('documentSlides.saveUrl', route('proposals.groups.slides', $proposal->proposal_group_id))
         ->has('documentSlides.sections', 5)
@@ -199,7 +200,8 @@ it('D-397: step 6 "Documento" lists the slides of the group by section, cover an
         ->where('documentSlides.sections.1.slides.0.thumbnailUrl', route('files.thumbnail', $this->benefit->image_file_id))
         ->where('documentSlides.sections.2.slides.0.kind', 'led')
         ->where('documentSlides.sections.2.slides.0.thumbnailUrl', null)
-        ->where('documentSlides.sections.2.slides.0.pagesLabel', '1 pagina, per il club con il LED'));
+        ->where('documentSlides.sections.2.slides.0.pages', 0)
+        ->where('documentSlides.sections.2.slides.0.pagesLabel', 'Nessuna pagina: simulazione LED non configurata'));
 
     expect(dslListed($response))->toBe([
         'Copertina Lazio' => [true, false, true],
