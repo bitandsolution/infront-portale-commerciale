@@ -81,7 +81,8 @@ final class SimulatorPresenter
      */
     public function choice(Season $season, array $choices, DocumentMode $mode): array
     {
-        $ids = $this->simulator->clubs($season)->modelKeys();
+        /** @var list<int> $ids */
+        $ids = $this->simulator->clubs($season)->pluck('id')->all();
         /** @var list<string> $tiers */
         $tiers = $this->simulator->tiers()->pluck('code')->all();
         /** @var list<string> $formats */
