@@ -257,6 +257,9 @@ function routeMatrix(): array
         'content.led-mockups.preview' => ['method' => 'GET', 'expected' => $adminForm],
         'pages.content_simulator' => ['method' => 'GET', 'expected' => $backOffice],
         'pages.content_kpi' => ['method' => 'GET', 'expected' => $backOffice],
+        // F6-01 — KPI and digital of a club (D-109, D-491): admin and manager; the form is sent empty
+        'content.kpis.edit' => ['method' => 'GET', 'expected' => $backOffice],
+        'content.kpis.update' => ['method' => 'PUT', 'expected' => $backOfficeForm],
 
         // M02 — calendars, import, matches, stadiums: manager and admin (D-137)
         'pages.sports_calendars' => ['method' => 'GET', 'expected' => $backOffice],
@@ -477,7 +480,7 @@ function matrixParameters(string $route): array
         in_array($route, ['catalog.on-top.update', 'catalog.on-top.destroy'], true) => [
             'onTopAsset' => OnTopAsset::query()->create(['price_list_id' => PriceList::factory()->create()->id, 'club_id' => null, 'title' => 'Match sponsor', 'body' => 'Testo di prova'])->id,
         ],
-        in_array($route, ['inventory.capacities.edit', 'inventory.capacities.update'], true) => [
+        in_array($route, ['inventory.capacities.edit', 'inventory.capacities.update', 'content.kpis.edit', 'content.kpis.update'], true) => [
             'club' => ($club = Club::factory()->infront()->create())->id,
             'stagione' => ClubEnrollment::query()->create(['competition_season_id' => CompetitionSeason::factory()->create()->id, 'club_id' => $club->id])->competitionSeason->season_id,
         ],

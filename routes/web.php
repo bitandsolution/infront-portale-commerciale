@@ -12,6 +12,7 @@ use App\Http\Controllers\Catalog\PriceListController;
 use App\Http\Controllers\Clients\ClientController;
 use App\Http\Controllers\Clients\ClientManagementController;
 use App\Http\Controllers\Clients\CommoditySectorController;
+use App\Http\Controllers\Content\KpiController;
 use App\Http\Controllers\Content\LedMockupController;
 use App\Http\Controllers\Content\SlideController;
 use App\Http\Controllers\Documents\DocumentController;
@@ -244,6 +245,12 @@ Route::middleware(['auth', 'auth.session'])->group(function (): void {
                 ->where(['scope' => 'infront|[0-9]+', 'kind' => 'row_1|row_2|both_rows'])
                 ->middleware('throttle:30,1')
                 ->name('content.led-mockups.preview');
+
+            // KPI and digital of a club in a season (M08 F-05; D-109, D-491; F6-01): admin and manager.
+            // The list is the "contenuti/kpi" page above; the season comes with ?stagione= like the
+            // capacities, or from the top bar.
+            Route::get('contenuti/kpi/club/{club}', [KpiController::class, 'edit'])->whereNumber('club')->name('content.kpis.edit');
+            Route::put('contenuti/kpi/club/{club}', [KpiController::class, 'update'])->whereNumber('club')->name('content.kpis.update');
         });
 
         // Clients (M05 F-01, F-03, F-04; D-076, D-078, D-358). New client: agent and admin. Page and

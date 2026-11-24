@@ -12,6 +12,7 @@ use App\Models\CalendarImport;
 use App\Models\Client;
 use App\Models\Club;
 use App\Models\ClubEnrollment;
+use App\Models\ClubKpiValue;
 use App\Models\CompetitionSeason;
 use App\Models\FixtureMatch;
 use App\Models\LedMockupSetting;
@@ -111,6 +112,11 @@ it('D-400: demo:prepare prepares season, clubs, calendar, catalog, clients, slid
     // Everything written through the Actions: audit events of the admin and of the agent.
     expect(AuditEvent::query()->where('action', 'calendar_import.confirmed')->count())->toBe(1)
         ->and(AuditEvent::query()->where('action', 'slide.created')->count())->toBe(52);
+
+    // F6-01: fictitious KPI and digital of the five clubs, one audit event per club.
+    expect(ClubKpiValue::query()->where('season_id', $season->id)->count())->toBe(65)
+        ->and(ClubKpiValue::query()->where('club_id', Club::query()->where('code', 'BOLOGNA')->value('id'))->whereHas('definition', fn ($query) => $query->where('code', 'FANBASE_ITALY'))->value('value'))->toBe(1260000)
+        ->and(AuditEvent::query()->where('action', 'club_kpis.updated')->count())->toBe(5);
 });
 
 it('D-440: demo:prepare prepares the three groups of proposals of the demo', function () {

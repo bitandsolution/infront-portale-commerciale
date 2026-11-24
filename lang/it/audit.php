@@ -117,6 +117,7 @@ return [
         'slide_created' => 'Slide caricata nella libreria',
         'slide_updated' => 'Slide della libreria modificata',
         'led_mockup_saved' => 'Simulazione LED configurata',
+        'club_kpis_updated' => 'KPI di un club modificati',
         'document_requested' => 'Documento PDF richiesto',
         'document_regenerated' => 'Documento PDF rigenerato',
         'document_generated' => 'Documento PDF generato',

@@ -17,6 +17,7 @@ return [
             'sports' => 'Stagione, stadi, club ed edizioni…',
             'calendar' => 'Calendario fittizio della Serie A…',
             'catalog' => 'Listino e capacità…',
+            'kpis' => 'KPI e digital…',
             'clients' => 'Clienti…',
             'slides' => 'Libreria slide…',
             'led' => 'Simulazioni LED…',
@@ -27,6 +28,7 @@ return [
         'sports' => 'Stagione 2027-28 aperta; Serie A con :clubs club (Lazio, Roma, Bologna, Udinese e Como club Infront); Serie B con 19 partite in casa, senza club',
         'calendar' => 'Calendario fittizio della Serie A: :matches partite, una giornata a settimana dal 22/08/2027',
         'catalog' => 'Listino 2027-28 pubblicato e capacità gestite per :clubs club',
+        'kpis' => 'KPI e digital fittizi per :clubs club',
         'clients' => ':clients clienti fittizi (4 di agente1, 1 di agente2)',
         'slides' => 'Libreria slide: :slides slide (network e cinque club), :replaced sostituite dalla cartella della demo',
         'photo_real' => 'Simulazione LED: foto :file dalla cartella della demo',
@@ -40,6 +42,8 @@ return [
     ],
 
     'contact' => 'Referente di prova',
+    'kpi_source' => 'Dati fittizi della demo',
+    'kpi_period' => 'Stagione 2026-27',
 
     'slides' => [
         'network' => [

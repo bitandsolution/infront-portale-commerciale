@@ -176,6 +176,14 @@ final readonly class AuditSubject
     }
 
     /**
+     * The KPI of a club in a season (F6-01), e.g. "SS Lazio (LAZIO) · 2027-28".
+     */
+    public static function clubKpis(Club $club, Season $season): self
+    {
+        return new self('club_kpis', $club->id, $club->name.' ('.$club->code.') · '.$season->code);
+    }
+
+    /**
      * A capacity of the inventory (F2-04), e.g. "SS Lazio (LAZIO) · 2027-28 · 1ª fila (FILA_1)".
      */
     public static function capacity(int $id, Season $season, Club $club, string $resource): self

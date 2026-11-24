@@ -12,6 +12,34 @@ return [
         'slide_updated' => 'Slide :slide salvata',
         'nothing_changed' => 'Nessuna modifica da salvare',
         'led_mockup_saved' => 'Simulazione LED salvata: :name, :photo',
+        'kpis_saved' => 'KPI di :club salvati (:count modificati)',
+    ],
+
+    // F6-01: KPI and digital of the clubs (M08 F-05; D-491). Errors under the fields end with a period.
+    'kpis' => [
+        'validation' => [
+            'value_format' => 'Scrivi un numero intero senza decimali, al massimo di :digits cifre (es. 1.250.000).',
+            'source_required' => 'Scrivi la fonte del valore.',
+            'period_required' => 'Scrivi il periodo di riferimento del valore.',
+        ],
+        'attributes' => [
+            'value' => 'valore',
+            'source' => 'fonte',
+            'period' => 'periodo',
+        ],
+    ],
+
+    'kpi_groups' => [
+        'club' => 'KPI club',
+        'digital' => 'Digital club',
+    ],
+
+    'kpi_units' => [
+        'people' => 'persone',
+        'broadcasts' => 'trasmissioni',
+        'followers' => 'follower',
+        'users' => 'utenti',
+        'contacts' => 'contatti',
     ],
 
     // DM-06: simulation of the logo on the LED (D-398).
@@ -28,6 +56,10 @@ return [
     'errors' => [
         'season_closed' => 'La stagione :season è chiusa: la libreria slide è in sola lettura',
         'no_season' => 'Scegli una stagione dalla barra in alto per caricare le slide',
+        'no_kpi_season' => 'Scegli una stagione dalla barra in alto per vedere i KPI',
+        'kpis_season_closed' => 'La stagione :season è chiusa: i KPI sono in sola lettura',
+        'kpis_club_not_in_season' => ':club non è un club Infront iscritto a una competizione della stagione :season',
+        'kpi_not_active' => 'Uno dei KPI non è più attivo: ricarica la pagina',
     ],
 
     // Errors under the fields (they end with a period).
