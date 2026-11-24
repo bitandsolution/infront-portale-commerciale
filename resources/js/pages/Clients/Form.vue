@@ -130,7 +130,10 @@ const mergeOptions = computed<Option[]>(() => {
     return term === '' ? options : options.filter((option) => option.label.toLocaleLowerCase('it').includes(term) || option.value === mergeForm.keep_id);
 });
 
-const mergeKeepLabel = computed(() => props.management?.mergeTargets.find((option) => option.value === mergeForm.keep_id)?.label ?? '');
+const mergeKeep = computed(() => props.management?.mergeTargets.find((option) => option.value === mergeForm.keep_id));
+const mergeKeepLabel = computed(() => mergeKeep.value?.label ?? '');
+// F5-07 (D-483): the proposals stay with their agents, even when the client that stays is of another agent.
+const mergeOtherAgents = computed(() => (props.management?.mergeAgentIds ?? []).some((id) => id !== mergeKeep.value?.ownerId));
 
 type Confirming = 'deactivate' | 'merge';
 
@@ -576,7 +579,21 @@ function confirm(): void {
         >
             <template v-if="confirming === 'merge'">
                 <p>{{ t('clients.manage.confirm_merge_text', { client: client?.companyName ?? '', keep: mergeKeepLabel }) }}</p>
-                <p>{{ t('clients.manage.confirm_merge_final') }}</p>
+                <p
+                    v-if="(management?.mergeGroups ?? 0) > 0"
+                    class="mt-2"
+                >
+                    {{ t(management?.mergeGroups === 1 ? 'clients.manage.confirm_merge_proposals_one' : 'clients.manage.confirm_merge_proposals', { count: String(management?.mergeGroups ?? 0) }) }}
+                </p>
+                <p
+                    v-if="(management?.mergeGroups ?? 0) > 0 && mergeOtherAgents"
+                    class="mt-2 font-medium"
+                >
+                    {{ t('clients.manage.confirm_merge_other_agents') }}
+                </p>
+                <p class="mt-2">
+                    {{ t('clients.manage.confirm_merge_final') }}
+                </p>
             </template>
             <p v-else>
                 {{ t('clients.manage.confirm_deactivate_text') }}

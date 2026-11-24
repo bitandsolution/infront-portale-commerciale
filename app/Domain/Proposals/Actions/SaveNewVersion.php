@@ -50,8 +50,9 @@ use Illuminate\Support\Facades\DB;
  *    D-459…D-461); every other problem blocks;
  * 3. a version equal to the current one is refused ("Nessuna modifica", D-467); a change of the
  *    discount only is a new version;
- * 4. club rows rewritten with the current list (D-464), discount on the total, client, slides chosen
- *    and slides composed copied from the previous version, frozen as version n+1 (D-198);
+ * 4. club rows rewritten with the current list (D-464), discount on the total, slides chosen and
+ *    slides composed copied from the previous version, name, logo and sector of the current client
+ *    (D-481), frozen as version n+1 (D-198);
  * 5. the commitments of the previous version released as "superseded" and those of the new version
  *    written (D-192), forced on the resources beyond the residual (D-460);
  * 6. current version, lock_version; history "discount_set" (when the discount changes), "forced" and
@@ -173,8 +174,10 @@ final class SaveNewVersion
             $isForced = $forced !== [];
             $now = now();
 
-            // D-464: the rows take the current list, then the copy is frozen as version n+1 with what
-            // the previous version froze of the client and of the document (D-419, DM-07).
+            // D-464: the rows take the current list, then the copy is frozen as version n+1 with what the
+            // previous version froze of the document (D-419, DM-07) and, like the approval, the data of the
+            // current client of the proposal (D-481: after a merge, the client that stays).
+            $client = $locked->client()->first();
             $this->rows->write($working, $working->clubs()->with('seats')->get(), $evaluation, $season);
             $working->forceFill([
                 ...DraftRowsWriter::versionTotals($evaluation),
@@ -182,10 +185,10 @@ final class SaveNewVersion
                 'discount_value' => $applied->value,
                 'discount_amount' => $applied->isNone() ? null : $applied->amount,
                 'final_total' => $applied->finalTotal,
-                'client_name' => $previous->client_name,
-                'client_logo_file_id' => $previous->client_logo_file_id,
-                'commodity_sector_id' => $previous->commodity_sector_id,
-                'sector_free_text' => $previous->sector_free_text,
+                'client_name' => $client?->company_name,
+                'client_logo_file_id' => $client?->logo_file_id,
+                'commodity_sector_id' => $client?->commodity_sector_id,
+                'sector_free_text' => $client?->sector_free_text,
                 'document_mode' => $previous->document_mode,
                 'excluded_slide_ids' => $previous->excluded_slide_ids,
                 'custom_slides' => $previous->custom_slides,

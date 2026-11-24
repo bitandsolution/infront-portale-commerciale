@@ -174,6 +174,7 @@ return [
         'chosen' => 'Il cliente ha scelto questa variante',
         'not_chosen' => 'Il cliente ha scelto la variante :letter',
         'new_version' => 'Versione :number',
+        'client_merged' => 'Cliente unito: :from → :to',
     ],
 
     'event_types' => [
@@ -191,5 +192,6 @@ return [
         'cancelled' => 'Annullata',
         'duplicated' => 'Duplicata',
         'variant_added' => 'Variante aggiunta',
+        'client_merged' => 'Cliente unito',
     ],
 ];

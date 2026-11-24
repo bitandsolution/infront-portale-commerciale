@@ -12,7 +12,7 @@ Riferimenti: `docs/specs/spec-M07-ciclo-vita-approvazione.md`, M01 §7 (e-mail),
 | **F5-04** Versioni di un'approvata | L'admin modifica una variante approvata con il configuratore in modalità revisione (sconto compreso): nasce la versione di lavoro dalla versione congelata corrente; al salvataggio finale si crea la **versione n+1** congelata, la disponibilità si controlla **solo sulla differenza** (gli impegni della versione precedente si rilasciano come `superseded` e quelli nuovi si scrivono nella stessa transazione), cronologia `new_version`, audit; **elenco delle versioni** nel dettaglio (autore, data, differenze principali); il documento si rigenera con le sole varianti valide | D-041, D-096, D-198, D-216, D-445, D-448, D-464…D-468; M07-CA7, M07 F-06 | F5-02, F5-03 |
 | **F5-05** Annullamento | L'admin annulla il gruppo approvato con motivazione obbligatoria: tutte le varianti approvate diventano "Annullata", impegni rilasciati con il motivo `cancelled`, cronologia `cancelled`, audit; il documento resta scaricabile con la dicitura "Annullata" nel portale (PDF invariato) | D-095, D-444, D-447, D-469…D-473; M07-CA8 | F5-01 |
 | **F5-06** E-mail delle proposte | Cinque e-mail `PortalMail` (D-299, D-300): invio in approvazione ad admin e gestori attivi; approvazione all'agente **quando il documento è pronto**, con il link alla pagina (mai allegati), o senza link con l'avviso all'admin se la generazione fallisce (D-221); rifiuto con la motivazione; nuova versione; annullamento. Tipi nuovi in `NotificationType`, colonna `notification_logs.proposal_id` (variante A del gruppo) | D-102, D-105, D-221, D-299, D-474…D-478; M07-CA5, M01-CA6 | F5-04, F5-05 |
-| **F5-07** Unione dei clienti con le proposte | `MergeClients` sposta sul cliente che resta i gruppi e le proposte del duplicato (l'agente proprietario non cambia), nella stessa transazione, con l'audit dei gruppi spostati; le versioni congelate restano invariate | D-359 | — |
+| **F5-07** Unione dei clienti con le proposte | `MergeClients` sposta sul cliente che resta i gruppi e le proposte del duplicato (l'agente proprietario non cambia), nella stessa transazione, con l'audit dei gruppi spostati; le versioni congelate restano invariate | D-359, D-480…D-484 | — |
 
 Note:
 - Ogni nuova rotta entra nel test di matrice (D-215); ogni scrittura registra il suo evento di audit nell'area `proposals`.
@@ -36,4 +36,7 @@ Fuori da F5:
 | F5-03 | ✅ Unita e collaudata (PR #127, D-459…D-463) |
 | F5-04 | ✅ Unita e collaudata (PR #128, D-464…D-468) |
 | F5-05 | ✅ Unita e collaudata (PR #129, D-469…D-473) |
-| F5-06 | In revisione (decisioni D-474…D-478 e codice con la stessa PR) |
+| F5-06 | ✅ Unita e collaudata (PR #130, D-474…D-478) |
+| F5-07 | ✅ Unita e collaudata (PR #132, D-480…D-484) |
+
+**F5 completata il 19/11/2026.**

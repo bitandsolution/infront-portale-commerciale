@@ -223,7 +223,11 @@ export interface ClientManagement {
     reactivateUrl: string | null;
     mergeUrl: string | null;
     owners: Option[];
-    mergeTargets: Option[];
+    /** Clients that can stay, with their agent (F5-07, D-483). */
+    mergeTargets: (Option & { ownerId: string })[];
+    /** F5-07 (D-480, D-483): groups of proposals that move with the merge and their agents. */
+    mergeGroups: number;
+    mergeAgentIds: string[];
 }
 
 /** The fields of the client form (ClientsPresenter::clientForm). */
