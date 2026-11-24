@@ -53,7 +53,7 @@ Ordine: DM-01 → DM-02 (in parallelo) → DM-03 → DM-04 → DM-05 → DM-06 �
 ## Cosa resta alle fette successive
 
 - **F5**: forzatura, ritiro, modifica in approvazione, blocco di lavorazione, annullamento, versioni successive di un'approvata, e-mail delle proposte, `notification_logs.proposal_id`, spostamento delle proposte nell'unione dei clienti (D-359), pagina "Tutte le proposte".
-- **F6**: KPI club e digital, avvisi di completezza e di aggiornamento, simulatore di composizione, layout dinamici dei KPI.
+- **F6**: KPI club e digital, avvisi di completezza e di aggiornamento, simulatore di composizione (i layout dinamici dei KPI sono di F7: D-486).
 - **F7**: gli altri layout dinamici (club coinvolti, KPI network, KPI campagna, digital key figures, KPI club, digital club), e-mail dopo il documento (D-221), riduzione del tempo dei controlli, prova sullo staging.
 - **F8**: report e dashboard tengono conto dei gruppi (varianti approvate, scelte, non scelte).
 

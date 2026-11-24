@@ -4,7 +4,7 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 
 | File | Contenuto |
 |---|---|
-| `registro-decisioni.md` | Decisioni D-001…D-267. Valgono solo le APPROVATE |
+| `registro-decisioni.md` | Decisioni D-001…D-494. Valgono solo le APPROVATE |
 | `pianificazione.md` | Fase 6: perimetro MVP, fette F0…F9, milestone, calendario |
 | `progettazione-tecnica.md` | Stack, hosting (R1–R7), modello dati, sicurezza e API, documenti e code, piano di avvio |
 | `ux-architettura.md` | Principi UX, navigazione per ruolo, stati ed errori, breakpoint |
@@ -21,6 +21,7 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 | `dev/pr-f4.md` | Elenco delle PR della fetta F4 (D-370) |
 | `dev/pr-demo.md` | Elenco delle PR della fetta DM, demo del 4/12/2026 (D-394) |
 | `dev/pr-f5.md` | Elenco delle PR della fetta F5, M07 Ciclo di vita e notifiche (D-443) |
+| `dev/pr-f6.md` | Elenco delle PR della fetta F6, M08 Contenuti e KPI (D-485) |
 | `dev/prova-generale-demo.md` | Dati della demo (`demo:prepare`), materiale sulla VM, prova generale e istantanea (DM-08, D-400) |
 | `dev/collaudo-milestone-a.md` | Checklist del collaudo della milestone A e traccia del caricamento di R0 (D-353) |
 
