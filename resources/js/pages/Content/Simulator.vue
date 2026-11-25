@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { CalendarDays, FileImage, Info, Layers, Lock, Plus, Shield, Trash2 } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import CheckboxField from '@/components/forms/CheckboxField.vue';
 import SelectField from '@/components/forms/SelectField.vue';
 import EmptyState from '@/components/states/EmptyState.vue';
@@ -14,7 +14,9 @@ import type { LayoutData, Option } from '@/types';
  * clubs of a proposal with package, LED format and hospitality, and the mode of the document; the
  * server composes it with DocumentComposer and answers with the slides in order, the pages, the
  * warnings and the slides excluded by a condition. Nothing is saved: the choices live in the address
- * (a GET with only "choice" and "result" reloaded), so the link can be shared.
+ * (a GET with only "choice" and "result" reloaded), so the link can be shared. Every composition is a
+ * new entry of the browser history: "back" returns to the previous choices, and the form follows the
+ * "choice" of the page restored by the browser (D-498).
  */
 interface SimulatorClub {
     id: number;
@@ -114,11 +116,36 @@ function setFormat(club: SimulatorClub, value: string): void {
 }
 
 let timer: ReturnType<typeof setTimeout> | undefined;
+let syncing = false;
 
 watch([clubs, mode], () => {
+    if (syncing) {
+        return;
+    }
     clearTimeout(timer);
     timer = setTimeout(compose, 300);
 }, { deep: true });
+
+// "Back" and "forward" restore a page of the history with its own choices: the form follows them
+// without composing again (the result restored with the page is already theirs).
+watch(() => props.choice, (choice) => {
+    if (timer !== undefined || state.value === 'loading') {
+        return;
+    }
+    const restored = (choice?.clubs ?? []).map((club) => ({ ...club }));
+    const restoredMode = choice?.mode ?? 'complete';
+    if (JSON.stringify(restored) === JSON.stringify(clubs.value) && restoredMode === mode.value) {
+        return;
+    }
+    clearTimeout(timer);
+    timer = undefined;
+    syncing = true;
+    clubs.value = restored;
+    mode.value = restoredMode;
+    void nextTick(() => {
+        syncing = false;
+    });
+});
 
 onBeforeUnmount(() => clearTimeout(timer));
 
@@ -137,7 +164,6 @@ function compose(): void {
     }, {
         preserveState: true,
         preserveScroll: true,
-        replace: true,
         only: ['choice', 'result'],
         queryStringArrayFormat: 'indices',
         onError: () => {
