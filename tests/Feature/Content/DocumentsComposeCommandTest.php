@@ -45,6 +45,21 @@ it('DM-02: shows the document type, the slides with their pages and the warnings
         ->and($output)->toContain('- Manca la copertina attiva per il documento club');
 });
 
+it('D-503: lists the clubs without the KPI the document uses', function () {
+    $proposal = Proposal::factory()->withWorkingVersion()->create();
+    $club = Club::factory()->infront()->create(['name' => 'SS Lazio', 'short_name' => 'Lazio']);
+    ProposalVersionClub::factory()->create([
+        'proposal_version_id' => ProposalVersion::query()->where('proposal_id', $proposal->id)->value('id'),
+        'club_id' => $club->id,
+    ]);
+
+    Artisan::call('documents:compose', ['number' => (string) $proposal->number]);
+    $output = Artisan::output();
+
+    expect($output)->toContain('KPI da completare:')
+        ->and($output)->toContain('- SS Lazio: mancano 13 KPI su 13 (Fanbase Italia, ');
+});
+
 it('DM-02: an unknown proposal is an error', function () {
     $status = Artisan::call('documents:compose', ['number' => '99999']);
 

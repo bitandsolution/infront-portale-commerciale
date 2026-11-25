@@ -796,6 +796,8 @@ export interface ProposalGroupDetail {
     document: GroupDocument | null;
     /** Admin and manager, while the group waits: what the document would miss (D-416). */
     documentWarnings: string[];
+    /** Admin and manager, while the group waits: clubs without KPI (D-502, D-503). */
+    documentKpiWarnings: string[];
     canSubmit: boolean;
     submitUrl: string;
     /** Lock of the work while the group waits (F5-01, D-446): holder, last action, held by the viewer. */
@@ -908,6 +910,8 @@ export interface DocumentSlides {
     pages: number;
     /** Missing system slides, for admin and manager. */
     warnings: string[];
+    /** Clubs without KPI, for admin and manager (D-502, D-503). */
+    kpiWarnings: string[];
     /** Neutral note for the agent when the library lacks a system slide. */
     note: string | null;
     /** Editor of the slides composed with blocks (DM-07). */

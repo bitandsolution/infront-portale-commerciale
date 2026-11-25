@@ -10,6 +10,10 @@ use App\Enums\DocumentType;
  * Every slide whose conditions hold is listed, with its flag "included" for the chosen slides
  * (D-397, D-418): the step "Documento" shows them all, the PDF uses includedSlides(). The candidates
  * left out by their conditions are in $excluded, for the simulator (D-494, D-495).
+ *
+ * KPI (F6-03; D-500…D-503): $kpis are the KPI in force of the clubs of the group, for the snapshot of
+ * the document; $missingKpis the clubs without some of the KPI the document type uses, kept apart from
+ * $warnings so that the note of the agent about the missing system slides does not fire for them.
  */
 final readonly class Composition
 {
@@ -18,6 +22,7 @@ final readonly class Composition
      * @param  list<ComposedSlide>  $slides
      * @param  list<string>  $warnings
      * @param  list<ExcludedSlide>  $excluded
+     * @param  list<ClubMissingKpis>  $missingKpis
      */
     public function __construct(
         public ?DocumentType $documentType,
@@ -26,7 +31,19 @@ final readonly class Composition
         public array $warnings,
         public DocumentSelection $selection = new DocumentSelection,
         public array $excluded = [],
+        public ?ClubKpiSet $kpis = null,
+        public array $missingKpis = [],
     ) {}
+
+    /**
+     * The warnings "club senza KPI" (D-502, D-503), for admin and manager.
+     *
+     * @return list<string>
+     */
+    public function kpiWarnings(): array
+    {
+        return array_map(fn (ClubMissingKpis $missing): string => $missing->warning(), $this->missingKpis);
+    }
 
     /**
      * The slides that enter the document.

@@ -210,9 +210,9 @@ it('M09 FL-01: the approval generates the club document: cover, club recap, clos
         ->and($file->downloadName())->toBe('Infront_Proposta_Caffe-Rossi-S-p-A_Lazio_2027-28_v1.pdf')
         ->and($document->page_model['variants'])->toHaveCount(1)
         ->and(array_column($document->page_model['slides'], 'title'))->toBe(['Copertina Lazio', 'Recap Lazio', 'Contatti Lazio'])
-        ->and($document->kpi_snapshot['A']['total_matches'])->toBe(19)
+        ->and($document->kpi_snapshot['campaign']['A']['total_matches'])->toBe(19)
         // 155,680 € + 1′ × 19 matches × 1,000 € = 174,680 €, less 15%.
-        ->and($document->kpi_snapshot['A']['final_total'])->toBe('148478.00');
+        ->and($document->kpi_snapshot['campaign']['A']['final_total'])->toBe('148478.00');
 
     $pages = docgRenderer()->rendered[0]['pages'];
     expect($pages[0])->toBeInstanceOf(LayoutPage::class)

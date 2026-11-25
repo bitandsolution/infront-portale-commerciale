@@ -20,7 +20,7 @@ Riferimenti: `docs/specs/spec-M08-contenuti-kpi.md`, progettazione-tecnica §5.3
 | F-06 Aggregazioni network, RB-05 | ❌ |
 | F-08 Avviso KPI non aggiornati | ❌ |
 | F-09 Controllo di completezza | ❌ (esistono solo gli avvisi di copertina, recap, chiusura, simulazione LED e sfondo della slide composta nella composizione di un gruppo) |
-| `kpi_snapshot` del documento (D-111) | 🟡 Contiene solo i KPI di campagna della versione, nessun KPI di club |
+| `kpi_snapshot` del documento (D-111) | 🟡 Contiene solo i KPI di campagna della versione, nessun KPI di club (F6-03: `version` 2 con club e somme, D-500, D-501) |
 | `layout_texts` (D-202) | ❌ Serve ai testi dei layout KPI: con F7 |
 | M08-CA6 (recap club con listino, sconto, totale) | ✅ Nei fatti con DM-04 (D-415), senza un test con il nome del CA |
 
@@ -64,3 +64,4 @@ Ordine (D-485): F6-01 → F6-02 → F6-03 → F6-04; F6-05 in parallelo. Il simu
 | F6-01 | ✅ Unita e collaudata il 24/11/2026 (#134): elenco, scheda, errori di fonte e periodo, decimali rifiutati, nessuna modifica, rimozione, ruoli, avviso oltre 6 mesi, audit `club_kpis.updated` |
 | Fuori fetta | ✅ #135 unita il 24/11/2026: `web-auth/webauthn-lib` 5.3.13 (avvisi di sicurezza del 17/11; vincolo diretto da togliere quando Fortify o `laravel/passkeys` lo richiederanno da soli) |
 | F6-02 | ✅ Collaudata il 25/11/2026 (#136, decisioni D-495…D-499): combinazione, slide escluse, indirizzo condivisibile e tasto "indietro" (corretto durante il collaudo), documento network, "Solo riepilogo", ruoli, nessun evento di audit; D-499 non provabile sulla VM (tutte le simulazioni LED configurate), coperta dai test |
+| F6-03 | 🔄 In revisione (PR `feat/f6-03-kpi-documents`, decisioni D-500…D-503 con la #137): `ClubKpis`, `kpi_snapshot` `version` 2, avviso "club senza KPI" (simulatore, dettaglio del gruppo e passo "Documento" per chi approva, `page_model`, `documents:compose`); test di M08-CA6, CA7, RB-05, D-251, D-414, D-502, D-503. Collaudo dopo la demo (D-485) |

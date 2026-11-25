@@ -15,7 +15,7 @@ use Illuminate\Console\Command;
 /**
  * Read-only check of the composition of the document of a group of variants (DM-02; D-403…D-405),
  * until the "Documento" step shows it (DM-05): document type, ordered slides with their pages,
- * mandatory and "summary only" slides, warnings. Nothing is written.
+ * mandatory and "summary only" slides, warnings, clubs without KPI (F6-03). Nothing is written.
  *
  *   php artisan documents:compose 205
  */
@@ -91,6 +91,15 @@ final class DocumentsComposeCommand extends Command
             $this->line(Text::get('content.compose_command.warnings'));
 
             foreach ($composition->warnings as $warning) {
+                $this->line('- '.$warning);
+            }
+        }
+
+        // F6-03 (D-502, D-503): clubs without the KPI the document type uses.
+        if ($composition->missingKpis !== []) {
+            $this->line(Text::get('content.compose_command.kpi_warnings'));
+
+            foreach ($composition->kpiWarnings() as $warning) {
                 $this->line('- '.$warning);
             }
         }
