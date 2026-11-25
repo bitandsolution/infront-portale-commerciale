@@ -134,9 +134,9 @@ final readonly class ClubKpiSet
 
     /**
      * The clubs and network parts of the KPI snapshot of a document (D-500, D-501): every club with its
-     * KPI in force and the codes of those missing, the sums of all the clubs and of every tier present.
+     * KPI in force and the codes of those missing, the sums of all the clubs and of every tier present (PHP keeps the tiers as integer keys).
      *
-     * @return array{clubs: array<int, array<string, mixed>>, network: array<string, array<string, array<string, mixed>>>}
+     * @return array{clubs: array<int, array<string, mixed>>, network: array<int|string, array<string, array<string, mixed>>>}
      */
     public function snapshot(): array
     {
