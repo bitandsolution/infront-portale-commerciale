@@ -63,4 +63,4 @@ Ordine (D-485): F6-01 → F6-02 → F6-03 → F6-04; F6-05 in parallelo. Il simu
 | F6-00 | ✅ Unita il 24/11/2026 (#133, decisioni D-485…D-494) |
 | F6-01 | ✅ Unita e collaudata il 24/11/2026 (#134): elenco, scheda, errori di fonte e periodo, decimali rifiutati, nessuna modifica, rimozione, ruoli, avviso oltre 6 mesi, audit `club_kpis.updated` |
 | Fuori fetta | ✅ #135 unita il 24/11/2026: `web-auth/webauthn-lib` 5.3.13 (avvisi di sicurezza del 17/11; vincolo diretto da togliere quando Fortify o `laravel/passkeys` lo richiederanno da soli) |
-| F6-02 | Aperta (decisioni D-495…D-499) |
+| F6-02 | ✅ Collaudata il 25/11/2026 (#136, decisioni D-495…D-499): combinazione, slide escluse, indirizzo condivisibile e tasto "indietro" (corretto durante il collaudo), documento network, "Solo riepilogo", ruoli, nessun evento di audit; D-499 non provabile sulla VM (tutte le simulazioni LED configurate), coperta dai test |
