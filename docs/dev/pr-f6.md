@@ -1,6 +1,7 @@
 # Fetta F6 — M08 Contenuti e KPI: elenco delle PR
 
 Stato: ✅ approvato (D-485…D-494, 24/11/2026). Sviluppo dal 24/11/2026, in anticipo sul calendario (F6 era prevista dal 25/2/2027); collaudi e blocco del codice seguono la data della demo, ancora da confermare (D-485).
+Decisioni della F6-02: D-495…D-499 (24/11/2026).
 Riferimenti: `docs/specs/spec-M08-contenuti-kpi.md`, progettazione-tecnica §5.3.5, `docs/layout-dinamici.md` (§3, §4.3–§4.7), `docs/dev/pr-demo.md` (parte di M08 già fatta nella fetta DM), D-107…D-119, D-202…D-206, D-250…D-252, D-258, D-402…D-437.
 
 ## Cosa c'è già su `main` (fetta DM)
@@ -14,7 +15,7 @@ Riferimenti: `docs/specs/spec-M08-contenuti-kpi.md`, progettazione-tecnica §5.3
 | F-03 Slide dinamiche | 🟡 Solo i layout della demo: `cover`, `network_recap`, `club_recap`, `led_mockup`, `custom_blocks`. Gli altri sei layout (club coinvolti, KPI network, KPI campagna, digital key figures, KPI club, digital club) non esistono |
 | `slides.layout_options` (D-250) | 🟡 Colonna presente, mai letta né scritta |
 | RB-01…RB-03, §10 "stesso ordine" | ✅ `DocumentComposer` (unica implementazione, già pensata per un ingresso costruito a mano: `CompositionInput`); avviso `duplicateOrder` in libreria; **M08-CA1, CA2, CA3, CA4** con test |
-| F-04 Simulatore (**CA5**) | ❌ Solo la voce di menu segnaposto `content_simulator` |
+| F-04 Simulatore (**CA5**) | ✅ F6-02: "Contenuti › Simulatore" (D-494…D-498), slide escluse nel composer (D-495), pagine della simulazione LED come nel PDF (D-499) |
 | F-05 Schede KPI club e digital (**CA7**) | ❌ Nessuna tabella (`kpi_definitions`, `club_kpi_values`); voce di menu segnaposto `content_kpi` |
 | F-06 Aggregazioni network, RB-05 | ❌ |
 | F-08 Avviso KPI non aggiornati | ❌ |
@@ -59,4 +60,7 @@ Ordine (D-485): F6-01 → F6-02 → F6-03 → F6-04; F6-05 in parallelo. Il simu
 
 | PR | Esito |
 |---|---|
-| F6-00 | Aperta (decisioni D-485…D-494) |
+| F6-00 | ✅ Unita il 24/11/2026 (#133, decisioni D-485…D-494) |
+| F6-01 | ✅ Unita e collaudata il 24/11/2026 (#134): elenco, scheda, errori di fonte e periodo, decimali rifiutati, nessuna modifica, rimozione, ruoli, avviso oltre 6 mesi, audit `club_kpis.updated` |
+| Fuori fetta | ✅ #135 unita il 24/11/2026: `web-auth/webauthn-lib` 5.3.13 (avvisi di sicurezza del 17/11; vincolo diretto da togliere quando Fortify o `laravel/passkeys` lo richiederanno da soli) |
+| F6-02 | ✅ Collaudata il 25/11/2026 (#136, decisioni D-495…D-499): combinazione, slide escluse, indirizzo condivisibile e tasto "indietro" (corretto durante il collaudo), documento network, "Solo riepilogo", ruoli, nessun evento di audit; D-499 non provabile sulla VM (tutte le simulazioni LED configurate), coperta dai test |

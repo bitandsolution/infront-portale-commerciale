@@ -39,6 +39,12 @@ final readonly class ComposedSlide
         return $this->customSection ?? $this->slide->section;
     }
 
+    /** Pages the slide makes in the PDF: its drawable instances (D-427, D-499). */
+    public function pageCount(): int
+    {
+        return count(array_filter($this->instances, fn (SlideInstance $instance): bool => $instance->drawable));
+    }
+
     /** Title shown in the step "Documento" and in the page model. */
     public function title(): string
     {

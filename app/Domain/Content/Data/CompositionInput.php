@@ -12,7 +12,7 @@ use App\Models\Season;
  * Input of the composition of a document (M09 §6 step 3; D-396): the season and the variants of a
  * group with their clubs, the slides chosen for the document (D-418, D-419) and the slides composed
  * with blocks (D-399; DM-07). Built from a group
- * of proposals, or by hand (tests, future simulator, M08 F-04), so the composition has one
+ * of proposals, or by hand (tests, the simulator CompositionSimulator, M08 F-04), so the composition has one
  * implementation (CLAUDE.md §4).
  */
 final readonly class CompositionInput

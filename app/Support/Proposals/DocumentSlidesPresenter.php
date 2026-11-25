@@ -152,7 +152,7 @@ final class DocumentSlidesPresenter
             DocumentLayout::LedMockup => 'led',
             DocumentLayout::CustomBlocks => 'custom',
         };
-        $pages = count($composed->instances);
+        $pages = $composed->pageCount();
         $summaryOnly = $composition->selection->mode === DocumentMode::Summary;
 
         return [
@@ -170,6 +170,7 @@ final class DocumentSlidesPresenter
             'pages' => $pages,
             'pagesLabel' => match (true) {
                 $kind === 'recap' && $variantCount > 1 => Text::get('ui.proposals.slides.pages_per_variant', ['count' => (string) $pages]),
+                $kind === 'led' && $pages === 0 => Text::get('ui.proposals.slides.led_not_configured'),
                 $kind === 'led' => Text::get($pages === 1 ? 'ui.proposals.slides.page_per_club_one' : 'ui.proposals.slides.pages_per_club', ['count' => (string) $pages]),
                 default => null,
             },

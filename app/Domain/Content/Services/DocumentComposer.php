@@ -7,6 +7,7 @@ use App\Domain\Content\Data\ComposedSlide;
 use App\Domain\Content\Data\Composition;
 use App\Domain\Content\Data\CompositionInput;
 use App\Domain\Content\Data\CustomSlide;
+use App\Domain\Content\Data\ExcludedSlide;
 use App\Domain\Content\Data\SlideInstance;
 use App\Domain\Content\Data\VariantFacts;
 use App\Enums\DocumentLayout;
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * Composition of the document of a group of variants (M09 §6 step 3, F-02; M08 §4, RB-01…RB-03;
  * D-115, D-118, D-121, D-202, D-396, D-403…D-405): the only implementation, used by the "Documento"
- * step (DM-05), the PDF (DM-04) and the future simulator (M08 F-04).
+ * step (DM-05), the PDF (DM-04) and the simulator (M08 F-04, F6-02: CompositionSimulator).
  *
  * - Type: club when every variant has the same single club, network with two or more distinct clubs
  *   (D-403), none without clubs.
@@ -40,6 +41,11 @@ use Illuminate\Database\Eloquent\Builder;
  * - A pair of club and format without configuration of the LED simulation (club or generic) gives a
  *   warning: that page is skipped by the document (D-427).
  * - Warnings for a missing cover, recap or closing (D-405): the document can still be composed.
+ * - Excluded slides (M08 F-04, D-494, D-495): a candidate whose conditions do not hold is listed apart with
+ *   the condition types not satisfied, and the LED simulation without any LED in the group with its
+ *   own reason, for the simulator; the step "Documento" and the PDF do not read them.
+ * - Pages (D-427, D-499): a page of the LED simulation without configuration is not drawable, so it is
+ *   not counted (the PDF skips it).
  * - Chosen slides (D-397, D-418): every slide is listed with its flag "included" from the
  *   DocumentSelection of the input; cover and recap are always included.
  * - Slides composed with blocks (D-399, D-428, D-429; DM-07): the first library slide with the
@@ -71,14 +77,22 @@ final class DocumentComposer
 
         $rows = $input->clubRows();
         $slides = [];
+        $excluded = [];
         $background = null;
 
         foreach ($this->candidates($input, $type, $clubIds) as $slide) {
-            if (! $this->conditionsHold($slide, $rows)) {
+            $isBackground = $slide->layout_code?->isCustomBackground() === true;
+            $unmet = $this->unmetConditions($slide, $rows);
+
+            if ($unmet !== []) {
+                if (! $isBackground) {
+                    $excluded[] = new ExcludedSlide($slide, $unmet);
+                }
+
                 continue;
             }
 
-            if ($slide->layout_code?->isCustomBackground() === true) {
+            if ($isBackground) {
                 $background ??= $slide;
 
                 continue;
@@ -87,6 +101,8 @@ final class DocumentComposer
             $instances = $this->instances($slide, $input);
 
             if ($instances === []) {
+                $excluded[] = new ExcludedSlide($slide, [], withoutLed: true);
+
                 continue;
             }
 
@@ -113,7 +129,7 @@ final class DocumentComposer
             }
         }
 
-        return new Composition($type, $clubIds, $slides, $warnings, $input->selection);
+        return new Composition($type, $clubIds, $slides, $warnings, $input->selection, $excluded);
     }
 
     /**
@@ -194,10 +210,16 @@ final class DocumentComposer
     }
 
     /**
+     * The condition types of the slide that no club of any variant satisfies, with their values; an
+     * empty list means the slide enters the document (RB-01, D-118, D-404).
+     *
      * @param  list<ClubFacts>  $rows
+     * @return array<string, list<string>>
      */
-    private function conditionsHold(Slide $slide, array $rows): bool
+    private function unmetConditions(Slide $slide, array $rows): array
     {
+        $unmet = [];
+
         foreach ($slide->conditionValues() as $type => $values) {
             $conditionType = SlideConditionType::from($type);
             $satisfied = false;
@@ -210,11 +232,11 @@ final class DocumentComposer
             }
 
             if (! $satisfied) {
-                return false;
+                $unmet[$type] = $values;
             }
         }
 
-        return true;
+        return $unmet;
     }
 
     /**
@@ -230,8 +252,12 @@ final class DocumentComposer
             $pairs = [];
 
             foreach ($input->clubRows() as $row) {
-                if ($row->formatCode !== null) {
-                    $pairs[$row->clubId.'|'.$row->formatCode] = new SlideInstance(clubId: $row->clubId, formatCode: $row->formatCode);
+                if ($row->formatCode !== null && ! isset($pairs[$row->clubId.'|'.$row->formatCode])) {
+                    $pairs[$row->clubId.'|'.$row->formatCode] = new SlideInstance(
+                        clubId: $row->clubId,
+                        formatCode: $row->formatCode,
+                        drawable: $this->ledMockups->settingFor($row->clubId, $row->formatCode) !== null,
+                    );
                 }
             }
 
@@ -261,7 +287,7 @@ final class DocumentComposer
                     continue;
                 }
 
-                if ($this->ledMockups->settingFor($instance->clubId, $instance->formatCode) === null) {
+                if (! $instance->drawable) {
                     $missing[$instance->clubId.'|'.$instance->formatCode] = $instance;
                 }
             }

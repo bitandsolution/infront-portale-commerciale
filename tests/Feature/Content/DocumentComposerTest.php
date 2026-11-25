@@ -8,12 +8,15 @@ use App\Domain\Content\Data\VariantFacts;
 use App\Domain\Content\Services\DocumentComposer;
 use App\Enums\DocumentLayout;
 use App\Enums\DocumentType;
+use App\Enums\FilePurpose;
+use App\Enums\LedPhotoKind;
 use App\Enums\SlideConditionType;
 use App\Enums\SlideDocumentType;
 use App\Models\Club;
 use App\Models\CompetitionSeason;
 use App\Models\HospitalityVariant;
 use App\Models\LedFormat;
+use App\Models\LedMockupSetting;
 use App\Models\PartnershipTier;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
@@ -21,6 +24,7 @@ use App\Models\ProposalVersionClub;
 use App\Models\Season;
 use App\Models\Slide;
 use App\Models\StoredFile;
+use App\Support\Documents\SampleDeck;
 use Database\Seeders\SystemDataSeeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -301,4 +305,47 @@ it('D-396, D-404: the input of a group reads the working versions of its variant
         ->and($a->clubs[0])->toEqual(new ClubFacts($club->id, 'LIBERA', false, null, true, 2))
         ->and($b->clubs[0])->toEqual(new ClubFacts($club->id, null, false, 'DOMINATION', false, 2))
         ->and(app(DocumentComposer::class)->compose($input)->documentType)->toBe(DocumentType::Club);
+});
+
+it('D-495: a slide left out by its conditions is listed with the types not satisfied only, never as a page', function () {
+    $club = Club::factory()->infront()->create();
+    Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)
+        ->withCondition(SlideConditionType::PartnershipTier, 'TOP', 'PREMIUM')->withCondition(SlideConditionType::HasHospitality, 'true')
+        ->create(['title' => 'Top o Premium con hospitality']);
+    Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)
+        ->layout(DocumentLayout::CustomBlocks)->withCondition(SlideConditionType::HasLed, 'true')->create(['title' => 'Sfondo personalizzata']);
+    Slide::factory()->forSeason($this->season)->forClub($club)->document(SlideDocumentType::Club)
+        ->layout(DocumentLayout::LedMockup)->section('BRAND_EXPOSURE')->create(['title' => 'Simulazione LED']);
+    Slide::factory()->forSeason($this->season)->document(SlideDocumentType::Network)
+        ->withCondition(SlideConditionType::PartnershipTier, 'OFFICIAL')->create(['title' => 'Network, non candidata']);
+
+    $composition = compBuild($this->season, [[compRow($club->id, 'PREMIUM')]]);
+
+    expect(compTitles($composition))->toBe([])
+        ->and(array_map(fn ($excluded) => [$excluded->slide->title, $excluded->unmetConditions, $excluded->withoutLed], $composition->excluded))->toBe([
+            ['Top o Premium con hospitality', ['has_hospitality' => ['true']], false],
+            ['Simulazione LED', [], true],
+        ]);
+});
+
+it('D-499: the pages of the LED simulation without configuration are not counted, as the PDF skips them', function () {
+    [$lazio, $roma] = Club::factory()->infront()->count(2)->create();
+    Slide::factory()->forSeason($this->season)->document(SlideDocumentType::Both)->layout(DocumentLayout::LedMockup)
+        ->section('BRAND_EXPOSURE')->create(['title' => 'Simulazione LED']);
+    LedMockupSetting::query()->create([
+        'club_id' => null,
+        'photo_kind' => LedPhotoKind::Row1,
+        'photo_file_id' => storeTestFile(FilePurpose::FieldPhoto, null, SampleDeck::fieldPhoto(), 'campo.png')->id,
+        'areas' => [[[0, 224], [1768, 224], [1768, 262], [0, 262]]],
+        'logo_height_percent' => 85,
+        'spacing' => 30,
+    ]);
+
+    $composition = compBuild($this->season, [[compRow($lazio->id, 'TOP', 'FILA_1'), compRow($roma->id, 'TOP', 'FILA_2')]]);
+    $led = $composition->slides[0];
+
+    expect(array_map(fn ($instance) => [$instance->formatCode, $instance->drawable], $led->instances))->toBe([['FILA_1', true], ['FILA_2', false]])
+        ->and($led->pageCount())->toBe(1)
+        ->and($composition->pageCount())->toBe(1)
+        ->and($composition->warnings)->toContain(sprintf('Simulazione LED non configurata per %s (2ª fila): la pagina non entra nel documento', $roma->name));
 });

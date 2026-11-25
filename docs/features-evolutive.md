@@ -2,7 +2,7 @@
 
 Raccolta delle funzionalità **fuori MVP**: rinviate, predisposte nell'architettura o proposte come miglioramento. Si aggiorna durante l'analisi (D-133) e si consegna completa al termine.
 
-Ultimo aggiornamento: 2026-11-13 (EV-27)
+Ultimo aggiornamento: 2026-11-24 (EV-28)
 
 Legenda stato:
 - **Predisposta:** l'architettura MVP la prevede, va solo attivata o sviluppata.
@@ -38,3 +38,4 @@ Legenda stato:
 | EV-25 | **Copia dei benefit da un club a un altro**, come base da rivedere | M03 | Rinviata | D-335 | M03 F-13; i benefit non sono usati nei documenti del rilascio 1.0 (D-117) |
 | EV-26 | **Foto reale del logo sul LED** per i clienti già attivi, caricata al posto della simulazione | M08, M09 | Proposta | D-398 | Richiesta di Infront del 10/11/2026 ("fotografia vera"); da appurare alla demo del 4/12/2026 |
 | EV-27 | **Editor visuale del testo** delle slide composte a blocchi (grassetto ed elenchi visti mentre si scrive, senza i segni `**` e "- ") | M08 | Proposta | D-437 | Scelta per la demo: campo di testo con segni semplici e pulsanti (DM-07) |
+| EV-28 | **Anteprima PDF dal simulatore** con dati di esempio (pulsante del mockup "Libreria slide e simulatore") | M08, M09 | Proposta | D-494 | Fuori da D-494: il simulatore mostra solo composizione, pagine e avvisi (F6-02) |
