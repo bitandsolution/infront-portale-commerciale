@@ -4,12 +4,12 @@ Indice dei documenti di progetto copiati nel repository al blocco 6.3 (2026-10-2
 
 | File | Contenuto |
 |---|---|
-| `registro-decisioni.md` | Decisioni D-001…D-494. Valgono solo le APPROVATE |
+| `registro-decisioni.md` | Decisioni D-001…D-503. Valgono solo le APPROVATE |
 | `pianificazione.md` | Fase 6: perimetro MVP, fette F0…F9, milestone, calendario |
 | `progettazione-tecnica.md` | Stack, hosting (R1–R7), modello dati, sicurezza e API, documenti e code, piano di avvio |
 | `ux-architettura.md` | Principi UX, navigazione per ruolo, stati ed errori, breakpoint |
 | `layout-dinamici.md` | Verifica sui PDF di esempio e specifica dei 9 layout dinamici |
-| `features-evolutive.md` | Funzioni fuori perimetro (EV-01…EV-24) |
+| `features-evolutive.md` | Funzioni fuori perimetro (EV-01…EV-28) |
 | `specs/spec-M01…M10-*.md` | Specifiche funzionali approvate, con le note di allineamento in testa |
 | `specs/spec-M11-migrazione.md` | Non applicata (D-227); resta solo il perimetro degli script di dati iniziali |
 | `dev/ci.md` | Pipeline di integrazione e deploy |
