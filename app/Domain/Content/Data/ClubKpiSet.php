@@ -53,7 +53,7 @@ final readonly class ClubKpiSet
      * Network sums of the aggregated KPI (M08 F-06, RB-05; D-501): of all the clubs, or with a tier only
      * of the clubs of that competition (D-251). Only the clubs with the value are summed.
      *
-     * @return array<string, NetworkKpiSum>  KPI code → sum
+     * @return array<string, NetworkKpiSum> KPI code → sum
      */
     public function network(?int $tier = null): array
     {
