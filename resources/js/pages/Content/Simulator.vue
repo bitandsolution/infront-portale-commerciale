@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { CalendarDays, FileImage, Info, Layers, Lock, Plus, Shield, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import KpiWarnings from '@/components/content/KpiWarnings.vue';
 import CheckboxField from '@/components/forms/CheckboxField.vue';
 import SelectField from '@/components/forms/SelectField.vue';
 import EmptyState from '@/components/states/EmptyState.vue';
@@ -56,6 +57,7 @@ interface SimulatorResult {
     totalSlides: number;
     pages: number;
     warnings: string[];
+    kpiWarnings: string[];
     sections: { name: string; slides: SimulatorSlide[] }[];
     excluded: { id: number; title: string; section: string; reasons: string[]; thumbnailUrl: string | null }[];
 }
@@ -416,6 +418,8 @@ function modeClass(selected: boolean): string {
                                     </li>
                                 </ul>
                             </div>
+
+                            <KpiWarnings :warnings="result.kpiWarnings" />
 
                             <p
                                 v-if="result.sections.length === 0"

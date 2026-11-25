@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { CircleAlert, FileImage, Info, Layers, Lock } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import KpiWarnings from '@/components/content/KpiWarnings.vue';
 import CustomSlides from '@/components/proposals/CustomSlides.vue';
 import { useTrans } from '@/composables/useTrans';
 import { createVisitQueue } from '@/composables/visitQueue';
@@ -280,6 +281,10 @@ function modeClass(selected: boolean): string {
                 </li>
             </ul>
         </div>
+        <KpiWarnings
+            v-if="showWarnings"
+            :warnings="slides.kpiWarnings"
+        />
         <p
             v-if="slides.note"
             class="flex items-start gap-2 rounded-[10px] bg-surface px-3.5 py-3 text-sm text-ink-soft"

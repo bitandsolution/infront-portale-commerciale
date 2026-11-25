@@ -4,6 +4,7 @@ import { AlertTriangle, ArrowLeft, Ban, CheckCircle2, CircleCheck, CircleX, Info
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 import { buttonClasses } from '@/components/buttons';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import KpiWarnings from '@/components/content/KpiWarnings.vue';
 import SelectField from '@/components/forms/SelectField.vue';
 import TextField from '@/components/forms/TextField.vue';
 import DocumentPanel from '@/components/proposals/DocumentPanel.vue';
@@ -597,6 +598,8 @@ function reject(): void {
                         {{ t('proposals.document.warnings_hint') }}
                     </p>
                 </div>
+
+                <KpiWarnings :warnings="group.documentKpiWarnings" />
 
                 <div v-if="group.availability && group.availability.length > 0">
                     <h2 class="text-base font-semibold text-ink">

@@ -289,6 +289,8 @@ final class ProposalGroupsPresenter
         }
 
         $documentType = DocumentType::forClubs(count($clubIds));
+        // DM-04 (D-416) and F6-03 (D-503): what the document will lack, for who approves while it waits.
+        $composition = $isReviewer && $waiting ? $this->composer->forGroup($group) : null;
         $allApproved = $variants->every(fn (Proposal $variant): bool => $variant->status === ProposalStatus::Approved);
         $chosen = $variants->contains(fn (Proposal $variant): bool => $variant->status === ProposalStatus::NotChosen)
             ? $variants->firstWhere('status', ProposalStatus::Approved)
@@ -315,7 +317,8 @@ final class ProposalGroupsPresenter
             'problems' => $review !== null ? $review->problems : [],
             'history' => $this->history($variants),
             'document' => $this->document($group, $viewer, $status),
-            'documentWarnings' => $isReviewer && $waiting ? $this->composer->forGroup($group)->warnings : [],
+            'documentWarnings' => $composition !== null ? $composition->warnings : [],
+            'documentKpiWarnings' => $composition !== null ? $composition->kpiWarnings() : [],
             'canSubmit' => $isAgent && $variants->every(fn (Proposal $variant): bool => $variant->isEditable()),
             'submitUrl' => route('proposals.groups.submit', $group),
             'reviewLock' => $lockHolder !== null ? [

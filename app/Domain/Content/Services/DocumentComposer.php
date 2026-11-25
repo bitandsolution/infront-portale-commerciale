@@ -52,10 +52,15 @@ use Illuminate\Database\Eloquent\Builder;
  *   layout "custom_blocks" (the background "Slide personalizzata") is never a page by itself; every
  *   composed slide of the group is drawn on it and placed at the end of its section, in the order the
  *   slides were added. Without that background the composed slides are left out, with a warning.
+ * - KPI (F6-03; D-500…D-503): the KPI in force of the clubs of the group (ClubKpis) and the clubs
+ *   without some of the KPI the document type uses, listed apart from the warnings; they never block.
  */
 final class DocumentComposer
 {
-    public function __construct(private readonly LedMockups $ledMockups) {}
+    public function __construct(
+        private readonly LedMockups $ledMockups,
+        private readonly ClubKpis $kpis,
+    ) {}
 
     public function forGroup(ProposalGroup $group): Composition
     {
@@ -67,7 +72,9 @@ final class DocumentComposer
         $clubIds = $input->clubIds();
         $type = DocumentType::forClubs(count($clubIds));
 
-        if ($input->season === null) {
+        $season = $input->season;
+
+        if ($season === null) {
             return new Composition($type, $clubIds, [], [Text::get('content.composition.no_season')]);
         }
 
@@ -129,7 +136,28 @@ final class DocumentComposer
             }
         }
 
-        return new Composition($type, $clubIds, $slides, $warnings, $input->selection, $excluded);
+        $kpis = $this->kpis->of($season, self::clubTiers($input));
+
+        return new Composition($type, $clubIds, $slides, $warnings, $input->selection, $excluded, $kpis, $kpis->missing($type));
+    }
+
+    /**
+     * Clubs of the group with the tier of their competition (D-251), in the order they first appear;
+     * the first row with a competition gives it.
+     *
+     * @return array<int, int|null>
+     */
+    private static function clubTiers(CompositionInput $input): array
+    {
+        $tiers = [];
+
+        foreach ($input->clubRows() as $row) {
+            if (! array_key_exists($row->clubId, $tiers) || $tiers[$row->clubId] === null) {
+                $tiers[$row->clubId] = $row->competitionTier;
+            }
+        }
+
+        return $tiers;
     }
 
     /**

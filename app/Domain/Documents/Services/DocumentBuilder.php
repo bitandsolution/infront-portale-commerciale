@@ -2,6 +2,7 @@
 
 namespace App\Domain\Documents\Services;
 
+use App\Domain\Content\Data\ClubKpiSet;
 use App\Domain\Content\Data\ComposedSlide;
 use App\Domain\Content\Data\CompositionInput;
 use App\Domain\Content\Data\CustomSlide;
@@ -59,6 +60,10 @@ use Illuminate\Support\Str;
  *   a configuration or a logo the page is skipped and listed in the page model (D-427).
  * - Slides composed with blocks (DM-07, D-399, D-428): the content frozen with the versions drawn on
  *   the background "Slide personalizzata" of the library (CustomBlocksLayout).
+ *
+ * - KPI (F6-03; D-493, D-500…D-503): the snapshot keeps the KPI of the campaign of every variant, the
+ *   KPI in force of the clubs of the document and the network sums; the clubs without KPI are in the
+ *   page model ("kpi_warnings"), they never stop the document.
  *
  * A missing cover or recap, or a background without its image, stops the generation with a clear
  * message (DocumentNotComposable, D-416).
@@ -175,8 +180,9 @@ final class DocumentBuilder
                 'slides' => $model,
                 'skipped' => $skipped,
                 'warnings' => $composition->warnings,
+                'kpi_warnings' => $composition->kpiWarnings(),
             ],
-            kpiSnapshot: self::kpis($versions),
+            kpiSnapshot: self::kpis($versions, $composition->kpis),
         );
     }
 
@@ -454,18 +460,20 @@ final class DocumentBuilder
     }
 
     /**
-     * KPI of every variant as frozen on its version (D-111): the document keeps them even if the
-     * data change later.
+     * KPI snapshot of the document (D-111, D-204, D-493, D-500, D-501): the KPI of the campaign of
+     * every variant as frozen on its version, the KPI in force of the clubs of the document when it is
+     * generated (regeneration included) and the network sums. The document keeps them even if the data
+     * change later (M08-CA7).
      *
      * @param  array<string, ProposalVersion>  $versions
      * @return array<string, mixed>
      */
-    private static function kpis(array $versions): array
+    private static function kpis(array $versions, ?ClubKpiSet $kpis): array
     {
-        $snapshot = [];
+        $campaign = [];
 
         foreach ($versions as $letter => $version) {
-            $snapshot[$letter] = [
+            $campaign[$letter] = [
                 'campaign_starts_on' => $version->campaign_starts_on?->toDateString(),
                 'campaign_months' => $version->campaign_months,
                 'total_matches' => $version->total_matches,
@@ -476,7 +484,14 @@ final class DocumentBuilder
             ];
         }
 
-        return $snapshot;
+        $clubs = $kpis?->snapshot() ?? ['clubs' => [], 'network' => []];
+
+        return [
+            'version' => ClubKpiSet::SNAPSHOT_VERSION,
+            'campaign' => $campaign,
+            'clubs' => $clubs['clubs'],
+            'network' => $clubs['network'],
+        ];
     }
 
     /**

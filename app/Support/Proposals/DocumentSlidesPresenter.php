@@ -93,6 +93,7 @@ final class DocumentSlidesPresenter
             'totalSlides' => count($composition->slides),
             'pages' => $composition->pageCount(),
             'warnings' => $isReviewer ? $composition->warnings : [],
+            'kpiWarnings' => $isReviewer ? $composition->kpiWarnings() : [],
             'note' => ! $isReviewer && $composition->documentType !== null && $composition->warnings !== [] ? Text::get('ui.proposals.slides.agent_note') : null,
             'custom' => $this->customSlides->present($group, $input->customSlides, $composition, $editable),
         ];

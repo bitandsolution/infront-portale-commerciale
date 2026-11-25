@@ -1768,6 +1768,11 @@ return [
     ],
     // Slide library (M08 §4; DM-02, D-402…D-406).
     'content' => [
+        // F6-03 (D-502, D-503): clubs without KPI, for admin and manager.
+        'kpi_warnings' => [
+            'title' => 'KPI da completare',
+            'hint' => 'Il documento si genera comunque. I KPI si inseriscono in "Contenuti › KPI e digital"; le slide che li mostrano arrivano con i layout dei KPI.',
+        ],
         'slides' => [
             'intro' => 'Slide dei documenti della stagione :season: statiche (immagine PNG 1920×1080) o dinamiche (sfondo e dati scritti dal sistema). Le condizioni decidono in quali proposte una slide entra nel documento; senza condizioni entra sempre. Una slide non si cancella: si disattiva.',
             'no_season' => 'Scegli una stagione dalla barra in alto per vedere la libreria.',

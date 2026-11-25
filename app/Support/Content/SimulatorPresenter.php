@@ -128,6 +128,7 @@ final class SimulatorPresenter
             'totalSlides' => count($composition->slides),
             'pages' => $composition->pageCount(),
             'warnings' => $composition->warnings,
+            'kpiWarnings' => $composition->kpiWarnings(),
             'sections' => $sections,
             'excluded' => array_map(fn (ExcludedSlide $excluded): array => $this->excluded($excluded), $composition->excluded),
         ];

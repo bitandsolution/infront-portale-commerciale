@@ -173,6 +173,9 @@ return [
         'missing_led_mockup' => 'Simulazione LED non configurata per :club (:photo): la pagina non entra nel documento',
         // DM-07 (D-428): the slides composed with blocks need the background of the library.
         'missing_custom_background' => 'Manca lo sfondo attivo della slide personalizzata per il :document: le slide personalizzate non entrano nel documento',
+        // F6-03 (D-502): KPI the document type uses (club: all, network: the aggregated ones).
+        'missing_kpi_one' => ':club: manca 1 KPI su :total (:names)',
+        'missing_kpis' => ':club: mancano :missing KPI su :total (:names)',
     ],
 
     // Server command documents:compose.
@@ -187,6 +190,7 @@ return [
         'custom' => 'Personalizzata',
         'variant' => 'Proposta :letter',
         'warnings' => 'Avvisi:',
+        'kpi_warnings' => 'KPI da completare:',
         'total' => ':slides slide della libreria, :pages pagine previste.',
         'mode' => 'Contenuto scelto: :mode, :included slide su :slides.',
     ],
