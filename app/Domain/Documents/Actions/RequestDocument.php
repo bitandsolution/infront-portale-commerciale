@@ -16,6 +16,7 @@ use App\Models\Proposal;
 use App\Models\ProposalGroup;
 use App\Models\ProposalVersionClub;
 use App\Models\User;
+use App\Support\Text;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -23,7 +24,9 @@ use Illuminate\Support\Facades\DB;
  * D-413, D-414; DM-04): called by the approval, in its transaction, and by the regeneration of the
  * admin. The current document, if any, becomes "replaced" (it stays, downloadable by the admin only),
  * a new row starts "queued" and the job of the queue "documents" composes and renders it after the
- * commit. A job of a replaced document finds it replaced and stores nothing.
+ * commit. A job of a replaced document finds it replaced and stores nothing; a document replaced while
+ * still queued or generating becomes "failed" with the reason ("documents.errors.replaced_while_pending"),
+ * with its own audit event, so that it does not stay pending forever.
  *
  * F5-06 (D-221, D-474, D-477): $notification is the e-mail to the agent that waits for this document
  * (approval, new version); a regeneration inherits the one the replaced document still owed (an
@@ -64,7 +67,24 @@ final class RequestDocument
                 ->lockForUpdate()
                 ->first();
 
+            $replacedStatus = $current?->status;
             $current?->forceFill(['superseded_at' => now()])->save();
+
+            // A document replaced while still queued or generating will never be ready: its job finds it
+            // replaced and stores nothing. It becomes "failed" with the reason, not pending forever.
+            if ($current !== null && $replacedStatus !== null && $replacedStatus->isPending()) {
+                $reason = Text::get('documents.errors.replaced_while_pending');
+                $current->forceFill(['status' => DocumentStatus::Failed, 'last_error' => $reason])->save();
+
+                $this->audit->record(
+                    AuditAction::DocumentFailed,
+                    $actor,
+                    AuditSubject::document($current, Proposal::query()->findOrFail($current->proposal_id)),
+                    ['status' => $replacedStatus->value],
+                    ['status' => DocumentStatus::Failed->value],
+                    $reason,
+                );
+            }
 
             $document = Document::query()->create([
                 'proposal_group_id' => $group->id,
@@ -86,7 +106,7 @@ final class RequestDocument
                 $regeneration ? AuditAction::DocumentRegenerated : AuditAction::DocumentRequested,
                 $actor,
                 AuditSubject::document($document, $first),
-                $current !== null ? ['document_id' => $current->id, 'status' => $current->status->value] : [],
+                $current !== null && $replacedStatus !== null ? ['document_id' => $current->id, 'status' => $replacedStatus->value] : [],
                 [
                     'document_id' => $document->id,
                     'proposal_group_id' => $group->id,
