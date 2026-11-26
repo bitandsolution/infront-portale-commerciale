@@ -20,7 +20,7 @@
         "openspout/openspout": "^4.0",
         "sentry/sentry-laravel": "^4.0",
         "spatie/browsershot": "^5.4",
-        "symfony/http-foundation": "^8.1.11",
+        "symfony/http-foundation": "^8.1.12",
         "symfony/http-kernel": "^8.1.12",
         "symfony/mailer": "^8.1.12",
         "symfony/mime": "^8.1.10",
