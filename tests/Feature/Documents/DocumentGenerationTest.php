@@ -422,7 +422,7 @@ it('M09 §9: a rendering error is kept and retried; after the last attempt the d
         ->and($document->last_error)->toBe('Generazione non riuscita dopo l\'ultimo tentativo: Chromium non risponde');
 });
 
-it('D-205: a job of a replaced document stores nothing', function () {
+it('D-205: a job of a replaced document stores nothing; replaced while queued it fails with the reason', function () {
     docgClubSlides($this, $this->lazio);
     $a = docgGroup($this->agent, [[$this->lazio->id => ['tier' => true]]]);
     Queue::fake();
@@ -431,10 +431,46 @@ it('D-205: a job of a replaced document stores nothing', function () {
 
     app(RequestDocument::class)->handle($a->group()->firstOrFail(), $this->admin, regeneration: true);
     app(DocumentGenerator::class)->generate($first->id);
+    // The job of the replaced document fails after its last attempt: the reason of the replacement stays.
+    app(DocumentGenerator::class)->fail($first->id, 'Chromium non risponde');
 
-    expect($first->refresh()->status)->toBe(DocumentStatus::Queued)
+    $failed = auditEventsOf(AuditAction::DocumentFailed);
+
+    expect($first->refresh()->status)->toBe(DocumentStatus::Failed)
+        ->and($first->last_error)->toBe('Sostituito da una nuova generazione prima di essere pronto.')
+        ->and($first->superseded_at)->not->toBeNull()
         ->and($first->file_id)->toBeNull()
-        ->and(StoredFile::query()->where('purpose', FilePurpose::GeneratedPdf->value)->count())->toBe(0);
+        ->and(StoredFile::query()->where('purpose', FilePurpose::GeneratedPdf->value)->count())->toBe(0)
+        ->and($failed)->toHaveCount(1)
+        ->and($failed->first()?->user_id)->toBe($this->admin->id)
+        ->and($failed->first()?->old_values)->toBe(['status' => 'queued'])
+        ->and($failed->first()?->new_values)->toBe(['status' => 'failed'])
+        ->and(soleAuditEvent(AuditAction::DocumentRegenerated)->old_values)->toBe(['document_id' => $first->id, 'status' => 'queued'])
+        ->and(docgCurrent($a)->status)->toBe(DocumentStatus::Queued);
+});
+
+it('D-205: a document replaced while generating fails with the reason, a ready one stays ready', function () {
+    docgClubSlides($this, $this->lazio);
+    $a = docgGroup($this->agent, [[$this->lazio->id => ['tier' => true]]]);
+    Queue::fake();
+    docgApprove($this->admin, $a)->assertSessionHasNoErrors();
+    $generating = docgCurrent($a);
+    $generating->forceFill(['status' => DocumentStatus::Generating, 'attempts' => 1])->save();
+
+    app(RequestDocument::class)->handle($a->group()->firstOrFail(), $this->admin, regeneration: true);
+    $second = docgCurrent($a);
+    app(DocumentGenerator::class)->generate($second->id);
+
+    expect($generating->refresh()->status)->toBe(DocumentStatus::Failed)
+        ->and($generating->last_error)->toBe('Sostituito da una nuova generazione prima di essere pronto.')
+        ->and($second->refresh()->status)->toBe(DocumentStatus::Ready);
+
+    app(RequestDocument::class)->handle($a->group()->firstOrFail(), $this->admin, regeneration: true);
+
+    expect($second->refresh()->status)->toBe(DocumentStatus::Ready)
+        ->and($second->superseded_at)->not->toBeNull()
+        ->and($second->last_error)->toBeNull()
+        ->and(auditEventsOf(AuditAction::DocumentFailed))->toHaveCount(1);
 });
 
 it('D-415: a club recap with the LED only has the LED row, no partnership row', function () {

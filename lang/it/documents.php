@@ -72,6 +72,7 @@ return [
         'page_count' => 'Il PDF ha :pages pagine invece delle :expected attese.',
         'not_linearized' => 'Il PDF non è linearizzato: qpdf non ha completato l\'ottimizzazione.',
         'font_not_embedded' => 'Il font :font non è incorporato nel PDF come sottoinsieme.',
+        'replaced_while_pending' => 'Sostituito da una nuova generazione prima di essere pronto.',
     ],
 
     'toasts' => [

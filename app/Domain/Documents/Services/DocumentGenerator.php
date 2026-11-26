@@ -133,7 +133,8 @@ final class DocumentGenerator
         DB::transaction(function () use ($documentId, $reason): void {
             $document = Document::query()->whereKey($documentId)->lockForUpdate()->first();
 
-            if ($document === null || $document->status === DocumentStatus::Ready) {
+            // A replaced document already failed when it was replaced (RequestDocument): it keeps that reason.
+            if ($document === null || $document->status === DocumentStatus::Ready || (! $document->isCurrent() && $document->status === DocumentStatus::Failed)) {
                 return;
             }
 
